@@ -188,9 +188,9 @@
   <p class="subtitle">~ vibing since 2026 ~</p>
 
   <div class="animation-switcher">
-    <button class="active" data-anim="breathing-idle" data-dir="south">DANCE</button>
+    <button class="active" data-anim="breathing-idle" data-dir="south">VIBE</button>
+    <button data-anim="jumping-2" data-dir="south">JUMP</button>
     <button data-anim="breathing-idle" data-dir="east">SIDE</button>
-    <button data-anim="breathing-idle" data-dir="west">OTHER SIDE</button>
     <button data-anim="breathing-idle" data-dir="north">BACK</button>
   </div>
 
@@ -205,6 +205,11 @@
         east:  ['animations/breathing-idle/east/frame_000.png','animations/breathing-idle/east/frame_001.png','animations/breathing-idle/east/frame_002.png','animations/breathing-idle/east/frame_003.png'],
         north: ['animations/breathing-idle/north/frame_000.png','animations/breathing-idle/north/frame_001.png','animations/breathing-idle/north/frame_002.png','animations/breathing-idle/north/frame_003.png'],
         west:  ['animations/breathing-idle/west/frame_000.png','animations/breathing-idle/west/frame_001.png','animations/breathing-idle/west/frame_002.png','animations/breathing-idle/west/frame_003.png'],
+      },
+      'jumping-2': {
+        south: Array.from({length: 8}, (_, i) => `animations/jumping-2/south/frame_00${i}.png`),
+        east:  Array.from({length: 8}, (_, i) => `animations/jumping-2/east/frame_00${i}.png`),
+        north: Array.from({length: 8}, (_, i) => `animations/jumping-2/north/frame_00${i}.png`),
       }
     };
 
