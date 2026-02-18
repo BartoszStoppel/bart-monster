@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bart Monster</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Courier New', monospace;
+      overflow: hidden;
+    }
+
+    .stage {
+      position: relative;
+      width: 400px;
+      height: 400px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Disco floor */
+    .floor {
+      position: absolute;
+      bottom: 40px;
+      width: 320px;
+      height: 80px;
+      background: linear-gradient(135deg, #ff006e33, #8338ec33, #3a86ff33, #ff006e33);
+      background-size: 200% 200%;
+      animation: disco-floor 2s ease infinite;
+      border-radius: 50%;
+      filter: blur(8px);
+    }
+
+    @keyframes disco-floor {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+
+    /* Spotlight glow */
+    .spotlight {
+      position: absolute;
+      top: 0;
+      width: 200px;
+      height: 300px;
+      background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.08) 0%, transparent 70%);
+      animation: spotlight-pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes spotlight-pulse {
+      0%, 100% { opacity: 0.6; transform: scale(1); }
+      50% { opacity: 1; transform: scale(1.1); }
+    }
+
+    /* The monster sprite */
+    .monster {
+      position: relative;
+      z-index: 10;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      width: 192px;
+      height: 192px;
+      animation: monster-bounce 0.5s ease-in-out infinite;
+    }
+
+    @keyframes monster-bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    /* Shadow under monster */
+    .shadow {
+      position: absolute;
+      bottom: 60px;
+      width: 100px;
+      height: 20px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 50%;
+      animation: shadow-pulse 0.5s ease-in-out infinite;
+      z-index: 5;
+    }
+
+    @keyframes shadow-pulse {
+      0%, 100% { transform: scaleX(1); opacity: 0.4; }
+      50% { transform: scaleX(0.8); opacity: 0.2; }
+    }
+
+    /* Floating music notes */
+    .note {
+      position: absolute;
+      font-size: 24px;
+      opacity: 0;
+      animation: float-note 2s ease-in-out infinite;
+      z-index: 20;
+    }
+
+    .note:nth-child(1) { left: 20%; animation-delay: 0s; }
+    .note:nth-child(2) { right: 20%; animation-delay: 0.7s; }
+    .note:nth-child(3) { left: 35%; animation-delay: 1.4s; }
+
+    @keyframes float-note {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+      20% { opacity: 0.8; }
+      100% { transform: translateY(-120px) rotate(20deg); opacity: 0; }
+    }
+
+    /* Disco particles */
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      animation: sparkle 1.5s ease-in-out infinite;
+    }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0; transform: scale(0); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
+    h1 {
+      color: #e0e0ff;
+      font-size: 2.5rem;
+      margin-bottom: 8px;
+      text-shadow: 0 0 20px rgba(131, 56, 236, 0.5);
+      letter-spacing: 4px;
+      z-index: 10;
+    }
+
+    .subtitle {
+      color: #8888aa;
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+      z-index: 10;
+      margin-top: 8px;
+    }
+
+    .animation-switcher {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+      z-index: 10;
+    }
+
+    .animation-switcher button {
+      background: rgba(131, 56, 236, 0.2);
+      border: 1px solid rgba(131, 56, 236, 0.4);
+      color: #c0c0e0;
+      padding: 8px 20px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-family: 'Courier New', monospace;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      transition: all 0.2s;
+    }
+
+    .animation-switcher button:hover,
+    .animation-switcher button.active {
+      background: rgba(131, 56, 236, 0.5);
+      border-color: rgba(131, 56, 236, 0.8);
+      color: #fff;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>BART MONSTER</h1>
+
+  <div class="stage">
+    <div class="note">&#9835;</div>
+    <div class="note">&#9834;</div>
+    <div class="note">&#9833;</div>
+    <div class="spotlight"></div>
+    <div class="floor"></div>
+    <div class="shadow"></div>
+    <img class="monster" id="monster" src="sprites/animations/breathing-idle/south/frame_000.png" alt="Bart Monster">
+  </div>
+
+  <p class="subtitle">~ vibing since 2026 ~</p>
+
+  <div class="animation-switcher">
+    <button class="active" data-anim="breathing-idle" data-dir="south">DANCE</button>
+    <button data-anim="breathing-idle" data-dir="east">SIDE</button>
+    <button data-anim="breathing-idle" data-dir="west">OTHER SIDE</button>
+    <button data-anim="breathing-idle" data-dir="north">BACK</button>
+  </div>
+
+  <script>
+    const monsterEl = document.getElementById('monster');
+    const buttons = document.querySelectorAll('.animation-switcher button');
+
+    // Animation metadata
+    const animations = {
+      'breathing-idle': {
+        south: ['animations/breathing-idle/south/frame_000.png','animations/breathing-idle/south/frame_001.png','animations/breathing-idle/south/frame_002.png','animations/breathing-idle/south/frame_003.png'],
+        east:  ['animations/breathing-idle/east/frame_000.png','animations/breathing-idle/east/frame_001.png','animations/breathing-idle/east/frame_002.png','animations/breathing-idle/east/frame_003.png'],
+        north: ['animations/breathing-idle/north/frame_000.png','animations/breathing-idle/north/frame_001.png','animations/breathing-idle/north/frame_002.png','animations/breathing-idle/north/frame_003.png'],
+        west:  ['animations/breathing-idle/west/frame_000.png','animations/breathing-idle/west/frame_001.png','animations/breathing-idle/west/frame_002.png','animations/breathing-idle/west/frame_003.png'],
+      }
+    };
+
+    let currentFrames = animations['breathing-idle'].south;
+    let frameIndex = 0;
+    const FPS = 6;
+
+    // Preload all images
+    Object.values(animations).forEach(dirs => {
+      Object.values(dirs).forEach(frames => {
+        frames.forEach(src => {
+          const img = new Image();
+          img.src = 'sprites/' + src;
+        });
+      });
+    });
+
+    // Animation loop
+    function animate() {
+      monsterEl.src = 'sprites/' + currentFrames[frameIndex];
+      frameIndex = (frameIndex + 1) % currentFrames.length;
+    }
+
+    setInterval(animate, 1000 / FPS);
+
+    // Button handlers
+    buttons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        buttons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const anim = btn.dataset.anim;
+        const dir = btn.dataset.dir;
+        if (animations[anim] && animations[anim][dir]) {
+          currentFrames = animations[anim][dir];
+          frameIndex = 0;
+        }
+      });
+    });
+
+    // Add disco particles
+    const stage = document.querySelector('.stage');
+    const colors = ['#ff006e', '#8338ec', '#3a86ff', '#ffbe0b', '#fb5607'];
+    for (let i = 0; i < 12; i++) {
+      const p = document.createElement('div');
+      p.className = 'particle';
+      p.style.left = Math.random() * 100 + '%';
+      p.style.top = Math.random() * 100 + '%';
+      p.style.background = colors[Math.floor(Math.random() * colors.length)];
+      p.style.animationDelay = (Math.random() * 2) + 's';
+      p.style.animationDuration = (1 + Math.random() * 2) + 's';
+      stage.appendChild(p);
+    }
+  </script>
+
+</body>
+</html>
