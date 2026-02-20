@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Monster Town - Map</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: 'Courier New', monospace;
+    }
+    h1 {
+      color: #e0e0ff;
+      font-size: 1.8rem;
+      margin-bottom: 16px;
+      text-shadow: 0 0 20px rgba(131, 56, 236, 0.5);
+      letter-spacing: 3px;
+    }
+    .map-container {
+      position: relative;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    canvas {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+    .label {
+      color: #8888aa;
+      font-size: 0.8rem;
+      margin-top: 12px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <h1>MONSTER TOWN</h1>
+  <div class="map-container">
+    <canvas id="mapCanvas"></canvas>
+  </div>
+  <p class="label">~ a town on the back of a giant turtle ~</p>
+
+  <script>
+    const TILE_SIZE = 32;
+    const SCALE = 2;
+    const MAP_W = 22; // tiles wide
+    const MAP_H = 18; // tiles tall
+    const VERT_W = MAP_W + 1;
+    const VERT_H = MAP_H + 1;
+
+    // Vertex grid: 1 = shell (upper), 0 = path (lower)
+    // Start with all shell
+    const vertices = Array.from({ length: VERT_H }, () => Array(VERT_W).fill(1));
+
+    // Helper: set a rectangular region of vertices to path (0)
+    function setPath(x1, y1, x2, y2) {
+      for (let y = y1; y <= y2; y++)
+        for (let x = x1; x <= x2; x++)
+          if (y >= 0 && y < VERT_H && x >= 0 && x < VERT_W)
+            vertices[y][x] = 0;
+    }
+
+    // Main vertical road (center column, x=10-12)
+    setPath(10, 2, 12, 16);
+
+    // Main horizontal road (center row, y=8-10)
+    setPath(2, 8, 20, 10);
+
+    // 8 building spots (wider pads where buildings will go)
+    // Top-left
+    setPath(4, 3, 8, 6);
+    // Top-right
+    setPath(14, 3, 18, 6);
+    // Left
+    setPath(3, 8, 6, 10);
+    // Right
+    setPath(16, 8, 19, 10);
+    // Bottom-left
+    setPath(4, 12, 8, 15);
+    // Bottom-right
+    setPath(14, 12, 18, 15);
+    // Top-center
+    setPath(9, 2, 13, 4);
+    // Bottom-center
+    setPath(9, 14, 13, 16);
+
+    // Side paths to building spots
+    setPath(7, 6, 10, 8);   // top-left to center
+    setPath(12, 6, 15, 8);  // top-right to center
+    setPath(7, 10, 10, 12);  // bottom-left to center
+    setPath(12, 10, 15, 12); // bottom-right to center
+
+    // Tile lookup by corner pattern
+    let tileIndex = {};
+    let tilesetImg = null;
+    let turtleImgs = {};
+
+    async function loadAssets() {
+      // Load tileset metadata
+      const metaRes = await fetch('sprites/map/tileset/shell_path_metadata.json');
+      const meta = await metaRes.json();
+
+      // Build corner -> bounding_box lookup
+      for (const tile of meta.tileset_data.tiles) {
+        const key = [
+          tile.corners.NW, tile.corners.NE,
+          tile.corners.SW, tile.corners.SE
+        ].join(',');
+        tileIndex[key] = tile.bounding_box;
+      }
+
+      // Load tileset image
+      tilesetImg = await loadImg('sprites/map/tileset/shell_path.png');
+
+      // Load turtle parts
+      const parts = ['head', 'flipper_front_left', 'flipper_front_right',
+                      'flipper_rear_left', 'flipper_rear_right', 'tail'];
+      for (const p of parts) {
+        turtleImgs[p] = await loadImg(`sprites/map/turtle/${p}.png`);
+      }
+    }
+
+    function loadImg(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = reject;
+        img.src = src;
+      });
+    }
+
+    function getTile(nw, ne, sw, se) {
+      const key = [
+        nw ? 'upper' : 'lower',
+        ne ? 'upper' : 'lower',
+        sw ? 'upper' : 'lower',
+        se ? 'upper' : 'lower'
+      ].join(',');
+      return tileIndex[key] || null;
+    }
+
+    async function render() {
+      await loadAssets();
+
+      const canvas = document.getElementById('mapCanvas');
+      const totalW = MAP_W * TILE_SIZE;
+      const totalH = MAP_H * TILE_SIZE;
+      // Extra space for turtle parts around the shell
+      const padding = 96;
+      canvas.width = (totalW + padding * 2) * SCALE;
+      canvas.height = (totalH + padding * 2) * SCALE;
+      canvas.style.width = canvas.width + 'px';
+      canvas.style.height = canvas.height + 'px';
+
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      ctx.scale(SCALE, SCALE);
+
+      const ox = padding; // offset for turtle padding
+      const oy = padding;
+
+      // Draw ocean background
+      ctx.fillStyle = '#2a5c8a';
+      ctx.fillRect(0, 0, totalW + padding * 2, totalH + padding * 2);
+
+      // Draw subtle wave pattern
+      ctx.fillStyle = '#336b99';
+      for (let wy = 0; wy < totalH + padding * 2; wy += 12) {
+        for (let wx = 0; wx < totalW + padding * 2; wx += 24) {
+          const wobble = Math.sin(wy * 0.05 + wx * 0.03) * 4;
+          ctx.fillRect(wx + wobble, wy, 16, 4);
+        }
+      }
+
+      // Draw turtle body parts UNDER the shell
+      const cx = ox + totalW / 2;
+      const cy = oy + totalH / 2;
+
+      // Head (top center)
+      ctx.drawImage(turtleImgs.head, cx - 64, oy - 70, 128, 96);
+      // Front left flipper
+      ctx.drawImage(turtleImgs.flipper_front_left, ox - 40, oy + 20, 80, 100);
+      // Front right flipper
+      ctx.drawImage(turtleImgs.flipper_front_right, ox + totalW - 40, oy + 20, 80, 100);
+      // Rear left flipper
+      ctx.drawImage(turtleImgs.flipper_rear_left, ox - 30, oy + totalH - 100, 64, 80);
+      // Rear right flipper
+      ctx.drawImage(turtleImgs.flipper_rear_right, ox + totalW - 34, oy + totalH - 100, 64, 80);
+      // Tail (bottom center)
+      ctx.drawImage(turtleImgs.tail, cx - 24, oy + totalH - 10, 48, 64);
+
+      // Draw shell oval clip (so tiles only show within the shell shape)
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, totalW / 2 + 8, totalH / 2 + 8, 0, 0, Math.PI * 2);
+      ctx.clip();
+
+      // Draw shell edge (darker border)
+      ctx.fillStyle = '#4a6741';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy, totalW / 2 + 8, totalH / 2 + 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Render tiles
+      for (let ty = 0; ty < MAP_H; ty++) {
+        for (let tx = 0; tx < MAP_W; tx++) {
+          const nw = vertices[ty][tx];
+          const ne = vertices[ty][tx + 1];
+          const sw = vertices[ty + 1][tx];
+          const se = vertices[ty + 1][tx + 1];
+
+          const bbox = getTile(nw, ne, sw, se);
+          if (bbox) {
+            ctx.drawImage(
+              tilesetImg,
+              bbox.x, bbox.y, bbox.width, bbox.height,
+              ox + tx * TILE_SIZE, oy + ty * TILE_SIZE, TILE_SIZE, TILE_SIZE
+            );
+          }
+        }
+      }
+
+      ctx.restore();
+
+      // Draw building spot markers
+      ctx.globalAlpha = 0.3;
+      ctx.fillStyle = '#ffbe0b';
+      const spots = [
+        { x: 4, y: 3, w: 4, h: 3, label: '1' },
+        { x: 14, y: 3, w: 4, h: 3, label: '2' },
+        { x: 9, y: 2, w: 4, h: 2, label: '3' },
+        { x: 3, y: 8, w: 3, h: 2, label: '4' },
+        { x: 16, y: 8, w: 3, h: 2, label: '5' },
+        { x: 4, y: 12, w: 4, h: 3, label: '6' },
+        { x: 14, y: 12, w: 4, h: 3, label: '7' },
+        { x: 9, y: 14, w: 4, h: 2, label: '8' },
+      ];
+      for (const s of spots) {
+        ctx.fillRect(
+          ox + s.x * TILE_SIZE, oy + s.y * TILE_SIZE,
+          s.w * TILE_SIZE, s.h * TILE_SIZE
+        );
+      }
+      ctx.globalAlpha = 1;
+
+      // Draw building labels
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 14px Courier New';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      for (const s of spots) {
+        ctx.fillText(
+          `B${s.label}`,
+          ox + (s.x + s.w / 2) * TILE_SIZE,
+          oy + (s.y + s.h / 2) * TILE_SIZE
+        );
+      }
+
+      // Plaza label
+      ctx.fillStyle = '#e0e0ff';
+      ctx.font = 'bold 12px Courier New';
+      ctx.fillText('PLAZA', cx, cy);
+    }
+
+    render();
+  </script>
+</body>
+</html>
