@@ -51,15 +51,14 @@
   <script>
     const TILE = 32;
     const SCALE = 2;
-    const MW = 40;   // map tiles wide
-    const MH = 30;   // map tiles tall
+    const MW = 40;
+    const MH = 30;
     const VW = MW + 1;
     const VH = MH + 1;
 
-    // Terrain types (higher = more elevated)
-    const WATER = 0, PATH = 1, DIRT = 2, GRASS = 3, STONE = 4;
+    // Terrain types (elevation order)
+    const WATER = 0, PATH = 1, DIRT = 2, GRASS = 3, HILL = 4;
 
-    // Vertex terrain grid — default all grass
     const terrain = Array.from({ length: VH }, () => Array(VW).fill(GRASS));
 
     function fill(t, x1, y1, x2, y2) {
@@ -68,71 +67,77 @@
           terrain[y][x] = t;
     }
 
-    // ── Town Layout (40x30) ─────────────────────────
+    // ═══════════════════════════════════════════════════
+    //  TOWN LAYOUT — clean grid, hill border, grass outside
+    // ═══════════════════════════════════════════════════
 
-    // Stone border around entire map (3 vertices thick)
-    fill(STONE, 0, 0, VW - 1, 2);           // top
-    fill(STONE, 0, VH - 3, VW - 1, VH - 1); // bottom
-    fill(STONE, 0, 0, 2, VH - 1);           // left
-    fill(STONE, VW - 3, 0, VW - 1, VH - 1); // right
+    // Outer grass is the default (already filled)
 
-    // Main vertical road (center)
-    fill(PATH, 19, 3, 22, 27);
+    // Hill border: rectangular ring from (4,4) to (36,26)
+    fill(HILL, 4, 4, 36, 26);
 
-    // Main horizontal road
-    fill(PATH, 3, 13, 37, 16);
+    // Inner grass: inside the hill ring
+    fill(GRASS, 7, 7, 33, 23);
 
-    // Central plaza (wider intersection)
-    fill(PATH, 16, 11, 25, 18);
+    // ── Grid road network (all aligned to grid) ──
 
-    // Connection paths to buildings
-    // Upper-left connector
-    fill(PATH, 9, 8, 16, 11);
-    // Upper-right connector
-    fill(PATH, 25, 8, 32, 11);
-    // Lower-left connector
-    fill(PATH, 9, 18, 16, 21);
-    // Lower-right connector
-    fill(PATH, 25, 18, 32, 21);
+    // Main vertical road: 3 wide, center of town
+    fill(PATH, 19, 7, 21, 23);
 
-    // Secondary paths to outer buildings
-    fill(PATH, 5, 8, 9, 10);    // far left upper
-    fill(PATH, 32, 8, 36, 10);  // far right upper
-    fill(PATH, 5, 19, 9, 21);   // far left lower
-    fill(PATH, 32, 19, 36, 21); // far right lower
+    // Main horizontal road: 3 wide
+    fill(PATH, 7, 14, 33, 16);
 
-    // Entry paths from edges
-    fill(PATH, 19, 3, 22, 5);   // north entry
-    fill(PATH, 19, 25, 22, 27); // south entry
-    fill(PATH, 3, 13, 5, 16);   // west entry
-    fill(PATH, 36, 13, 37, 16); // east entry
+    // ── 8 building pads (dirt) — in a strict 2x4 grid ──
+    //    4 across top row, 4 across bottom row
+    //    Each pad: 4 tiles wide × 3 tiles tall
 
-    // 8 building pads (dirt)
-    fill(DIRT, 5, 4, 10, 7);     // B1 — top far-left
-    fill(DIRT, 12, 4, 17, 7);    // B2 — top near-left
-    fill(DIRT, 24, 4, 29, 7);    // B3 — top near-right
-    fill(DIRT, 31, 4, 36, 7);    // B4 — top far-right
-    fill(DIRT, 5, 22, 10, 25);   // B5 — bottom far-left
-    fill(DIRT, 12, 22, 17, 25);  // B6 — bottom near-left
-    fill(DIRT, 24, 22, 29, 25);  // B7 — bottom near-right
-    fill(DIRT, 31, 22, 36, 25);  // B8 — bottom far-right
+    // Top row (y=8..10 tiles → vertices 8..11)
+    fill(DIRT, 8,  8, 12, 11);   // B1
+    fill(DIRT, 14, 8, 18, 11);   // B2
+    fill(DIRT, 22, 8, 26, 11);   // B3
+    fill(DIRT, 28, 8, 32, 11);   // B4
 
-    // Water features
-    fill(WATER, 4, 26, 8, 28);   // bottom-left pond
-    fill(WATER, 33, 26, 37, 28); // bottom-right pond
-    fill(WATER, 35, 4, 37, 6);   // top-right small pond
+    // Bottom row (y=19..21 tiles → vertices 19..22)
+    fill(DIRT, 8,  19, 12, 22);  // B5
+    fill(DIRT, 14, 19, 18, 22);  // B6
+    fill(DIRT, 22, 19, 26, 22);  // B7
+    fill(DIRT, 28, 19, 32, 22);  // B8
 
-    // ── Tileset pairs ────────────────────────────────
-    // Each tileset handles a transition between two adjacent terrain levels.
-    // Within each tileset, "upper" = the higher terrain, "lower" = the lower terrain.
+    // ── Connector paths: short stubs from dirt pads to main roads ──
+    // Top buildings → horizontal road
+    fill(PATH, 10, 12, 11, 13);   // B1 south
+    fill(PATH, 16, 12, 17, 13);   // B2 south
+    fill(PATH, 24, 12, 25, 13);   // B3 south
+    fill(PATH, 30, 12, 31, 13);   // B4 south
+
+    // Bottom buildings → horizontal road
+    fill(PATH, 10, 17, 11, 18);   // B5 north
+    fill(PATH, 16, 17, 17, 18);   // B6 north
+    fill(PATH, 24, 17, 25, 18);   // B7 north
+    fill(PATH, 30, 17, 31, 18);   // B8 north
+
+    // ── Entry paths from hill border to roads ──
+    fill(PATH, 19, 5, 21, 7);     // north gate
+    fill(PATH, 19, 23, 21, 25);   // south gate
+    fill(PATH, 5, 14, 7, 16);     // west gate
+    fill(PATH, 33, 14, 35, 16);   // east gate
+
+    // ── Water: small pond in town ──
+    fill(WATER, 9, 14, 11, 16);   // pond left of center
+
+    // ═══════════════════════════════════════════════════
+    //  RENDERING ENGINE
+    // ═══════════════════════════════════════════════════
+
     const PAIRS = [
-      { lower: WATER, upper: GRASS, ts: 'grass_water' },  // grass is upper relative to water
-      { lower: PATH,  upper: GRASS, ts: 'grass_path' },   // grass is upper relative to path
-      { lower: DIRT,  upper: GRASS, ts: 'grass_dirt' },    // grass is upper relative to dirt
-      { lower: GRASS, upper: STONE, ts: 'grass_stone' },  // stone is upper relative to grass
+      { lower: WATER, upper: GRASS, ts: 'grass_water' },
+      { lower: PATH,  upper: GRASS, ts: 'grass_path' },
+      { lower: DIRT,  upper: GRASS, ts: 'grass_dirt' },
+      { lower: GRASS, upper: HILL,  ts: 'grass_hill' },
     ];
 
     const tilesets = {};
+    const baseVariants = {};  // terrain → [Image, Image, ...]
     const accentImgs = {};
 
     function loadImg(src) {
@@ -162,10 +167,25 @@
     }
 
     async function loadAssets() {
-      const names = ['grass_path', 'grass_dirt', 'grass_water', 'grass_stone'];
-      const results = await Promise.all(names.map(loadTileset));
-      names.forEach((n, i) => tilesets[n] = results[i]);
+      const tsNames = ['grass_path', 'grass_dirt', 'grass_water', 'grass_hill'];
+      const tsResults = await Promise.all(tsNames.map(loadTileset));
+      tsNames.forEach((n, i) => tilesets[n] = tsResults[i]);
 
+      // Load base tile variants
+      const variantDefs = {
+        [GRASS]: ['grass/grass_1.png','grass/grass_2.png','grass/grass_3.png','grass/grass_4.png'],
+        [PATH]:  ['path/path_1.png','path/path_2.png'],
+        [DIRT]:  ['dirt/dirt_1.png','dirt/dirt_2.png'],
+        [WATER]: ['water/water_1.png'],
+        [HILL]:  ['hill/hill_1.png','hill/hill_2.png'],
+      };
+      for (const [t, files] of Object.entries(variantDefs)) {
+        baseVariants[t] = await Promise.all(
+          files.map(f => loadImg(`sprites/map/base_tiles/${f}`))
+        );
+      }
+
+      // Load accent images
       const accentNames = [
         'flowers', 'dark_grass', 'mushrooms', 'bush', 'rocks',
         'barrel', 'signpost', 'bench', 'well', 'crate',
@@ -176,127 +196,55 @@
       accentNames.forEach((n, i) => accentImgs[n] = accentResults[i]);
     }
 
-    // For each cell, determine which tileset + corner mapping to use.
+    // Determine tileset + corners for a cell
     function cellInfo(tx, ty) {
       const c = [
-        terrain[ty][tx],        // NW
-        terrain[ty][tx + 1],    // NE
-        terrain[ty + 1][tx],    // SW
-        terrain[ty + 1][tx + 1] // SE
+        terrain[ty][tx], terrain[ty][tx+1],
+        terrain[ty+1][tx], terrain[ty+1][tx+1],
       ];
-
-      // Find the unique terrain values present
       const unique = [...new Set(c)];
 
       if (unique.length === 1) {
-        // All same terrain — find a pair where this terrain is either upper or lower
         const t = unique[0];
         for (const p of PAIRS) {
-          if (t === p.upper) return { ts: p.ts, corners: ['upper','upper','upper','upper'] };
-          if (t === p.lower) return { ts: p.ts, corners: ['lower','lower','lower','lower'] };
+          if (t === p.upper) return { ts: p.ts, corners: ['upper','upper','upper','upper'], uniform: t };
+          if (t === p.lower) return { ts: p.ts, corners: ['lower','lower','lower','lower'], uniform: t };
         }
-        // Fallback: all grass
-        return { ts: 'grass_path', corners: ['upper','upper','upper','upper'] };
+        return { ts: 'grass_path', corners: ['upper','upper','upper','upper'], uniform: GRASS };
       }
 
-      // Find the best-matching pair for the terrains present
-      // Try to find a pair that directly covers both terrain values
+      // Find best pair
       for (const p of PAIRS) {
-        const hasUpper = c.some(v => v === p.upper);
-        const hasLower = c.some(v => v === p.lower);
-        if (hasUpper && hasLower) {
-          // Check if ALL corners are either upper or lower for this pair
-          const allMatch = c.every(v => v === p.upper || v === p.lower);
-          if (allMatch) {
-            const mapped = c.map(v => v === p.upper ? 'upper' : 'lower');
-            return { ts: p.ts, corners: mapped };
-          }
+        if (c.every(v => v === p.upper || v === p.lower)) {
+          return { ts: p.ts, corners: c.map(v => v === p.upper ? 'upper' : 'lower'), uniform: -1 };
         }
       }
 
-      // Mixed case: pick the pair that covers the most corners
+      // Fallback: best-matching pair
       let bestPair = PAIRS[0], bestScore = 0;
       for (const p of PAIRS) {
         const score = c.filter(v => v === p.upper || v === p.lower).length;
         if (score > bestScore) { bestScore = score; bestPair = p; }
       }
-      const mapped = c.map(v => {
-        if (v === bestPair.upper) return 'upper';
-        if (v === bestPair.lower) return 'lower';
-        // For unmatched terrain, map to whichever is closer in elevation
-        return v > bestPair.upper ? 'upper' : v < bestPair.lower ? 'lower' :
-               Math.abs(v - bestPair.upper) <= Math.abs(v - bestPair.lower) ? 'upper' : 'lower';
-      });
-      return { ts: bestPair.ts, corners: mapped };
+      return {
+        ts: bestPair.ts,
+        corners: c.map(v => v >= bestPair.upper ? 'upper' : 'lower'),
+        uniform: -1,
+      };
     }
 
-    // Seeded RNG for reproducible randomness
+    // Seeded RNG
     function makeRng(seed) {
       return () => { seed = (seed * 16807 + 12345) % 2147483647; return (seed & 0x7fffffff) / 2147483647; };
-    }
-
-    // Build decoration placement map
-    function buildDecorations(rng) {
-      const decos = [];
-
-      for (let ty = 0; ty < MH; ty++) {
-        for (let tx = 0; tx < MW; tx++) {
-          const c = [terrain[ty][tx], terrain[ty][tx+1], terrain[ty+1][tx], terrain[ty+1][tx+1]];
-          const allSame = c.every(v => v === c[0]);
-          const r = rng();
-
-          if (allSame && c[0] === GRASS) {
-            // Grass decorations — varied
-            if (r < 0.04)      decos.push({ tx, ty, img: 'flowers', opacity: 1 });
-            else if (r < 0.08) decos.push({ tx, ty, img: 'dark_grass', opacity: 0.5 });
-            else if (r < 0.10) decos.push({ tx, ty, img: 'mushrooms', opacity: 1 });
-            else if (r < 0.13) decos.push({ tx, ty, img: 'bush', opacity: 1 });
-          } else if (allSame && c[0] === DIRT) {
-            // Dirt decorations
-            if (r < 0.06)      decos.push({ tx, ty, img: 'rocks', opacity: 0.8 });
-            else if (r < 0.09) decos.push({ tx, ty, img: 'crate', opacity: 1 });
-          } else if (allSame && c[0] === PATH) {
-            // Path decorations — sparse
-            if (r < 0.015)     decos.push({ tx, ty, img: 'barrel', opacity: 1 });
-          }
-        }
-      }
-
-      return decos;
-    }
-
-    // Fixed decoration placements (signposts, benches, well — placed at specific locations)
-    function fixedDecorations() {
-      return [
-        // Signposts at road junctions
-        { tx: 18, ty: 5, img: 'signpost', opacity: 1 },
-        { tx: 22, ty: 25, img: 'signpost', opacity: 1 },
-        { tx: 4, ty: 13, img: 'signpost', opacity: 1 },
-        { tx: 36, ty: 15, img: 'signpost', opacity: 1 },
-        // Benches around the plaza
-        { tx: 17, ty: 12, img: 'bench', opacity: 1 },
-        { tx: 24, ty: 12, img: 'bench', opacity: 1 },
-        { tx: 17, ty: 17, img: 'bench', opacity: 1 },
-        { tx: 24, ty: 17, img: 'bench', opacity: 1 },
-        // Well near the plaza
-        { tx: 20, ty: 14, img: 'well', opacity: 1 },
-        // Barrels near buildings
-        { tx: 10, ty: 7, img: 'barrel', opacity: 1 },
-        { tx: 31, ty: 7, img: 'barrel', opacity: 1 },
-        { tx: 10, ty: 22, img: 'barrel', opacity: 1 },
-        { tx: 31, ty: 22, img: 'barrel', opacity: 1 },
-      ];
     }
 
     async function render() {
       await loadAssets();
 
       const canvas = document.getElementById('mapCanvas');
-      const W = MW * TILE;
-      const H = MH * TILE;
-      canvas.width  = W * SCALE;
-      canvas.height = H * SCALE;
-      canvas.style.width  = canvas.width  + 'px';
+      canvas.width  = MW * TILE * SCALE;
+      canvas.height = MH * TILE * SCALE;
+      canvas.style.width  = canvas.width + 'px';
       canvas.style.height = canvas.height + 'px';
 
       const ctx = canvas.getContext('2d');
@@ -308,95 +256,98 @@
       // ── Draw base tiles ──
       for (let ty = 0; ty < MH; ty++) {
         for (let tx = 0; tx < MW; tx++) {
-          const { ts, corners } = cellInfo(tx, ty);
-          const tileset = tilesets[ts];
-          const key = corners.join(',');
+          const info = cellInfo(tx, ty);
+          const tileset = tilesets[info.ts];
+          const key = info.corners.join(',');
           const bbox = tileset.index[key];
-          if (bbox) {
-            // Add tile variation: random flip for uniform tiles
-            const allSame = corners.every(c => c === corners[0]);
-            const flip = allSame ? rng() : -1;
+          const dx = tx * TILE;
+          const dy = ty * TILE;
 
-            ctx.save();
-            const dx = tx * TILE;
-            const dy = ty * TILE;
-
-            if (flip > 0.75) {
-              // Flip horizontal
-              ctx.translate(dx + TILE, dy);
-              ctx.scale(-1, 1);
-              ctx.drawImage(tileset.img, bbox.x, bbox.y, bbox.width, bbox.height, 0, 0, TILE, TILE);
-            } else if (flip > 0.5) {
-              // Flip vertical
-              ctx.translate(dx, dy + TILE);
-              ctx.scale(1, -1);
-              ctx.drawImage(tileset.img, bbox.x, bbox.y, bbox.width, bbox.height, 0, 0, TILE, TILE);
-            } else if (flip > 0.25) {
-              // Flip both
-              ctx.translate(dx + TILE, dy + TILE);
-              ctx.scale(-1, -1);
-              ctx.drawImage(tileset.img, bbox.x, bbox.y, bbox.width, bbox.height, 0, 0, TILE, TILE);
-            } else {
-              // No flip
-              ctx.drawImage(tileset.img, bbox.x, bbox.y, bbox.width, bbox.height, dx, dy, TILE, TILE);
-            }
-            ctx.restore();
+          if (info.uniform >= 0 && baseVariants[info.uniform]?.length > 1) {
+            // Uniform cell: pick a random base tile variant
+            const variants = baseVariants[info.uniform];
+            const idx = Math.floor(rng() * variants.length);
+            ctx.drawImage(variants[idx], dx, dy, TILE, TILE);
+          } else if (bbox) {
+            ctx.drawImage(
+              tileset.img,
+              bbox.x, bbox.y, bbox.width, bbox.height,
+              dx, dy, TILE, TILE,
+            );
           }
         }
       }
 
-      // ── Draw random decorations ──
-      const decos = buildDecorations(makeRng(42));
-      for (const d of decos) {
-        const img = accentImgs[d.img];
-        if (img) {
-          ctx.globalAlpha = d.opacity;
-          ctx.drawImage(img, d.tx * TILE, d.ty * TILE, TILE, TILE);
+      // ── Decorative accents (each type appears at most 2 times) ──
+      const decoRng = makeRng(42);
+      const decoCounts = {};
+      const MAX_PER_DECO = 2;
+
+      function placeDeco(tx, ty, name, opacity) {
+        if ((decoCounts[name] || 0) >= MAX_PER_DECO) return false;
+        decoCounts[name] = (decoCounts[name] || 0) + 1;
+        ctx.globalAlpha = opacity;
+        ctx.drawImage(accentImgs[name], tx * TILE, ty * TILE, TILE, TILE);
+        ctx.globalAlpha = 1;
+        return true;
+      }
+
+      // Scatter random decos
+      for (let ty = 0; ty < MH; ty++) {
+        for (let tx = 0; tx < MW; tx++) {
+          const c = [terrain[ty][tx], terrain[ty][tx+1], terrain[ty+1][tx], terrain[ty+1][tx+1]];
+          if (!c.every(v => v === c[0])) { decoRng(); continue; }
+          const r = decoRng();
+          const t = c[0];
+
+          if (t === GRASS) {
+            if      (r < 0.008) placeDeco(tx, ty, 'flowers', 1);
+            else if (r < 0.016) placeDeco(tx, ty, 'dark_grass', 0.5);
+            else if (r < 0.022) placeDeco(tx, ty, 'mushrooms', 1);
+            else if (r < 0.028) placeDeco(tx, ty, 'bush', 1);
+          } else if (t === DIRT) {
+            if      (r < 0.02) placeDeco(tx, ty, 'rocks', 0.8);
+            else if (r < 0.04) placeDeco(tx, ty, 'crate', 1);
+          } else if (t === PATH) {
+            if (r < 0.01) placeDeco(tx, ty, 'barrel', 1);
+          }
         }
       }
-      ctx.globalAlpha = 1;
 
-      // ── Draw fixed decorations ──
-      for (const d of fixedDecorations()) {
-        const img = accentImgs[d.img];
-        if (img) {
-          ctx.globalAlpha = d.opacity;
-          ctx.drawImage(img, d.tx * TILE, d.ty * TILE, TILE, TILE);
-        }
-      }
-      ctx.globalAlpha = 1;
+      // Fixed placements (also respect max 2 rule)
+      placeDeco(18, 7,  'signpost', 1);
+      placeDeco(22, 23, 'signpost', 1);
+      placeDeco(18, 14, 'bench', 1);
+      placeDeco(22, 16, 'bench', 1);
+      placeDeco(20, 15, 'well', 1);
 
-      // ── Building spot overlays ──
+      // ── Building labels ──
       const spots = [
-        { x: 5,  y: 4,  w: 5, h: 3, label: '1' },
-        { x: 12, y: 4,  w: 5, h: 3, label: '2' },
-        { x: 24, y: 4,  w: 5, h: 3, label: '3' },
-        { x: 31, y: 4,  w: 5, h: 3, label: '4' },
-        { x: 5,  y: 22, w: 5, h: 3, label: '5' },
-        { x: 12, y: 22, w: 5, h: 3, label: '6' },
-        { x: 24, y: 22, w: 5, h: 3, label: '7' },
-        { x: 31, y: 22, w: 5, h: 3, label: '8' },
+        { x: 8,  y: 8,  w: 4, h: 3, label: '1' },
+        { x: 14, y: 8,  w: 4, h: 3, label: '2' },
+        { x: 22, y: 8,  w: 4, h: 3, label: '3' },
+        { x: 28, y: 8,  w: 4, h: 3, label: '4' },
+        { x: 8,  y: 19, w: 4, h: 3, label: '5' },
+        { x: 14, y: 19, w: 4, h: 3, label: '6' },
+        { x: 22, y: 19, w: 4, h: 3, label: '7' },
+        { x: 28, y: 19, w: 4, h: 3, label: '8' },
       ];
 
       ctx.globalAlpha = 0.25;
       ctx.fillStyle = '#ffbe0b';
-      for (const s of spots) {
+      for (const s of spots)
         ctx.fillRect(s.x * TILE, s.y * TILE, s.w * TILE, s.h * TILE);
-      }
       ctx.globalAlpha = 1;
 
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 14px Courier New';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'middle';
-      for (const s of spots) {
+      for (const s of spots)
         ctx.fillText(`B${s.label}`, (s.x + s.w / 2) * TILE, (s.y + s.h / 2) * TILE);
-      }
 
-      // Plaza label
       ctx.fillStyle = '#e0e0ff';
-      ctx.font = 'bold 14px Courier New';
-      ctx.fillText('TOWN PLAZA', 20.5 * TILE, 14.5 * TILE);
+      ctx.fillText('TOWN PLAZA', 20.5 * TILE, 15 * TILE);
     }
 
     render();
