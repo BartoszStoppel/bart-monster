@@ -4,10 +4,10 @@ import type { BoardGame } from "@/types/database";
 
 interface GameCardProps {
   game: BoardGame;
-  communityRating?: number | null;
+  avgScore?: number;
 }
 
-export function GameCard({ game, communityRating }: GameCardProps) {
+export function GameCard({ game, avgScore }: GameCardProps) {
   const playerRange =
     game.min_players && game.max_players
       ? game.min_players === game.max_players
@@ -48,19 +48,19 @@ export function GameCard({ game, communityRating }: GameCardProps) {
         </div>
 
         <div className="mt-auto flex items-center gap-3 pt-2">
+          {avgScore != null ? (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-zinc-400">Ours</span>
+              <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                {avgScore.toFixed(1)}
+              </span>
+            </div>
+          ) : null}
           {game.bgg_rating ? (
             <div className="flex items-center gap-1">
               <span className="text-xs text-zinc-400">BGG</span>
               <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
                 {game.bgg_rating.toFixed(1)}
-              </span>
-            </div>
-          ) : null}
-          {communityRating ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-zinc-400">Ours</span>
-              <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                {communityRating.toFixed(1)}
               </span>
             </div>
           ) : null}

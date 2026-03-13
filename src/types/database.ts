@@ -2,6 +2,8 @@ export interface Profile {
   id: string;
   display_name: string;
   avatar_url: string | null;
+  email: string | null;
+  is_admin: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -23,6 +25,7 @@ export interface BoardGame {
   bgg_weight: number | null;
   categories: string[];
   mechanics: string[];
+  category: "party" | "board";
   fetched_at: string;
   created_at: string;
 }
@@ -48,4 +51,17 @@ export interface GameRating {
 
 export interface GameRatingWithProfile extends GameRating {
   profiles: Profile;
+}
+
+export type Tier = "S" | "A" | "B" | "C" | "D" | "F";
+
+export interface TierPlacement {
+  id: string;
+  user_id: string;
+  bgg_id: number;
+  tier: Tier;
+  position: number;
+  score: number | null;
+  created_at: string;
+  updated_at: string;
 }

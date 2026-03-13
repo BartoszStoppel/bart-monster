@@ -8,7 +8,7 @@ import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { href: "/", label: "Collection" },
-  { href: "/search", label: "Search" },
+  { href: "/tier-list", label: "Tier List" },
   { href: "/statistics", label: "Statistics" },
   { href: "/profile", label: "Profile" },
 ];
