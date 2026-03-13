@@ -1,14 +1,21 @@
 import { createClient } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/admin";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { RatingSection } from "./rating-section";
-import type { GameRatingWithProfile } from "@/types/database";
+import { CategoryChanger } from "./category-changer";
+import { DeleteGameButton } from "./delete-game-button";
+import { OwnershipToggle } from "./ownership-toggle";
 
 export const dynamic = "force-dynamic";
 
 interface GameDetailPageProps {
   params: Promise<{ bggId: string }>;
 }
+
+const CATEGORY_LABELS: Record<string, string> = {
+  party: "Party Game",
+  board: "Board Game",
+};
 
 export default async function GameDetailPage({ params }: GameDetailPageProps) {
   const { bggId: bggIdParam } = await params;
@@ -25,29 +32,26 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
 
   if (!game) notFound();
 
-  const { data: ratings } = await supabase
-    .from("game_ratings")
-    .select("*, profiles(*)")
-    .eq("bgg_id", bggId)
-    .order("created_at", { ascending: false });
-
-  const { data: owners } = await supabase
-    .from("user_game_collection")
-    .select("*, profiles(*)")
-    .eq("bgg_id", bggId)
-    .eq("owned", true);
+  const admin = await isAdmin(supabase);
 
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const typedRatings = (ratings ?? []) as GameRatingWithProfile[];
-  const userRating = typedRatings.find((r) => r.user_id === user?.id);
+  const { data: owners } = await supabase
+    .from("user_game_collection")
+    .select("*, profiles(id, display_name)")
+    .eq("bgg_id", bggId)
+    .eq("owned", true);
 
-  const avgRating =
-    typedRatings.length > 0
-      ? typedRatings.reduce((sum, r) => sum + r.rating, 0) / typedRatings.length
-      : null;
+  const ownerInfos = (owners ?? [])
+    .map((o) => ({
+      displayName: (o.profiles as { display_name: string })?.display_name ?? "Unknown",
+      userId: o.user_id,
+    }))
+    .filter((o) => o.displayName !== "Unknown");
+
+  const currentUserOwns = ownerInfos.some((o) => o.userId === user?.id);
 
   const playerRange =
     game.min_players && game.max_players
@@ -72,9 +76,29 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
         )}
 
         <div className="flex flex-col gap-2">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            {game.name}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+              {game.name}
+            </h1>
+            {game.category && (
+              <span
+                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                  game.category === "party"
+                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
+                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                }`}
+              >
+                {CATEGORY_LABELS[game.category] ?? game.category}
+              </span>
+            )}
+          </div>
+          {admin && (
+            <div className="flex flex-wrap items-center gap-3">
+              <CategoryChanger bggId={game.bgg_id} currentCategory={game.category} />
+              <DeleteGameButton bggId={game.bgg_id} gameName={game.name} />
+            </div>
+          )}
+
           {game.year_published && (
             <span className="text-sm text-zinc-500 dark:text-zinc-400">
               ({game.year_published})
@@ -90,38 +114,22 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
             )}
           </div>
 
-          <div className="mt-3 flex gap-6">
-            {game.bgg_rating && (
-              <div>
-                <div className="text-xs text-zinc-400">BGG Rating</div>
-                <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                  {Number(game.bgg_rating).toFixed(1)}
-                </div>
-              </div>
-            )}
-            {avgRating !== null && (
-              <div>
-                <div className="text-xs text-zinc-400">Community Rating</div>
-                <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                  {avgRating.toFixed(1)}
-                </div>
-                <div className="text-xs text-zinc-400">
-                  ({typedRatings.length} {typedRatings.length === 1 ? "rating" : "ratings"})
-                </div>
-              </div>
-            )}
-          </div>
-
-          {owners && owners.length > 0 && (
+          {game.bgg_rating && (
             <div className="mt-3">
-              <span className="text-xs text-zinc-400">Owned by: </span>
-              <span className="text-sm text-zinc-600 dark:text-zinc-300">
-                {owners
-                  .map((o) => (o.profiles as { display_name: string })?.display_name)
-                  .filter(Boolean)
-                  .join(", ")}
-              </span>
+              <div className="text-xs text-zinc-400">BGG Rating</div>
+              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                {Number(game.bgg_rating).toFixed(1)}
+              </div>
             </div>
+          )}
+
+          {user && (
+            <OwnershipToggle
+              bggId={bggId}
+              initialOwners={ownerInfos}
+              initialOwned={currentUserOwns}
+              currentUserId={user.id}
+            />
           )}
 
           {game.categories && game.categories.length > 0 && (
@@ -150,12 +158,6 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
           </div>
         </div>
       )}
-
-      <RatingSection
-        bggId={bggId}
-        ratings={typedRatings}
-        userRating={userRating ?? null}
-      />
     </div>
   );
 }

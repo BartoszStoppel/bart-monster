@@ -1,145 +1,98 @@
 import { createClient } from "@/lib/supabase/server";
+import { CategoryToggle } from "@/components/category-toggle";
+import { ScoreComparisonChart } from "./score-chart";
+import { ComplexityChart } from "./complexity-chart";
 
 export const dynamic = "force-dynamic";
 
-interface GameWithStats {
-  bggId: number;
-  name: string;
-  bggRating: number | null;
-  communityAvg: number | null;
-  ratingCount: number;
-  difference: number | null;
+interface PageProps {
+  searchParams: Promise<{ category?: string }>;
 }
 
-export default async function StatisticsPage() {
+export default async function StatisticsPage({ searchParams }: PageProps) {
+  const params = await searchParams;
+  const category =
+    params.category === "party" ? "party" : ("board" as "party" | "board");
+
   const supabase = await createClient();
 
   const { data: games } = await supabase
     .from("board_games")
-    .select("bgg_id, name, bgg_rating")
+    .select("bgg_id, name, bgg_rating, bgg_weight")
+    .eq("category", category)
     .order("name");
 
-  const { data: ratings } = await supabase
-    .from("game_ratings")
-    .select("bgg_id, rating");
+  const { data: placements } = await supabase
+    .from("tier_placements")
+    .select("bgg_id, tier, user_id, score");
 
-  const ratingsByGame = new Map<number, number[]>();
-  if (ratings) {
-    for (const r of ratings) {
-      const existing = ratingsByGame.get(r.bgg_id) ?? [];
-      existing.push(r.rating);
-      ratingsByGame.set(r.bgg_id, existing);
-    }
-  }
+  const gameBggIds = new Set((games ?? []).map((g) => g.bgg_id));
 
-  const gameStats: GameWithStats[] = (games ?? []).map((game) => {
-    const gameRatings = ratingsByGame.get(game.bgg_id) ?? [];
-    const communityAvg =
-      gameRatings.length > 0
-        ? gameRatings.reduce((a, b) => a + b, 0) / gameRatings.length
-        : null;
-    const bggRating = game.bgg_rating ? Number(game.bgg_rating) : null;
-    const difference =
-      communityAvg !== null && bggRating !== null
-        ? communityAvg - bggRating
-        : null;
-
-    return {
-      bggId: game.bgg_id,
-      name: game.name,
-      bggRating,
-      communityAvg,
-      ratingCount: gameRatings.length,
-      difference,
-    };
-  });
-
-  const ratedGames = gameStats.filter((g) => g.communityAvg !== null);
-  const topRated = [...ratedGames].sort(
-    (a, b) => (b.communityAvg ?? 0) - (a.communityAvg ?? 0)
+  const filteredPlacements = (placements ?? []).filter((p) =>
+    gameBggIds.has(p.bgg_id)
   );
-  const biggestDifference = [...ratedGames]
-    .filter((g) => g.difference !== null)
-    .sort((a, b) => Math.abs(b.difference!) - Math.abs(a.difference!));
+
+  const uniqueRankers = new Set(filteredPlacements.map((p) => p.user_id));
 
   const totalGames = games?.length ?? 0;
-  const totalRatings = ratings?.length ?? 0;
-  const overallAvg =
-    totalRatings > 0
-      ? (ratings ?? []).reduce((sum, r) => sum + r.rating, 0) / totalRatings
-      : null;
+  const rankedGames = new Set(filteredPlacements.map((p) => p.bgg_id)).size;
+
+  const avgScoreMap = new Map<number, { total: number; count: number }>();
+  for (const p of filteredPlacements) {
+    if (p.score == null) continue;
+    const entry = avgScoreMap.get(p.bgg_id) ?? { total: 0, count: 0 };
+    entry.total += p.score;
+    entry.count += 1;
+    avgScoreMap.set(p.bgg_id, entry);
+  }
 
   return (
     <div>
-      <h1 className="mb-6 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        Statistics
-      </h1>
-
-      {/* Summary cards */}
-      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <StatCard label="Total Games" value={totalGames.toString()} />
-        <StatCard label="Total Ratings" value={totalRatings.toString()} />
-        <StatCard
-          label="Avg Rating"
-          value={overallAvg ? overallAvg.toFixed(1) : "-"}
-        />
-        <StatCard label="Games Rated" value={ratedGames.length.toString()} />
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+          Statistics
+        </h1>
+        <CategoryToggle category={category} basePath="/statistics" />
       </div>
 
-      {/* Top Rated */}
-      {topRated.length > 0 && (
-        <section className="mb-8">
-          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Top Rated by Community
-          </h2>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-zinc-200 text-left text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
-                  <th className="pb-2 pr-4 font-medium">#</th>
-                  <th className="pb-2 pr-4 font-medium">Game</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Ours</th>
-                  <th className="pb-2 pr-4 text-right font-medium">BGG</th>
-                  <th className="pb-2 text-right font-medium">Ratings</th>
-                </tr>
-              </thead>
-              <tbody>
-                {topRated.slice(0, 20).map((game, i) => (
-                  <tr
-                    key={game.bggId}
-                    className="border-b border-zinc-100 dark:border-zinc-800/50"
-                  >
-                    <td className="py-2 pr-4 text-zinc-400">{i + 1}</td>
-                    <td className="py-2 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
-                      <a
-                        href={`/games/${game.bggId}`}
-                        className="hover:text-blue-600 dark:hover:text-blue-400"
-                      >
-                        {game.name}
-                      </a>
-                    </td>
-                    <td className="py-2 pr-4 text-right font-semibold text-blue-600 dark:text-blue-400">
-                      {game.communityAvg?.toFixed(1)}
-                    </td>
-                    <td className="py-2 pr-4 text-right text-amber-600 dark:text-amber-400">
-                      {game.bggRating?.toFixed(1) ?? "-"}
-                    </td>
-                    <td className="py-2 text-right text-zinc-400">
-                      {game.ratingCount}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
+      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <StatCard label="Total Games" value={totalGames.toString()} />
+        <StatCard label="Games Ranked" value={rankedGames.toString()} />
+        <StatCard label="Rankers" value={uniqueRankers.size.toString()} />
+      </div>
 
-      {/* Biggest Differences */}
-      {biggestDifference.length > 0 && (
+      {games && games.length > 0 ? (() => {
+        const chartGames = games.map((g) => {
+          const entry = avgScoreMap.get(g.bgg_id);
+          return {
+            name: g.name,
+            bggId: g.bgg_id,
+            ourScore: entry ? entry.total / entry.count : null,
+            bggRating: g.bgg_rating ? Number(g.bgg_rating) : null,
+            bggWeight: g.bgg_weight ? Number(g.bgg_weight) : null,
+          };
+        });
+        const scoredChartGames = chartGames
+          .filter((g) => g.ourScore != null)
+          .sort((a, b) => (b.ourScore ?? 0) - (a.ourScore ?? 0));
+
+        const sorted = [...games].sort((a, b) => {
+          const aScore = avgScoreMap.get(a.bgg_id);
+          const bScore = avgScoreMap.get(b.bgg_id);
+          if (aScore && bScore) {
+            return bScore.total / bScore.count - aScore.total / aScore.count;
+          }
+          if (aScore) return -1;
+          if (bScore) return 1;
+          return a.name.localeCompare(b.name);
+        });
+        return (
+        <>
+        <ScoreComparisonChart games={scoredChartGames} />
+        <ComplexityChart games={chartGames} />
         <section>
           <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Biggest Differences vs BGG
+            Games
           </h2>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -148,38 +101,40 @@ export default async function StatisticsPage() {
                   <th className="pb-2 pr-4 font-medium">Game</th>
                   <th className="pb-2 pr-4 text-right font-medium">Ours</th>
                   <th className="pb-2 pr-4 text-right font-medium">BGG</th>
-                  <th className="pb-2 text-right font-medium">Diff</th>
+                  <th className="pb-2 text-right font-medium">Weight</th>
                 </tr>
               </thead>
               <tbody>
-                {biggestDifference.slice(0, 20).map((game) => (
+                {sorted.map((game) => (
                   <tr
-                    key={game.bggId}
+                    key={game.bgg_id}
                     className="border-b border-zinc-100 dark:border-zinc-800/50"
                   >
                     <td className="py-2 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
                       <a
-                        href={`/games/${game.bggId}`}
+                        href={`/games/${game.bgg_id}`}
                         className="hover:text-blue-600 dark:hover:text-blue-400"
                       >
                         {game.name}
                       </a>
                     </td>
                     <td className="py-2 pr-4 text-right font-semibold text-blue-600 dark:text-blue-400">
-                      {game.communityAvg?.toFixed(1)}
+                      {avgScoreMap.has(game.bgg_id)
+                        ? (
+                            avgScoreMap.get(game.bgg_id)!.total /
+                            avgScoreMap.get(game.bgg_id)!.count
+                          ).toFixed(1)
+                        : "-"}
                     </td>
                     <td className="py-2 pr-4 text-right text-amber-600 dark:text-amber-400">
-                      {game.bggRating?.toFixed(1) ?? "-"}
+                      {game.bgg_rating
+                        ? Number(game.bgg_rating).toFixed(1)
+                        : "-"}
                     </td>
-                    <td
-                      className={`py-2 text-right font-semibold ${
-                        game.difference! > 0
-                          ? "text-green-600 dark:text-green-400"
-                          : "text-red-600 dark:text-red-400"
-                      }`}
-                    >
-                      {game.difference! > 0 ? "+" : ""}
-                      {game.difference?.toFixed(1)}
+                    <td className="py-2 text-right text-zinc-500 dark:text-zinc-400">
+                      {game.bgg_weight
+                        ? Number(game.bgg_weight).toFixed(1)
+                        : "-"}
                     </td>
                   </tr>
                 ))}
@@ -187,12 +142,12 @@ export default async function StatisticsPage() {
             </table>
           </div>
         </section>
-      )}
-
-      {totalGames === 0 && (
+        </>
+        );
+      })() : (
         <div className="rounded-lg border border-dashed border-zinc-300 py-16 text-center dark:border-zinc-700">
           <p className="text-zinc-500 dark:text-zinc-400">
-            No statistics yet. Add some games and rate them to see data here.
+            No games yet. Add some games to see statistics here.
           </p>
         </div>
       )}

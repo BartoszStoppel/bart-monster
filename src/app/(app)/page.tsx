@@ -7,27 +7,22 @@ export const dynamic = "force-dynamic";
 export default async function CollectionPage() {
   const supabase = await createClient();
 
-  const { data: games } = await supabase
-    .from("board_games")
-    .select("*")
-    .order("name");
+  const [{ data: games }, { data: placements }] = await Promise.all([
+    supabase.from("board_games").select("*").order("name"),
+    supabase.from("tier_placements").select("bgg_id, score"),
+  ]);
 
-  const { data: ratings } = await supabase
-    .from("game_ratings")
-    .select("bgg_id, rating");
-
-  const avgRatings = new Map<number, number>();
-  if (ratings) {
-    const grouped = new Map<number, number[]>();
-    for (const r of ratings) {
-      const existing = grouped.get(r.bgg_id) ?? [];
-      existing.push(r.rating);
-      grouped.set(r.bgg_id, existing);
-    }
-    for (const [bggId, values] of grouped) {
-      const avg = values.reduce((a, b) => a + b, 0) / values.length;
-      avgRatings.set(bggId, avg);
-    }
+  const avgScoreMap = new Map<number, number>();
+  const scoreAcc = new Map<number, { total: number; count: number }>();
+  for (const p of placements ?? []) {
+    if (p.score == null) continue;
+    const entry = scoreAcc.get(p.bgg_id) ?? { total: 0, count: 0 };
+    entry.total += p.score;
+    entry.count += 1;
+    scoreAcc.set(p.bgg_id, entry);
+  }
+  for (const [bggId, { total, count }] of scoreAcc) {
+    avgScoreMap.set(bggId, total / count);
   }
 
   return (
@@ -52,11 +47,7 @@ export default async function CollectionPage() {
       {games && games.length > 0 ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {games.map((game) => (
-            <GameCard
-              key={game.bgg_id}
-              game={game}
-              communityRating={avgRatings.get(game.bgg_id)}
-            />
+            <GameCard key={game.bgg_id} game={game} avgScore={avgScoreMap.get(game.bgg_id)} />
           ))}
         </div>
       ) : (

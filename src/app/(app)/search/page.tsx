@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { GameSearchBar } from "@/components/game-search-bar";
-import { createClient } from "@/lib/supabase/client";
-import type { BggSearchResult } from "@/lib/bgg/types";
+import type { BggSearchResult, BggGameDetails } from "@/lib/bgg/types";
+import { AddGameForm } from "./add-game-form";
 
 interface AddedGame {
   bggId: number;
@@ -11,74 +12,52 @@ interface AddedGame {
 }
 
 export default function SearchPage() {
-  const [adding, setAdding] = useState<number | null>(null);
+  const [fetching, setFetching] = useState(false);
+  const [gameDetails, setGameDetails] = useState<BggGameDetails | null>(null);
   const [added, setAdded] = useState<AddedGame[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   async function handleSelect(searchResult: BggSearchResult) {
-    setAdding(searchResult.id);
     setError(null);
+    setGameDetails(null);
+    setFetching(true);
 
     const res = await fetch(`/api/bgg/game/${searchResult.id}`);
     if (!res.ok) {
       setError("Failed to fetch game details from BGG");
-      setAdding(null);
+      setFetching(false);
       return;
     }
 
     const { game } = await res.json();
-    const supabase = createClient();
+    setGameDetails(game);
+    setFetching(false);
+  }
 
-    const { error: upsertError } = await supabase.from("board_games").upsert(
-      {
-        bgg_id: game.id,
-        name: game.name,
-        description: game.description,
-        image_url: game.imageUrl,
-        thumbnail_url: game.thumbnailUrl,
-        year_published: game.yearPublished,
-        min_players: game.minPlayers,
-        max_players: game.maxPlayers,
-        playing_time: game.playingTime,
-        min_play_time: game.minPlayTime,
-        max_play_time: game.maxPlayTime,
-        min_age: game.minAge,
-        bgg_rating: game.bggRating,
-        bgg_weight: game.bggWeight,
-        categories: game.categories,
-        mechanics: game.mechanics,
-        fetched_at: new Date().toISOString(),
-      },
-      { onConflict: "bgg_id" }
-    );
+  function handleAdded(bggId: number, name: string) {
+    setGameDetails(null);
+    setAdded((prev) => [...prev, { bggId, name }]);
+  }
 
-    if (upsertError) {
-      setError("Failed to save game");
-      setAdding(null);
-      return;
-    }
+  function handleCancel() {
+    setGameDetails(null);
+  }
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (user) {
-      await supabase.from("user_game_collection").upsert(
-        {
-          user_id: user.id,
-          bgg_id: game.id,
-          owned: true,
-        },
-        { onConflict: "user_id,bgg_id" }
-      );
-    }
-
-    setAdded((prev) => [...prev, { bggId: game.id, name: game.name }]);
-    setAdding(null);
+  function handleError(message: string) {
+    setError(message);
   }
 
   return (
     <div>
+      <Link
+        href="/"
+        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+      >
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
+          <path fillRule="evenodd" d="M14 8a.75.75 0 0 1-.75.75H4.56l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 1.06L4.56 7.25h8.69A.75.75 0 0 1 14 8Z" clipRule="evenodd" />
+        </svg>
+        Back to Collection
+      </Link>
       <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
         Search Games
       </h1>
@@ -88,10 +67,19 @@ export default function SearchPage() {
 
       <GameSearchBar onSelect={handleSelect} />
 
-      {adding !== null && (
+      {fetching && (
         <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
-          Adding game to collection...
+          Fetching game details...
         </div>
+      )}
+
+      {gameDetails && (
+        <AddGameForm
+          game={gameDetails}
+          onAdded={handleAdded}
+          onCancel={handleCancel}
+          onError={handleError}
+        />
       )}
 
       {error && (
