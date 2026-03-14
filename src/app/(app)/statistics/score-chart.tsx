@@ -2,6 +2,7 @@ interface GameScore {
   name: string;
   bggId: number;
   ourScore: number | null;
+  yourScore: number | null;
   bggRating: number | null;
   bggWeight?: number | null;
 }
@@ -11,7 +12,7 @@ interface ScoreChartProps {
 }
 
 /**
- * Side-by-side horizontal bar chart: our score (blue) vs BGG rating (amber).
+ * Side-by-side horizontal bar chart: your score (green), our score (blue), BGG rating (amber).
  * Each game gets one row with overlapping bars for easy comparison.
  */
 export function ScoreComparisonChart({ games }: ScoreChartProps) {
@@ -21,12 +22,13 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
   return (
     <section className="mb-8">
       <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-        Ours vs BGG
+        Yours vs Ours vs BGG
       </h2>
       <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="space-y-4">
           {scored.map((game) => {
             const ours = game.ourScore ?? 0;
+            const yours = game.yourScore ?? 0;
             const bgg = game.bggRating ?? 0;
             const diff = ours - bgg;
             return (
@@ -39,6 +41,14 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
                     {game.name}
                   </a>
                   <div className="flex shrink-0 items-center gap-2 text-xs tabular-nums">
+                    {yours > 0 && (
+                      <>
+                        <span className="font-semibold text-green-600 dark:text-green-400">
+                          {yours.toFixed(1)}
+                        </span>
+                        <span className="text-zinc-300 dark:text-zinc-600">/</span>
+                      </>
+                    )}
                     <span className="font-semibold text-blue-600 dark:text-blue-400">
                       {ours.toFixed(1)}
                     </span>
@@ -70,9 +80,15 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
                     />
                   )}
                   <div
-                    className="absolute inset-y-0 left-0 rounded bg-blue-500 dark:bg-blue-500"
-                    style={{ width: `${(ours / 10) * 100}%`, opacity: 0.8 }}
+                    className="absolute inset-y-0 left-0 rounded bg-blue-500"
+                    style={{ width: `${(ours / 10) * 100}%`, opacity: 0.6 }}
                   />
+                  {yours > 0 && (
+                    <div
+                      className="absolute inset-y-0 left-0 rounded bg-green-500"
+                      style={{ width: `${(yours / 10) * 100}%`, opacity: 0.8 }}
+                    />
+                  )}
                 </div>
               </div>
             );
@@ -80,16 +96,19 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
         </div>
         <div className="mt-4 flex gap-4 text-xs text-zinc-400">
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-5 rounded bg-blue-500 opacity-80" />
-            <span>Our score (1-10)</span>
+            <div className="h-2.5 w-5 rounded bg-green-500 opacity-80" />
+            <span>Yours</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="h-2.5 w-5 rounded bg-blue-500 opacity-60" />
+            <span>Ours</span>
           </div>
           <div className="flex items-center gap-1.5">
             <div className="h-2.5 w-5 rounded bg-amber-400/40 dark:bg-amber-500/25" />
-            <span>BGG rating</span>
+            <span>BGG</span>
           </div>
         </div>
       </div>
     </section>
   );
 }
-

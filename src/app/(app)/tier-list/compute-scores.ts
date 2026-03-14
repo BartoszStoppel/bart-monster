@@ -3,9 +3,6 @@ import type { TierEntry } from "./use-tier-save";
 
 const TIERS: Tier[] = ["S", "A", "B", "C", "D", "F"];
 
-/** Fill order: middle scores first (5, 6, 4, 7, 3, 8, 2, 9, 1, 10). */
-const FILL_ORDER = [5, 4, 6, 3, 7, 2, 8, 1, 9, 0];
-
 /**
  * Extract a flat ranking from tier entries: S left-to-right, then A, ..., F.
  * Returns games in order from best (index 0) to worst.
@@ -16,34 +13,24 @@ export function flatRanking(tiers: TierEntry[]): BoardGame[] {
 }
 
 /**
- * Compute normalized 1–10 scores for N ranked games.
+ * Compute evenly-spaced scores from 10 (best) to 1 (worst).
  *
- * Divides N games into 10 score buckets as evenly as possible.
- * Extra slots go to middle scores first (5, 6, 4, 7, …).
+ * Each game gets a unique decimal score, rounded to one decimal place.
+ * For N games, the step between adjacent games is 9 / (N - 1).
+ * A single game receives a score of 10.
  *
  * Examples:
- * - 10 games → [10, 9, 8, 7, 6, 5, 4, 3, 2, 1]
- * - 11 games → [10, 9, 8, 7, 6, 5, 5, 4, 3, 2, 1]
- * - 20 games → [10, 10, 9, 9, 8, 8, 7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 1, 1]
+ * - 1 game  → [10.0]
+ * - 2 games → [10.0, 1.0]
+ * - 3 games → [10.0, 5.5, 1.0]
+ * - 5 games → [10.0, 7.8, 5.5, 3.2, 1.0]
  */
 export function computeScores(count: number): number[] {
-  const base = Math.floor(count / 10);
-  const remainder = count % 10;
+  if (count === 0) return [];
+  if (count === 1) return [10];
 
-  const bucketSizes = new Array<number>(10).fill(base);
-  for (let i = 0; i < remainder; i++) {
-    bucketSizes[FILL_ORDER[i]]++;
-  }
-
-  const scores: number[] = [];
-  for (let b = 0; b < 10; b++) {
-    const score = 10 - b;
-    for (let j = 0; j < bucketSizes[b]; j++) {
-      scores.push(score);
-    }
-  }
-
-  return scores;
+  const step = 9 / (count - 1);
+  return Array.from({ length: count }, (_, i) =>
+    Math.round((10 - i * step) * 10) / 10
+  );
 }
-
-export const MIN_RANKED_GAMES = 10;

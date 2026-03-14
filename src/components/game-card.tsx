@@ -5,9 +5,10 @@ import type { BoardGame } from "@/types/database";
 interface GameCardProps {
   game: BoardGame;
   avgScore?: number;
+  owned?: boolean;
 }
 
-export function GameCard({ game, avgScore }: GameCardProps) {
+export function GameCard({ game, avgScore, owned }: GameCardProps) {
   const playerRange =
     game.min_players && game.max_players
       ? game.min_players === game.max_players
@@ -21,6 +22,13 @@ export function GameCard({ game, avgScore }: GameCardProps) {
       className="group flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
     >
       <div className="relative aspect-square w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+        {owned && (
+          <div className="absolute top-1.5 right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white shadow-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
+              <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+            </svg>
+          </div>
+        )}
         {game.thumbnail_url ? (
           <Image
             src={game.thumbnail_url}
@@ -61,6 +69,14 @@ export function GameCard({ game, avgScore }: GameCardProps) {
               <span className="text-xs text-zinc-400">BGG</span>
               <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
                 {game.bgg_rating.toFixed(1)}
+              </span>
+            </div>
+          ) : null}
+          {game.bgg_weight ? (
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-zinc-400">Weight</span>
+              <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                {game.bgg_weight.toFixed(1)}
               </span>
             </div>
           ) : null}

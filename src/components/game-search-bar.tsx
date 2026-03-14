@@ -27,8 +27,6 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
 
   useEffect(() => {
     if (query.trim().length < 2) {
-      setResults([]);
-      setShowDropdown(false);
       return;
     }
 
@@ -60,7 +58,14 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
       <input
         type="text"
         value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        onChange={(e) => {
+          const val = e.target.value;
+          setQuery(val);
+          if (val.trim().length < 2) {
+            setResults([]);
+            setShowDropdown(false);
+          }
+        }}
         onFocus={() => results.length > 0 && setShowDropdown(true)}
         placeholder="Search for a board game..."
         className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"

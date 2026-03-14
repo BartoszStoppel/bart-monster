@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { CategoryToggle } from "@/components/category-toggle";
-import { ScoreComparisonChart } from "./score-chart";
 import { ComplexityChart } from "./complexity-chart";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +21,8 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
     .eq("category", category)
     .order("name");
 
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { data: placements } = await supabase
     .from("tier_placements")
     .select("bgg_id, tier, user_id, score");
@@ -38,12 +39,16 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
   const rankedGames = new Set(filteredPlacements.map((p) => p.bgg_id)).size;
 
   const avgScoreMap = new Map<number, { total: number; count: number }>();
+  const yourScoreMap = new Map<number, number>();
   for (const p of filteredPlacements) {
     if (p.score == null) continue;
     const entry = avgScoreMap.get(p.bgg_id) ?? { total: 0, count: 0 };
     entry.total += p.score;
     entry.count += 1;
     avgScoreMap.set(p.bgg_id, entry);
+    if (user && p.user_id === user.id) {
+      yourScoreMap.set(p.bgg_id, p.score);
+    }
   }
 
   return (
@@ -68,14 +73,11 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
             name: g.name,
             bggId: g.bgg_id,
             ourScore: entry ? entry.total / entry.count : null,
+            yourScore: yourScoreMap.get(g.bgg_id) ?? null,
             bggRating: g.bgg_rating ? Number(g.bgg_rating) : null,
             bggWeight: g.bgg_weight ? Number(g.bgg_weight) : null,
           };
         });
-        const scoredChartGames = chartGames
-          .filter((g) => g.ourScore != null)
-          .sort((a, b) => (b.ourScore ?? 0) - (a.ourScore ?? 0));
-
         const sorted = [...games].sort((a, b) => {
           const aScore = avgScoreMap.get(a.bgg_id);
           const bScore = avgScoreMap.get(b.bgg_id);
@@ -88,7 +90,6 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
         });
         return (
         <>
-        <ScoreComparisonChart games={scoredChartGames} />
         <ComplexityChart games={chartGames} />
         <section>
           <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
@@ -99,6 +100,7 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
               <thead>
                 <tr className="border-b border-zinc-200 text-left text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
                   <th className="pb-2 pr-4 font-medium">Game</th>
+                  <th className="pb-2 pr-4 text-right font-medium">Yours</th>
                   <th className="pb-2 pr-4 text-right font-medium">Ours</th>
                   <th className="pb-2 pr-4 text-right font-medium">BGG</th>
                   <th className="pb-2 text-right font-medium">Weight</th>
@@ -117,6 +119,11 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
                       >
                         {game.name}
                       </a>
+                    </td>
+                    <td className="py-2 pr-4 text-right font-semibold text-green-600 dark:text-green-400">
+                      {yourScoreMap.has(game.bgg_id)
+                        ? yourScoreMap.get(game.bgg_id)!.toFixed(1)
+                        : "-"}
                     </td>
                     <td className="py-2 pr-4 text-right font-semibold text-blue-600 dark:text-blue-400">
                       {avgScoreMap.has(game.bgg_id)

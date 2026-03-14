@@ -19,7 +19,7 @@ export function useTierSave() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const save = useCallback(async (tiers: TierEntry[]) => {
+  const save = useCallback(async (tiers: TierEntry[], categoryGameIds: number[]) => {
     setSaving(true);
     setError(null);
 
@@ -63,23 +63,30 @@ export function useTierSave() {
         throw new Error(`Upsert failed: ${upsertError.message}`);
       }
 
-      const rankedBggIds = placements.map((p) => p.bgg_id);
-      const { error: deleteError } = await supabase
-        .from("tier_placements")
-        .delete()
-        .eq("user_id", user.id)
-        .not("bgg_id", "in", `(${rankedBggIds.join(",")})`);
+      const rankedBggIds = new Set(placements.map((p) => p.bgg_id));
+      const unrankedCategoryIds = categoryGameIds.filter(
+        (id) => !rankedBggIds.has(id)
+      );
 
-      if (deleteError) {
-        setError("Failed to clean up old placements");
-        setSaving(false);
-        throw new Error(`Cleanup failed: ${deleteError.message}`);
+      if (unrankedCategoryIds.length > 0) {
+        const { error: deleteError } = await supabase
+          .from("tier_placements")
+          .delete()
+          .eq("user_id", user.id)
+          .in("bgg_id", unrankedCategoryIds);
+
+        if (deleteError) {
+          setError("Failed to clean up old placements");
+          setSaving(false);
+          throw new Error(`Cleanup failed: ${deleteError.message}`);
+        }
       }
     } else {
       const { error: deleteError } = await supabase
         .from("tier_placements")
         .delete()
-        .eq("user_id", user.id);
+        .eq("user_id", user.id)
+        .in("bgg_id", categoryGameIds);
 
       if (deleteError) {
         setError("Failed to clear tier placements");

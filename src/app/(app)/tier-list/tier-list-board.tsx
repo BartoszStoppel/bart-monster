@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo } from "react";
+import { useState, useCallback, useRef, useMemo, useEffect, useId } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -27,7 +27,6 @@ import type { BoardGame, Tier, TierPlacement } from "@/types/database";
 import { GameTile, GameTileOverlay } from "./game-tile";
 import { TierRow } from "./tier-row";
 import { useTierSave } from "./use-tier-save";
-import { MIN_RANKED_GAMES } from "./compute-scores";
 
 const TIERS: Tier[] = ["S", "A", "B", "C", "D", "F"];
 
@@ -157,12 +156,32 @@ export function TierListBoard({
   allPlacements,
   initialCategory,
 }: TierListBoardProps) {
+  const dndId = useId();
   const [category, setCategory] = useState(initialCategory);
   const games = category === "party" ? partyGames : boardGames;
   const placements = useMemo(
     () => filterPlacements(allPlacements, games),
     [allPlacements, games]
   );
+
+  const toggleContainerRef = useRef<HTMLDivElement>(null);
+  const partyBtnRef = useRef<HTMLButtonElement>(null);
+  const boardBtnRef = useRef<HTMLButtonElement>(null);
+  const [pillStyle, setPillStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
+
+  useEffect(() => {
+    const activeRef = category === "party" ? partyBtnRef : boardBtnRef;
+    const el = activeRef.current;
+    const container = toggleContainerRef.current;
+    if (el && container) {
+      const containerRect = container.getBoundingClientRect();
+      const elRect = el.getBoundingClientRect();
+      setPillStyle({
+        left: elRect.left - containerRect.left,
+        width: elRect.width,
+      });
+    }
+  }, [category]);
 
   const savedBuckets = useRef<TierBuckets | null>(null);
   const [buckets, setBuckets] = useState<TierBuckets>(() =>
@@ -171,12 +190,6 @@ export function TierListBoard({
   const [activeGame, setActiveGame] = useState<BoardGame | null>(null);
   const [dirty, setDirty] = useState(false);
   const { save, saving, error: saveError } = useTierSave();
-
-  const rankedCount = useMemo(
-    () => TIERS.reduce((sum, tier) => sum + buckets[tier].length, 0),
-    [buckets]
-  );
-  const canSave = rankedCount >= MIN_RANKED_GAMES;
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -190,14 +203,15 @@ export function TierListBoard({
       tier,
       games: buckets[tier],
     }));
+    const categoryGameIds = games.map((g) => g.bgg_id);
     try {
-      await save(tierEntries);
+      await save(tierEntries, categoryGameIds);
       savedBuckets.current = { ...buckets };
       setDirty(false);
     } catch {
       // error state is set inside useTierSave
     }
-  }, [buckets, save]);
+  }, [buckets, games, save]);
 
   const handleDiscard = useCallback(() => {
     if (savedBuckets.current) {
@@ -313,75 +327,62 @@ export function TierListBoard({
         </div>
       )}
       <div className="mb-4 flex items-center justify-between">
-        <div className="flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
+        <div ref={toggleContainerRef} className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
+          <div
+            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
+            style={{ left: pillStyle.left, width: pillStyle.width }}
+          />
           <button
+            ref={partyBtnRef}
             onClick={() => handleCategoryToggle("party")}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
               category === "party"
-                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-50"
+                ? "text-zinc-900 dark:text-zinc-50"
                 : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
             }`}
           >
             Party Games
           </button>
           <button
+            ref={boardBtnRef}
             onClick={() => handleCategoryToggle("board")}
-            className={`rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
+            className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
               category === "board"
-                ? "bg-white text-zinc-900 shadow-sm dark:bg-zinc-700 dark:text-zinc-50"
+                ? "text-zinc-900 dark:text-zinc-50"
                 : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
             }`}
           >
             Board Games
           </button>
         </div>
-        <div className="flex items-center gap-2">
-          <span className={`text-xs tabular-nums ${canSave ? "text-zinc-400 dark:text-zinc-500" : "text-amber-600 dark:text-amber-400"}`}>
-            {rankedCount}/{MIN_RANKED_GAMES} ranked
-          </span>
-          {dirty && (
-            <>
-              <button
-                onClick={handleDiscard}
-                disabled={saving}
-                className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800"
-              >
-                Discard
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || !canSave}
-                title={canSave ? undefined : `Rank at least ${MIN_RANKED_GAMES} games to save`}
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
-              >
-                {saving ? "Saving..." : "Save"}
-              </button>
-            </>
-          )}
-        </div>
+        {dirty && (
+          <div className="flex items-center gap-2">
+            <button
+              onClick={handleDiscard}
+              disabled={saving}
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800"
+            >
+              Discard
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={saving}
+              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            >
+              {saving ? "Saving..." : "Save"}
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="mb-2 flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
         <span className="font-medium">Best</span>
-        <div className="flex items-center gap-0.5">
-          <div className="h-1 w-16 rounded-full bg-gradient-to-r from-emerald-500 to-rose-500" />
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 16 16"
-            fill="currentColor"
-            className="h-3 w-3 text-rose-500"
-          >
-            <path
-              fillRule="evenodd"
-              d="M2 8a.75.75 0 0 1 .75-.75h8.69L8.22 4.03a.75.75 0 0 1 1.06-1.06l4.5 4.5a.75.75 0 0 1 0 1.06l-4.5 4.5a.75.75 0 0 1-1.06-1.06l3.22-3.22H2.75A.75.75 0 0 1 2 8Z"
-              clipRule="evenodd"
-            />
-          </svg>
-        </div>
+        <div className="h-1 w-16 rounded-full bg-gradient-to-r from-emerald-500 to-rose-500" />
         <span className="font-medium">Worst</span>
       </div>
 
       <DndContext
+        id={dndId}
         sensors={sensors}
         collisionDetection={collisionDetection}
         onDragStart={handleDragStart}

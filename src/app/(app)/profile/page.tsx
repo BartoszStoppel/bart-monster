@@ -1,3 +1,4 @@
+import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ProfileEditor } from "./profile-editor";
@@ -37,9 +38,11 @@ export default async function ProfilePage() {
       <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
         <div className="mb-4 flex items-center gap-4">
           {profile?.avatar_url && (
-            <img
+            <Image
               src={profile.avatar_url}
               alt=""
+              width={64}
+              height={64}
               className="h-16 w-16 rounded-full"
             />
           )}

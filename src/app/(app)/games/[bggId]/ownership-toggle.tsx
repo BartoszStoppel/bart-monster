@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface OwnerInfo {
@@ -28,11 +28,13 @@ export function OwnershipToggle({
   const [owned, setOwned] = useState(initialOwned);
   const [owners, setOwners] = useState(initialOwners);
   const [updating, setUpdating] = useState(false);
+  const [prevInitial, setPrevInitial] = useState({ initialOwned, initialOwners });
 
-  useEffect(() => {
+  if (prevInitial.initialOwned !== initialOwned || prevInitial.initialOwners !== initialOwners) {
+    setPrevInitial({ initialOwned, initialOwners });
     setOwned(initialOwned);
     setOwners(initialOwners);
-  }, [initialOwned, initialOwners]);
+  }
 
   async function handleToggle() {
     const newOwned = !owned;

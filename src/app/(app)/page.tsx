@@ -7,10 +7,24 @@ export const dynamic = "force-dynamic";
 export default async function CollectionPage() {
   const supabase = await createClient();
 
-  const [{ data: games }, { data: placements }] = await Promise.all([
-    supabase.from("board_games").select("*").order("name"),
-    supabase.from("tier_placements").select("bgg_id, score"),
-  ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const [{ data: games }, { data: placements }, { data: owned }] =
+    await Promise.all([
+      supabase.from("board_games").select("*").order("name"),
+      supabase.from("tier_placements").select("bgg_id, score"),
+      user
+        ? supabase
+            .from("user_game_collection")
+            .select("bgg_id")
+            .eq("user_id", user.id)
+            .eq("owned", true)
+        : Promise.resolve({ data: [] as { bgg_id: number }[] }),
+    ]);
+
+  const ownedSet = new Set((owned ?? []).map((o) => o.bgg_id));
 
   const avgScoreMap = new Map<number, number>();
   const scoreAcc = new Map<number, { total: number; count: number }>();
@@ -47,7 +61,7 @@ export default async function CollectionPage() {
       {games && games.length > 0 ? (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {games.map((game) => (
-            <GameCard key={game.bgg_id} game={game} avgScore={avgScoreMap.get(game.bgg_id)} />
+            <GameCard key={game.bgg_id} game={game} avgScore={avgScoreMap.get(game.bgg_id)} owned={ownedSet.has(game.bgg_id)} />
           ))}
         </div>
       ) : (

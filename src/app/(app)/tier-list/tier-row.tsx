@@ -6,16 +6,8 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import type { BoardGame } from "@/types/database";
+import { TIER_COLORS } from "@/lib/tier-colors";
 import { GameTile } from "./game-tile";
-
-const TIER_COLORS: Record<string, string> = {
-  S: "bg-rose-500",
-  A: "bg-orange-500",
-  B: "bg-yellow-500",
-  C: "bg-green-500",
-  D: "bg-blue-500",
-  F: "bg-slate-500",
-};
 
 interface TierRowProps {
   tier: string;

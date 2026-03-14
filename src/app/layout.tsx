@@ -15,6 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Board Game Hub",
   description: "Rate and discover board games with your group",
+  icons: {
+    icon: "/icon.png",
+    apple: "/sanic.jpg",
+  },
 };
 
 export default function RootLayout({
