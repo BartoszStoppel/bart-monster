@@ -166,12 +166,12 @@ export function SpinnerWheel({
     // The wheel rotates, pointer is fixed at top (-PI/2)
     // We want: rotation + angleToTarget ≡ -PI/2 (mod 2PI)
     // So final rotation = -PI/2 - angleToTarget
-    const extraSpins = (10 + Math.floor(Math.random() * 6)) * Math.PI * 2;
+    const extraSpins = (20 + Math.floor(Math.random() * 10)) * Math.PI * 2;
     const finalAngle = -Math.PI / 2 - angleToTarget + extraSpins;
 
     const startAngle = angleRef.current;
     const totalSpin = finalAngle - startAngle;
-    const duration = 7000;
+    const duration = 10000;
     const startTime = performance.now();
 
     function animate(now: number) {
