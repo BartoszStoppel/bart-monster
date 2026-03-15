@@ -73,6 +73,29 @@ export function parseSearchResults(
   }));
 }
 
+export interface BggThingSummary {
+  id: number;
+  thumbnailUrl: string;
+  minPlayers: number;
+  maxPlayers: number;
+}
+
+export function parseThingSummaries(
+  parsed: { items?: { item?: BggXmlThingItem | BggXmlThingItem[] } }
+): BggThingSummary[] {
+  const items = parsed?.items?.item;
+  if (!items) return [];
+
+  const list = Array.isArray(items) ? items : [items];
+
+  return list.map((item) => ({
+    id: parseInt(item["@_id"], 10),
+    thumbnailUrl: item.thumbnail ?? "",
+    minPlayers: parseInt(item.minplayers?.["@_value"] ?? "0", 10),
+    maxPlayers: parseInt(item.maxplayers?.["@_value"] ?? "0", 10),
+  }));
+}
+
 export function parseGameDetails(
   parsed: { items?: { item?: BggXmlThingItem | BggXmlThingItem[] } }
 ): BggGameDetails | null {

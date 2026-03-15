@@ -2,6 +2,9 @@ export interface BggSearchResult {
   id: number;
   name: string;
   yearPublished: number | null;
+  thumbnailUrl?: string;
+  minPlayers?: number;
+  maxPlayers?: number;
 }
 
 export interface BggGameDetails {

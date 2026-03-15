@@ -63,13 +63,13 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
   return (
     <div className="mx-auto max-w-3xl">
       <div className="mb-8 flex flex-col gap-6 sm:flex-row">
-        {game.image_url && (
+        {(game.image_url || game.thumbnail_url) && (
           <div className="relative h-64 w-48 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
             <Image
-              src={game.image_url}
+              src={(game.image_url || game.thumbnail_url)!}
               alt={game.name}
               fill
-              className="object-cover"
+              className="object-contain"
               sizes="192px"
             />
           </div>

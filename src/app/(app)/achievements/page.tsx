@@ -13,7 +13,21 @@ interface AchievementDisplay {
   title: string;
   description: string;
   icon: string;
-  holder: AchievementHolder | null;
+  holders: AchievementHolder[];
+}
+
+const PLACE_LABELS = ["1st", "2nd", "3rd"];
+const PLACE_COLORS = [
+  "text-amber-600 dark:text-amber-400",
+  "text-zinc-400 dark:text-zinc-500",
+  "text-orange-700 dark:text-orange-500",
+];
+
+interface BountyDisplay {
+  title: string;
+  description: string;
+  icon: string;
+  claimedBy: { display_name: string; avatar_url: string | null } | null;
 }
 
 export default async function AchievementsPage() {
@@ -48,17 +62,17 @@ export default async function AchievementsPage() {
       title: achievement.title,
       description: achievement.description,
       icon: achievement.icon,
-      holder: profile
-        ? {
+      holders: profile
+        ? [{
             display_name: profile.display_name,
             avatar_url: profile.avatar_url,
             detail: award?.detail ?? null,
-          }
-        : null,
+          }]
+        : [],
     });
   }
 
-  // --- Computed: Board Game Collector ---
+  // --- Computed: Board Game Collector (top 3) ---
   const { data: ownership } = await supabase
     .from("user_game_collection")
     .select("user_id, owned");
@@ -69,24 +83,39 @@ export default async function AchievementsPage() {
     countByUser.set(row.user_id, (countByUser.get(row.user_id) ?? 0) + 1);
   }
 
-  const topCollector = [...countByUser.entries()]
-    .sort((a, b) => b[1] - a[1])[0];
-
-  const collectorProfile = topCollector
-    ? profileMap.get(topCollector[0])
-    : null;
+  const topCollectors = [...countByUser.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3);
 
   achievements.push({
     title: "Board Game Collector",
     description: "Own the most board games in the group",
     icon: "🏆",
-    holder: collectorProfile
-      ? {
-          display_name: collectorProfile.display_name,
-          avatar_url: collectorProfile.avatar_url,
-          detail: `${topCollector[1]} ${topCollector[1] === 1 ? "game" : "games"} owned`,
-        }
-      : null,
+    holders: topCollectors.map(([userId, count]) => {
+      const profile = profileMap.get(userId);
+      return {
+        display_name: profile?.display_name ?? "Unknown",
+        avatar_url: profile?.avatar_url ?? null,
+        detail: `${count} ${count === 1 ? "game" : "games"}`,
+      };
+    }),
+  });
+
+  // --- Bounties ---
+  const { data: dbBounties } = await supabase
+    .from("bounties")
+    .select("title, description, icon, claimed_by");
+
+  const bounties: BountyDisplay[] = (dbBounties ?? []).map((b) => {
+    const profile = b.claimed_by ? profileMap.get(b.claimed_by) : null;
+    return {
+      title: b.title,
+      description: b.description,
+      icon: b.icon,
+      claimedBy: profile
+        ? { display_name: profile.display_name, avatar_url: profile.avatar_url }
+        : null,
+    };
   });
 
   return (
@@ -95,9 +124,22 @@ export default async function AchievementsPage() {
         Achievements
       </h1>
 
-      <div className="space-y-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {achievements.map((a) => (
           <AchievementCard key={a.title} {...a} />
+        ))}
+      </div>
+
+      <h2 className="mb-4 mt-10 text-xl font-bold text-zinc-900 dark:text-zinc-50">
+        Bounties
+      </h2>
+      <p className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+        Open challenges — be the first to claim one
+      </p>
+
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {bounties.map((b) => (
+          <BountyCard key={b.title} {...b} />
         ))}
       </div>
     </div>
@@ -108,7 +150,7 @@ function AchievementCard({
   title,
   description,
   icon,
-  holder,
+  holders,
 }: AchievementDisplay) {
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
@@ -124,11 +166,69 @@ function AchievementCard({
             {description}
           </p>
 
-          {holder ? (
+          {holders.length > 0 ? (
+            <div className="mt-3 space-y-2">
+              {holders.map((holder, i) => (
+                <div key={holder.display_name} className="flex items-center gap-2">
+                  {holders.length > 1 && (
+                    <span className={`text-xs font-bold ${PLACE_COLORS[i] ?? "text-zinc-400"}`}>
+                      {PLACE_LABELS[i] ?? `${i + 1}th`}
+                    </span>
+                  )}
+                  {holder.avatar_url && (
+                    <Image
+                      src={holder.avatar_url}
+                      alt=""
+                      width={24}
+                      height={24}
+                      className="h-6 w-6 rounded-full"
+                    />
+                  )}
+                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                    {holder.display_name}
+                  </span>
+                  {holder.detail && (
+                    <span className="text-sm text-zinc-500 dark:text-zinc-400">
+                      — {holder.detail}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="mt-3 text-sm italic text-zinc-400 dark:text-zinc-500">
+              No one has claimed this yet
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function BountyCard({ title, description, icon, claimedBy }: BountyDisplay) {
+  return (
+    <div className={`rounded-lg border p-6 ${
+      claimedBy
+        ? "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
+        : "border-dashed border-zinc-300 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/50"
+    }`}>
+      <div className="flex items-start gap-4">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 text-2xl dark:bg-red-900/30">
+          {icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            {title}
+          </h3>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            {description}
+          </p>
+          {claimedBy ? (
             <div className="mt-3 flex items-center gap-2">
-              {holder.avatar_url && (
+              {claimedBy.avatar_url && (
                 <Image
-                  src={holder.avatar_url}
+                  src={claimedBy.avatar_url}
                   alt=""
                   width={24}
                   height={24}
@@ -136,17 +236,15 @@ function AchievementCard({
                 />
               )}
               <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                {holder.display_name}
+                {claimedBy.display_name}
               </span>
-              {holder.detail && (
-                <span className="text-sm text-zinc-500 dark:text-zinc-400">
-                  — {holder.detail}
-                </span>
-              )}
+              <span className="text-xs font-medium text-green-600 dark:text-green-400">
+                Claimed
+              </span>
             </div>
           ) : (
-            <p className="mt-3 text-sm italic text-zinc-400 dark:text-zinc-500">
-              No one has claimed this yet
+            <p className="mt-3 text-sm font-medium text-red-500 dark:text-red-400">
+              Unclaimed
             </p>
           )}
         </div>

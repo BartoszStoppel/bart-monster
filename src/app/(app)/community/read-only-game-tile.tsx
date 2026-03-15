@@ -6,17 +6,19 @@ interface ReadOnlyGameTileProps {
 }
 
 export function ReadOnlyGameTile({ game }: ReadOnlyGameTileProps) {
+  const imageUrl = game.image_url || game.thumbnail_url;
+
   return (
     <div
       title={game.name}
       className="relative h-16 w-16 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800"
     >
-      {game.thumbnail_url ? (
+      {imageUrl ? (
         <Image
-          src={game.thumbnail_url}
+          src={imageUrl}
           alt={game.name}
           fill
-          className="object-cover"
+          className="object-contain"
           sizes="64px"
         />
       ) : (

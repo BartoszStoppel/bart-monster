@@ -1,6 +1,7 @@
 import { XMLParser } from "fast-xml-parser";
-import { parseSearchResults, parseGameDetails } from "./parser";
+import { parseSearchResults, parseGameDetails, parseThingSummaries } from "./parser";
 import type { BggSearchResult, BggGameDetails } from "./types";
+import type { BggThingSummary } from "./parser";
 
 const BGG_BASE_URL = "https://boardgamegeek.com/xmlapi2";
 
@@ -28,6 +29,28 @@ export async function searchGames(query: string): Promise<BggSearchResult[]> {
   const xml = await response.text();
   const parsed = parser.parse(xml);
   return parseSearchResults(parsed);
+}
+
+/**
+ * Fetch thumbnail and player count for multiple BGG IDs in a single request.
+ */
+export async function getThingSummaries(ids: number[]): Promise<BggThingSummary[]> {
+  if (ids.length === 0) return [];
+
+  const url = `${BGG_BASE_URL}/thing?id=${ids.join(",")}&type=boardgame`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${process.env.BGG_API_TOKEN}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`BGG batch fetch failed: ${response.status}`);
+  }
+
+  const xml = await response.text();
+  const parsed = parser.parse(xml);
+  return parseThingSummaries(parsed);
 }
 
 /**

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
@@ -9,6 +10,7 @@ import type { User } from "@supabase/supabase-js";
 const NAV_LINKS = [
   { href: "/", label: "Collection" },
   { href: "/tier-list", label: "Tier List" },
+  { href: "/picker", label: "Picker" },
   { href: "/community", label: "Community" },
   { href: "/achievements", label: "Achievements" },
   { href: "/statistics", label: "Statistics" },
@@ -92,10 +94,20 @@ export function Nav() {
 
         {/* User info */}
         {user && (
-          <div className="flex shrink-0 items-center gap-3 pl-4">
+          <div className="flex shrink-0 items-center gap-2 pl-4">
             <span className="hidden text-sm text-zinc-500 dark:text-zinc-400 sm:block">
               {user.user_metadata.full_name ?? user.email}
             </span>
+            {user.user_metadata.avatar_url && (
+              <Image
+                src={user.user_metadata.avatar_url as string}
+                alt=""
+                width={24}
+                height={24}
+                className="rounded-full"
+                referrerPolicy="no-referrer"
+              />
+            )}
             <button
               onClick={handleSignOut}
               className="text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"

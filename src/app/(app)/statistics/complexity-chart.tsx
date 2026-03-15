@@ -32,17 +32,7 @@ function yPos(v: number) {
   return PAD.top + PLOT_H - ((v - Y_MIN) / (Y_MAX - Y_MIN)) * PLOT_H;
 }
 
-/** Round down to nearest 0.5 */
-function floorHalf(v: number) {
-  return Math.floor(v * 2) / 2;
-}
-
-/** Round up to nearest 0.5 */
-function ceilHalf(v: number) {
-  return Math.ceil(v * 2) / 2;
-}
-
-/** Generate nice tick values between min and max with adaptive step size. */
+/** Generate nice tick values with adaptive step size. */
 function generateXTicks(xMin: number, xMax: number): number[] {
   const range = xMax - xMin;
   let step: number;
@@ -60,59 +50,35 @@ function generateXTicks(xMin: number, xMax: number): number[] {
 }
 
 /**
- * LOWESS smoothing — locally weighted regression.
- * For each evaluation point, fits a weighted linear regression using a
- * tri-cube kernel over the nearest `bandwidth` fraction of data points.
+ * Gaussian-weighted moving average.
+ * Evaluates a smooth curve by computing weighted means using a Gaussian kernel.
  */
-function lowess(
+function gaussianSmooth(
   xs: number[],
   ys: number[],
   steps: number,
-  bandwidth: number,
-  dataXs: number[]
+  sigma: number
 ): { x: number; y: number }[] {
   const n = xs.length;
   if (n < 2) return [];
-  const k = Math.max(2, Math.ceil(n * bandwidth));
 
-  const xLo = Math.min(...dataXs);
-  const xHi = Math.max(...dataXs);
+  const xLo = Math.min(...xs);
+  const xHi = Math.max(...xs);
 
   const result: { x: number; y: number }[] = [];
   for (let i = 0; i <= steps; i++) {
     const xEval = xLo + (i / steps) * (xHi - xLo);
-
-    const dists = xs.map((xi, j) => ({ dist: Math.abs(xi - xEval), j }));
-    dists.sort((a, b) => a.dist - b.dist);
-    const neighbors = dists.slice(0, k);
-    const maxDist = neighbors[neighbors.length - 1].dist || 1;
-
     let sumW = 0;
-    let sumWx = 0;
     let sumWy = 0;
-    let sumWxx = 0;
-    let sumWxy = 0;
 
-    for (const { dist, j } of neighbors) {
-      const u = dist / (maxDist * 1.001);
-      const w = Math.pow(1 - u * u * u, 3);
+    for (let j = 0; j < n; j++) {
+      const d = (xs[j] - xEval) / sigma;
+      const w = Math.exp(-0.5 * d * d);
       sumW += w;
-      sumWx += w * xs[j];
       sumWy += w * ys[j];
-      sumWxx += w * xs[j] * xs[j];
-      sumWxy += w * xs[j] * ys[j];
     }
 
-    const denom = sumW * sumWxx - sumWx * sumWx;
-    let yEval: number;
-    if (Math.abs(denom) < 1e-10) {
-      yEval = sumWy / sumW;
-    } else {
-      const b = (sumW * sumWxy - sumWx * sumWy) / denom;
-      const a = (sumWy - b * sumWx) / sumW;
-      yEval = a + b * xEval;
-    }
-
+    const yEval = sumW > 0 ? sumWy / sumW : 0;
     result.push({ x: xEval, y: Math.max(Y_MIN, Math.min(Y_MAX, yEval)) });
   }
   return result;
@@ -142,11 +108,13 @@ function buildSmoothPath(
 }
 
 /**
- * Scatter plot: X = BGG complexity, Y = score (1-10).
- * X-axis adapts to the data range. Three series with LOWESS trends.
+ * Scatter plot: X = BGG complexity (dynamic), Y = score (1-10).
+ * Three series: Yours (green), Ours (blue), BGG (orange).
+ * Clickable legend to toggle series visibility.
  */
 export function ComplexityChart({ games }: ComplexityChartProps) {
   const [hovered, setHovered] = useState<string | null>(null);
+  const [visible, setVisible] = useState({ yours: true, ours: true, bgg: true });
 
   const ourGames = games.filter(
     (g) => g.ourScore != null && g.bggWeight != null && g.bggWeight > 0
@@ -158,13 +126,14 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
     (g) => g.bggRating != null && g.bggWeight != null && g.bggWeight > 0
   );
 
-  const allWeights = [
+  const weightsKey = [
     ...ourGames.map((g) => g.bggWeight!),
     ...yourGames.map((g) => g.bggWeight!),
     ...bggGames.map((g) => g.bggWeight!),
-  ];
+  ].join(",");
 
   const { xMin, xMax, xTicks, toX } = useMemo(() => {
+    const allWeights = weightsKey.split(",").filter(Boolean).map(Number);
     if (allWeights.length === 0) {
       return {
         xMin: 1,
@@ -183,28 +152,24 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
     const fn = (v: number) =>
       PAD.left + ((v - min) / (max - min)) * PLOT_W;
     return { xMin: min, xMax: max, xTicks: ticks, toX: fn };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [allWeights.join(",")]);
+  }, [weightsKey]);
 
   if (ourGames.length === 0 && bggGames.length === 0) return null;
 
-  const bw = 0.85;
-  const steps = 60;
-
-  const ourXs = ourGames.map((g) => g.bggWeight!);
-  const yourXs = yourGames.map((g) => g.bggWeight!);
-  const bggXs = bggGames.map((g) => g.bggWeight!);
+  const steps = 80;
+  const range = xMax - xMin || 1;
+  const sigma = range * 0.4;
 
   const ourTrend = buildSmoothPath(
-    lowess(ourXs, ourGames.map((g) => g.ourScore!), steps, bw, ourXs),
+    gaussianSmooth(ourGames.map((g) => g.bggWeight!), ourGames.map((g) => g.ourScore!), steps, sigma),
     toX
   );
   const yourTrend = buildSmoothPath(
-    lowess(yourXs, yourGames.map((g) => g.yourScore!), steps, bw, yourXs),
+    gaussianSmooth(yourGames.map((g) => g.bggWeight!), yourGames.map((g) => g.yourScore!), steps, sigma),
     toX
   );
   const bggTrend = buildSmoothPath(
-    lowess(bggXs, bggGames.map((g) => g.bggRating!), steps, bw, bggXs),
+    gaussianSmooth(bggGames.map((g) => g.bggWeight!), bggGames.map((g) => g.bggRating!), steps, sigma),
     toX
   );
 
@@ -287,8 +252,8 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             Score
           </text>
 
-          {/* LOWESS trend lines */}
-          {bggTrend && (
+          {/* Trend lines */}
+          {visible.bgg && bggTrend && (
             <path
               d={bggTrend}
               fill="none"
@@ -299,7 +264,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               strokeLinejoin="round"
             />
           )}
-          {ourTrend && (
+          {visible.ours && ourTrend && (
             <path
               d={ourTrend}
               fill="none"
@@ -310,7 +275,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               strokeLinejoin="round"
             />
           )}
-          {yourTrend && (
+          {visible.yours && yourTrend && (
             <path
               d={yourTrend}
               fill="none"
@@ -323,24 +288,18 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
           )}
 
           {/* BGG dots (orange) */}
-          {bggGames.map((g) => {
+          {visible.bgg && bggGames.map((g) => {
             const cx = toX(g.bggWeight!);
             const cy = yPos(g.bggRating!);
             const key = `bgg-${g.bggId}`;
             const active = hovered === key;
             return (
               <a key={key} href={`/games/${g.bggId}`}>
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={8}
-                  fill="transparent"
+                <circle cx={cx} cy={cy} r={8} fill="transparent"
                   onMouseEnter={() => setHovered(key)}
                   onTouchStart={() => setHovered(key)}
                 />
-                <circle
-                  cx={cx}
-                  cy={cy}
+                <circle cx={cx} cy={cy}
                   r={active ? DOT_R_HOVER : DOT_R}
                   className="fill-orange-500 dark:fill-orange-400"
                   opacity={active ? 1 : 0.7}
@@ -350,24 +309,18 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
           })}
 
           {/* Our dots (blue) */}
-          {ourGames.map((g) => {
+          {visible.ours && ourGames.map((g) => {
             const cx = toX(g.bggWeight!);
             const cy = yPos(g.ourScore!);
             const key = `our-${g.bggId}`;
             const active = hovered === key;
             return (
               <a key={key} href={`/games/${g.bggId}`}>
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={8}
-                  fill="transparent"
+                <circle cx={cx} cy={cy} r={8} fill="transparent"
                   onMouseEnter={() => setHovered(key)}
                   onTouchStart={() => setHovered(key)}
                 />
-                <circle
-                  cx={cx}
-                  cy={cy}
+                <circle cx={cx} cy={cy}
                   r={active ? DOT_R_HOVER : DOT_R}
                   className="fill-blue-500 dark:fill-blue-400"
                   opacity={active ? 1 : 0.75}
@@ -377,24 +330,18 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
           })}
 
           {/* Your dots (green) */}
-          {yourGames.map((g) => {
+          {visible.yours && yourGames.map((g) => {
             const cx = toX(g.bggWeight!);
             const cy = yPos(g.yourScore!);
             const key = `your-${g.bggId}`;
             const active = hovered === key;
             return (
               <a key={key} href={`/games/${g.bggId}`}>
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={8}
-                  fill="transparent"
+                <circle cx={cx} cy={cy} r={8} fill="transparent"
                   onMouseEnter={() => setHovered(key)}
                   onTouchStart={() => setHovered(key)}
                 />
-                <circle
-                  cx={cx}
-                  cy={cy}
+                <circle cx={cx} cy={cy}
                   r={active ? DOT_R_HOVER : DOT_R}
                   className="fill-green-500 dark:fill-green-400"
                   opacity={active ? 1 : 0.8}
@@ -427,16 +374,10 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             return (
               <g pointerEvents="none">
                 <rect
-                  x={tx}
-                  y={cy - 8}
-                  width={labelW}
-                  height={16}
-                  rx={2}
+                  x={tx} y={cy - 8} width={labelW} height={16} rx={2}
                   className="fill-zinc-800/90 dark:fill-zinc-200/90"
                 />
-                <text
-                  x={tx + 5}
-                  y={cy + 2}
+                <text x={tx + 5} y={cy + 2}
                   className="fill-white text-[7px] dark:fill-zinc-900"
                 >
                   {label}
@@ -445,14 +386,39 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             );
           })()}
 
-          {/* Legend */}
-          <g>
-            <circle cx={W - PAD.right - 108} cy={PAD.top - 10} r={2} className="fill-green-500" />
-            <text x={W - PAD.right - 103} y={PAD.top - 7.5} className="fill-zinc-400 text-[7px]">Yours</text>
-            <circle cx={W - PAD.right - 74} cy={PAD.top - 10} r={2} className="fill-blue-500" />
-            <text x={W - PAD.right - 69} y={PAD.top - 7.5} className="fill-zinc-400 text-[7px]">Ours</text>
-            <circle cx={W - PAD.right - 44} cy={PAD.top - 10} r={2} className="fill-orange-500" />
-            <text x={W - PAD.right - 39} y={PAD.top - 7.5} className="fill-zinc-400 text-[7px]">BGG</text>
+          {/* Legend (clickable toggles) */}
+          <g
+            className="cursor-pointer"
+            onClick={() => setVisible((v) => ({ ...v, yours: !v.yours }))}
+          >
+            <circle cx={W - PAD.right - 108} cy={PAD.top - 10} r={2}
+              className="fill-green-500" opacity={visible.yours ? 1 : 0.25}
+            />
+            <text x={W - PAD.right - 103} y={PAD.top - 7.5}
+              className="fill-zinc-400 text-[7px]" opacity={visible.yours ? 1 : 0.35}
+            >Yours</text>
+          </g>
+          <g
+            className="cursor-pointer"
+            onClick={() => setVisible((v) => ({ ...v, ours: !v.ours }))}
+          >
+            <circle cx={W - PAD.right - 74} cy={PAD.top - 10} r={2}
+              className="fill-blue-500" opacity={visible.ours ? 1 : 0.25}
+            />
+            <text x={W - PAD.right - 69} y={PAD.top - 7.5}
+              className="fill-zinc-400 text-[7px]" opacity={visible.ours ? 1 : 0.35}
+            >Ours</text>
+          </g>
+          <g
+            className="cursor-pointer"
+            onClick={() => setVisible((v) => ({ ...v, bgg: !v.bgg }))}
+          >
+            <circle cx={W - PAD.right - 44} cy={PAD.top - 10} r={2}
+              className="fill-orange-500" opacity={visible.bgg ? 1 : 0.25}
+            />
+            <text x={W - PAD.right - 39} y={PAD.top - 7.5}
+              className="fill-zinc-400 text-[7px]" opacity={visible.bgg ? 1 : 0.35}
+            >BGG</text>
           </g>
         </svg>
       </div>

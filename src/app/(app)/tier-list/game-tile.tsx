@@ -1,5 +1,6 @@
 "use client";
 
+import { useRef } from "react";
 import Image from "next/image";
 import { useSortable, defaultAnimateLayoutChanges } from "@dnd-kit/sortable";
 import type { AnimateLayoutChanges } from "@dnd-kit/sortable";
@@ -12,9 +13,13 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) =>
 interface GameTileProps {
   game: BoardGame;
   overlay?: boolean;
+  isSelected?: boolean;
+  onTileTap?: (bggId: number) => void;
 }
 
-export function GameTile({ game, overlay }: GameTileProps) {
+export function GameTile({ game, overlay, isSelected, onTileTap }: GameTileProps) {
+  const tapRef = useRef<{ x: number; y: number } | null>(null);
+
   const {
     attributes,
     listeners,
@@ -29,16 +34,35 @@ export function GameTile({ game, overlay }: GameTileProps) {
     transition: transition ?? "transform 200ms ease",
   };
 
+  function handlePointerDown(e: React.PointerEvent) {
+    tapRef.current = { x: e.clientX, y: e.clientY };
+    listeners?.onPointerDown?.(e);
+  }
+
+  function handlePointerUp(e: React.PointerEvent) {
+    if (!tapRef.current) return;
+    const dx = Math.abs(e.clientX - tapRef.current.x);
+    const dy = Math.abs(e.clientY - tapRef.current.y);
+    tapRef.current = null;
+    if (dx < 5 && dy < 5 && onTileTap) {
+      onTileTap(game.bgg_id);
+    }
+  }
+
   return (
     <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
       title={game.name}
       className={`relative h-16 w-16 shrink-0 cursor-grab overflow-hidden rounded border border-zinc-200 bg-zinc-100 active:cursor-grabbing dark:border-zinc-700 dark:bg-zinc-800 ${
         isDragging && !overlay ? "opacity-30" : ""
-      } ${overlay ? "shadow-lg ring-2 ring-blue-500" : ""}`}
+      } ${overlay ? "shadow-lg ring-2 ring-blue-500" : ""} ${
+        isSelected ? "ring-2 ring-amber-400 scale-110 z-10" : ""
+      }`}
     >
       <TileImage game={game} />
     </div>
@@ -61,13 +85,14 @@ export function GameTileOverlay({ game }: GameTileOverlayProps) {
 }
 
 function TileImage({ game }: { game: BoardGame }) {
-  if (game.thumbnail_url) {
+  const imageUrl = game.image_url || game.thumbnail_url;
+  if (imageUrl) {
     return (
       <Image
-        src={game.thumbnail_url}
+        src={imageUrl}
         alt={game.name}
         fill
-        className="object-cover"
+        className="object-contain"
         sizes="64px"
         draggable={false}
       />

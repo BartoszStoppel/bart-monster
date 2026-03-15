@@ -16,11 +16,14 @@ export function GameCard({ game, avgScore, owned }: GameCardProps) {
         : `${game.min_players}-${game.max_players}`
       : null;
 
+  const imageUrl = game.image_url || game.thumbnail_url;
+
   return (
     <Link
       href={`/games/${game.bgg_id}`}
-      className="group flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
+      className="group relative flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900"
     >
+      {/* Image */}
       <div className="relative aspect-square w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
         {owned && (
           <div className="absolute top-1.5 right-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-green-500 text-white shadow-sm">
@@ -29,56 +32,61 @@ export function GameCard({ game, avgScore, owned }: GameCardProps) {
             </svg>
           </div>
         )}
-        {game.thumbnail_url ? (
+        {imageUrl ? (
           <Image
-            src={game.thumbnail_url}
+            src={imageUrl}
             alt={game.name}
             fill
-            className="object-cover transition-transform group-hover:scale-105"
-            sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
+            className="object-contain transition-transform group-hover:scale-105"
+            sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-zinc-400">
             No image
           </div>
         )}
+
+        {/* Score overlays on image */}
+        <div className="absolute bottom-1.5 left-1.5 flex flex-col gap-0.5">
+          {avgScore != null && (
+            <div className="flex items-center gap-1 rounded-md bg-blue-600 px-1.5 py-0.5 shadow">
+              <span className="text-[9px] font-medium text-blue-200">Ours</span>
+              <span className="text-xs font-bold text-white">{avgScore.toFixed(1)}</span>
+            </div>
+          )}
+          {game.bgg_rating ? (
+            <div className="flex items-center gap-1 rounded-md bg-orange-500 px-1.5 py-0.5 shadow">
+              <span className="text-[9px] font-medium text-orange-200">BGG</span>
+              <span className="text-xs font-bold text-white">{game.bgg_rating.toFixed(1)}</span>
+            </div>
+          ) : null}
+        </div>
       </div>
 
-      <div className="flex flex-1 flex-col gap-1 p-3">
-        <h3 className="line-clamp-2 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+      {/* Info */}
+      <div className="p-2">
+        <h3 className="truncate text-xs font-semibold text-zinc-900 dark:text-zinc-50">
           {game.name}
         </h3>
-
-        <div className="flex flex-wrap gap-2 text-xs text-zinc-500 dark:text-zinc-400">
-          {game.year_published ? <span>{game.year_published}</span> : null}
-          {playerRange ? <span>{playerRange} players</span> : null}
-          {game.playing_time ? <span>{game.playing_time} min</span> : null}
-        </div>
-
-        <div className="mt-auto flex items-center gap-3 pt-2">
-          {avgScore != null ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-zinc-400">Ours</span>
-              <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                {avgScore.toFixed(1)}
-              </span>
-            </div>
+        <div className="mt-0.5 flex items-center gap-1.5 text-[10px] text-zinc-400 dark:text-zinc-500">
+          {game.year_published ? <span>♦ {game.year_published}</span> : null}
+          {playerRange ? (
+            <>
+              <span className="text-zinc-300 dark:text-zinc-600">·</span>
+              <span>♟ {playerRange}</span>
+            </>
           ) : null}
-          {game.bgg_rating ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-zinc-400">BGG</span>
-              <span className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-                {game.bgg_rating.toFixed(1)}
-              </span>
-            </div>
+          {game.playing_time ? (
+            <>
+              <span className="text-zinc-300 dark:text-zinc-600">·</span>
+              <span>⏱ {game.playing_time}m</span>
+            </>
           ) : null}
           {game.bgg_weight ? (
-            <div className="flex items-center gap-1">
-              <span className="text-xs text-zinc-400">Weight</span>
-              <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
-                {game.bgg_weight.toFixed(1)}
-              </span>
-            </div>
+            <>
+              <span className="text-zinc-300 dark:text-zinc-600">·</span>
+              <span>⚖ {game.bgg_weight.toFixed(1)}</span>
+            </>
           ) : null}
         </div>
       </div>

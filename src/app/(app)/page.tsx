@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
-import { GameCard } from "@/components/game-card";
 import Link from "next/link";
+import { SortableGameGrid } from "./sortable-game-grid";
 
 export const dynamic = "force-dynamic";
 
@@ -59,11 +59,11 @@ export default async function CollectionPage() {
       </div>
 
       {games && games.length > 0 ? (
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-          {games.map((game) => (
-            <GameCard key={game.bgg_id} game={game} avgScore={avgScoreMap.get(game.bgg_id)} owned={ownedSet.has(game.bgg_id)} />
-          ))}
-        </div>
+        <SortableGameGrid
+          games={games}
+          avgScoreMap={Object.fromEntries(avgScoreMap)}
+          ownedSet={[...ownedSet]}
+        />
       ) : (
         <div className="rounded-lg border border-dashed border-zinc-300 py-16 text-center dark:border-zinc-700">
           <p className="text-zinc-500 dark:text-zinc-400">

@@ -106,7 +106,17 @@ function findContainer(
   return null;
 }
 
-function UnplayedRow({ games }: { games: BoardGame[] }) {
+function UnplayedRow({
+  games,
+  selectedBggId,
+  onTileTap,
+  onTierTap,
+}: {
+  games: BoardGame[];
+  selectedBggId: number | null;
+  onTileTap: (bggId: number) => void;
+  onTierTap: (tier: Tier | "unplayed") => void;
+}) {
   const { setNodeRef, isOver } = useDroppable({ id: "tier-unplayed" });
   const gameIds = games.map((g) => g.bgg_id);
 
@@ -114,10 +124,10 @@ function UnplayedRow({ games }: { games: BoardGame[] }) {
     <div
       className={`mt-4 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 ${
         isOver ? "bg-zinc-100 dark:bg-zinc-800/50" : ""
-      }`}
+      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-zinc-800/30" : ""}`}
     >
       <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-        Unplayed — drag games into tiers above
+        Unplayed — tap to select, then tap to place
       </div>
       <SortableContext
         id="tier-unplayed"
@@ -127,9 +137,17 @@ function UnplayedRow({ games }: { games: BoardGame[] }) {
         <div
           ref={setNodeRef}
           className="flex min-h-[4.5rem] flex-wrap items-center gap-1 px-3 pb-2"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onTierTap("unplayed");
+          }}
         >
           {games.map((game) => (
-            <GameTile key={game.bgg_id} game={game} />
+            <GameTile
+              key={game.bgg_id}
+              game={game}
+              isSelected={selectedBggId === game.bgg_id}
+              onTileTap={onTileTap}
+            />
           ))}
           {games.length === 0 && (
             <span className="text-xs text-zinc-400 dark:text-zinc-500">
@@ -189,6 +207,7 @@ export function TierListBoard({
   );
   const [activeGame, setActiveGame] = useState<BoardGame | null>(null);
   const [dirty, setDirty] = useState(false);
+  const [selectedBggId, setSelectedBggId] = useState<number | null>(null);
   const { save, saving, error: saveError } = useTierSave();
 
   const sensors = useSensors(
@@ -208,6 +227,7 @@ export function TierListBoard({
       await save(tierEntries, categoryGameIds);
       savedBuckets.current = { ...buckets };
       setDirty(false);
+      setSelectedBggId(null);
     } catch {
       // error state is set inside useTierSave
     }
@@ -220,9 +240,87 @@ export function TierListBoard({
       setBuckets(buildBuckets(games, placements));
     }
     setDirty(false);
+    setSelectedBggId(null);
   }, [games, placements]);
 
+  const handleTileTap = useCallback(
+    (tappedBggId: number) => {
+      if (selectedBggId === null) {
+        setSelectedBggId(tappedBggId);
+        return;
+      }
+
+      if (selectedBggId === tappedBggId) {
+        setSelectedBggId(null);
+        return;
+      }
+
+      setBuckets((prev) => {
+        const fromTier = findContainer(prev, selectedBggId);
+        const toTier = findContainer(prev, tappedBggId);
+        if (!fromTier || !toTier) return prev;
+
+        const game = prev[fromTier].find((g) => g.bgg_id === selectedBggId);
+        if (!game) return prev;
+
+        if (fromTier === toTier) {
+          const filtered = prev[fromTier].filter((g) => g.bgg_id !== selectedBggId);
+          const targetIndex = filtered.findIndex((g) => g.bgg_id === tappedBggId);
+          filtered.splice(targetIndex, 0, game);
+          return { ...prev, [fromTier]: filtered };
+        }
+
+        const fromGames = prev[fromTier].filter((g) => g.bgg_id !== selectedBggId);
+        const toGames = [...prev[toTier]];
+        const targetIndex = toGames.findIndex((g) => g.bgg_id === tappedBggId);
+        toGames.splice(targetIndex, 0, game);
+        return { ...prev, [fromTier]: fromGames, [toTier]: toGames };
+      });
+      setDirty(true);
+      setSelectedBggId(null);
+    },
+    [selectedBggId]
+  );
+
+  const handleTierTap = useCallback(
+    (tier: Tier | "unplayed") => {
+      if (selectedBggId === null) return;
+
+      setBuckets((prev) => {
+        const fromTier = findContainer(prev, selectedBggId);
+        if (!fromTier) return prev;
+
+        if (fromTier === tier) {
+          const items = prev[fromTier];
+          const lastItem = items[items.length - 1];
+          if (lastItem?.bgg_id === selectedBggId) {
+            setSelectedBggId(null);
+            return prev;
+          }
+          const filtered = items.filter((g) => g.bgg_id !== selectedBggId);
+          const game = items.find((g) => g.bgg_id === selectedBggId);
+          if (!game) return prev;
+          setSelectedBggId(null);
+          return { ...prev, [fromTier]: [...filtered, game] };
+        }
+
+        const game = prev[fromTier].find((g) => g.bgg_id === selectedBggId);
+        if (!game) return prev;
+
+        setSelectedBggId(null);
+        return {
+          ...prev,
+          [fromTier]: prev[fromTier].filter((g) => g.bgg_id !== selectedBggId),
+          [tier]: [...prev[tier], game],
+        };
+      });
+      setDirty(true);
+    },
+    [selectedBggId]
+  );
+
   function handleDragStart(event: DragStartEvent) {
+    setSelectedBggId(null);
     const id = event.active.id as number;
     const allGames = Object.values(buckets).flat();
     const game = allGames.find((g) => g.bgg_id === id);
@@ -316,6 +414,7 @@ export function TierListBoard({
     savedBuckets.current = fresh;
     setBuckets(fresh);
     setDirty(false);
+    setSelectedBggId(null);
     setCategory(cat);
   }
 
@@ -391,11 +490,23 @@ export function TierListBoard({
       >
         <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
           {TIERS.map((tier) => (
-            <TierRow key={tier} tier={tier} games={buckets[tier]} />
+            <TierRow
+              key={tier}
+              tier={tier}
+              games={buckets[tier]}
+              selectedBggId={selectedBggId}
+              onTileTap={handleTileTap}
+              onTierTap={handleTierTap}
+            />
           ))}
         </div>
 
-        <UnplayedRow games={buckets.unplayed} />
+        <UnplayedRow
+          games={buckets.unplayed}
+          selectedBggId={selectedBggId}
+          onTileTap={handleTileTap}
+          onTierTap={handleTierTap}
+        />
 
         <DragOverlay>
           {activeGame ? <GameTileOverlay game={activeGame} /> : null}

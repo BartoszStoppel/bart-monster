@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import type { BggSearchResult } from "@/lib/bgg/types";
 
 interface GameSearchBarProps {
@@ -83,16 +84,34 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
             <li key={game.id}>
               <button
                 onClick={() => handleSelect(game)}
-                className="flex w-full items-center justify-between px-4 py-2.5 text-left text-sm transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700"
               >
-                <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                  {game.name}
-                </span>
-                {game.yearPublished && (
-                  <span className="text-xs text-zinc-400">
-                    {game.yearPublished}
-                  </span>
+                {game.thumbnailUrl ? (
+                  <Image
+                    src={game.thumbnailUrl}
+                    alt=""
+                    width={40}
+                    height={40}
+                    className="h-10 w-10 shrink-0 rounded border border-zinc-200 object-cover dark:border-zinc-700"
+                  />
+                ) : (
+                  <div className="h-10 w-10 shrink-0 rounded border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800" />
                 )}
+                <div className="min-w-0 flex-1">
+                  <span className="block truncate font-medium text-zinc-900 dark:text-zinc-100">
+                    {game.name}
+                  </span>
+                  <span className="text-xs text-zinc-400">
+                    {[
+                      game.yearPublished,
+                      game.minPlayers && game.maxPlayers
+                        ? `${game.minPlayers}–${game.maxPlayers} players`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </span>
+                </div>
               </button>
             </li>
           ))}
