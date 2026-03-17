@@ -76,6 +76,8 @@ export function GamePicker({
   );
   const [mode, setMode] = useState<PickerMode>("random");
   const [category, setCategory] = useState<CategoryFilter>("all");
+  const [aggression, setAggression] = useState(50);
+  const [maxTime, setMaxTime] = useState<number | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [targetIndex, setTargetIndex] = useState<number | null>(null);
   const [result, setResult] = useState<BoardGame | null>(null);
@@ -107,10 +109,25 @@ export function GamePicker({
   const pool = useMemo(() => {
     if (!supplierId) return [];
     const ownedIds = new Set(ownershipMap[supplierId] ?? []);
-    const filtered = games.filter((g) => ownedIds.has(g.bgg_id));
-    if (category === "all") return filtered;
-    return filtered.filter((g) => g.category === category);
-  }, [supplierId, ownershipMap, games, category]);
+    let filtered = games.filter((g) => ownedIds.has(g.bgg_id));
+    if (category !== "all") {
+      filtered = filtered.filter((g) => g.category === category);
+    }
+    const playerCount = selectedPlayers.size;
+    if (playerCount > 0) {
+      filtered = filtered.filter((g) => {
+        if (g.min_players == null || g.max_players == null) return true;
+        return playerCount >= g.min_players && playerCount <= g.max_players;
+      });
+    }
+    if (maxTime != null) {
+      filtered = filtered.filter((g) => {
+        if (g.playing_time == null) return false;
+        return g.playing_time <= maxTime;
+      });
+    }
+    return filtered;
+  }, [supplierId, ownershipMap, games, category, selectedPlayers.size, maxTime]);
 
   const playerIds = useMemo(() => [...selectedPlayers], [selectedPlayers]);
 
@@ -119,18 +136,24 @@ export function GamePicker({
     [pool, mode, userScoreMap, playerIds]
   );
 
+  const adjustedWeights = useMemo(() => {
+    if (mode === "random") return weights;
+    const exp = 0.1 + (aggression / 100) * 2.9;
+    return weights.map((w) => Math.pow(w, exp));
+  }, [weights, mode, aggression]);
+
   const segments: WheelSegment[] = useMemo(
-    () => pool.map((g, i) => ({ label: g.name, weight: weights[i] })),
-    [pool, weights]
+    () => pool.map((g, i) => ({ label: g.name, weight: adjustedWeights[i] })),
+    [pool, adjustedWeights]
   );
 
   const handleSpin = useCallback(() => {
     if (pool.length === 0 || spinning) return;
     setResult(null);
-    const idx = weightedRandomIndex(weights);
+    const idx = weightedRandomIndex(adjustedWeights);
     setTargetIndex(idx);
     setSpinning(true);
-  }, [pool, weights, spinning]);
+  }, [pool, adjustedWeights, spinning]);
 
   const handleSpinComplete = useCallback(() => {
     setSpinning(false);
@@ -252,6 +275,38 @@ export function GamePicker({
         </span>
       </div>
 
+      {/* Time filter */}
+      <div>
+        <div className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
+          Max Play Time
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {[
+            { value: null, label: "Any" },
+            { value: 30, label: "30m" },
+            { value: 60, label: "1h" },
+            { value: 90, label: "1.5h" },
+            { value: 120, label: "2h" },
+            { value: 180, label: "3h" },
+          ].map((opt) => (
+            <button
+              key={opt.label}
+              onClick={() => {
+                setMaxTime(opt.value);
+                setResult(null);
+              }}
+              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                maxTime === opt.value
+                  ? "bg-blue-600 text-white"
+                  : "bg-zinc-100 text-zinc-500 hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-50"
+              }`}
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Mode toggle */}
       <div>
         <div className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
@@ -284,6 +339,34 @@ export function GamePicker({
           ))}
         </div>
       </div>
+
+      {/* Aggression slider */}
+      {mode !== "random" && (
+        <div>
+          <div className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
+            Aggression
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs text-zinc-400 dark:text-zinc-500">
+              Equal
+            </span>
+            <input
+              type="range"
+              min={0}
+              max={100}
+              value={aggression}
+              onChange={(e) => {
+                setAggression(Number(e.target.value));
+                setResult(null);
+              }}
+              className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-zinc-200 accent-blue-600 dark:bg-zinc-700"
+            />
+            <span className="text-xs text-zinc-400 dark:text-zinc-500">
+              Aggressive
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Spinner */}
       <SpinnerWheel
