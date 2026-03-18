@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useState } from "react";
 
 const SEGMENT_COLORS = [
   "#ef4444", "#f97316", "#eab308", "#22c55e",
@@ -11,6 +11,7 @@ const SEGMENT_COLORS = [
 export interface WheelSegment {
   label: string;
   weight: number;
+  imageUrl?: string;
 }
 
 interface SpinnerWheelProps {
@@ -35,8 +36,42 @@ export function SpinnerWheel({
   const angleRef = useRef(0);
   const animRef = useRef<number | null>(null);
   const spinningRef = useRef(false);
+  const [loadedImages, setLoadedImages] = useState<Map<string, HTMLImageElement>>(new Map());
 
   const totalWeight = segments.reduce((s, seg) => s + seg.weight, 0);
+
+  useEffect(() => {
+    const urls = segments
+      .map((s) => s.imageUrl)
+      .filter((u): u is string => u != null && u !== "");
+    const unique = [...new Set(urls)];
+    const pending = unique.filter((u) => !loadedImages.has(u));
+    if (pending.length === 0) return;
+
+    let cancelled = false;
+    const newMap = new Map(loadedImages);
+
+    Promise.all(
+      pending.map(
+        (url) =>
+          new Promise<void>((resolve) => {
+            const img = new Image();
+            img.onload = () => {
+              newMap.set(url, img);
+              resolve();
+            };
+            img.onerror = () => resolve();
+            img.src = url;
+          })
+      )
+    ).then(() => {
+      if (!cancelled) setLoadedImages(new Map(newMap));
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [segments, loadedImages]);
 
   const drawWheel = useCallback(
     (ctx: CanvasRenderingContext2D, size: number, rotation: number) => {
@@ -66,13 +101,44 @@ export function SpinnerWheel({
         const sliceAngle = (seg.weight / totalWeight) * Math.PI * 2;
         const endAngle = startAngle + sliceAngle;
 
+        // Draw wedge path
         ctx.beginPath();
         ctx.moveTo(cx, cy);
         ctx.arc(cx, cy, radius, startAngle, endAngle);
         ctx.closePath();
-        ctx.fillStyle = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
-        ctx.fill();
-        ctx.strokeStyle = "rgba(0,0,0,0.15)";
+
+        const img = seg.imageUrl ? loadedImages.get(seg.imageUrl) : undefined;
+        if (img) {
+          // Clip to wedge and draw image
+          ctx.save();
+          ctx.clip();
+
+          const midAngle = startAngle + sliceAngle / 2;
+          const imgSize = radius * 1.2;
+          const imgX = cx + Math.cos(midAngle) * radius * 0.4 - imgSize / 2;
+          const imgY = cy + Math.sin(midAngle) * radius * 0.4 - imgSize / 2;
+          ctx.drawImage(img, imgX, imgY, imgSize, imgSize);
+
+          // Dark overlay for label readability
+          ctx.fillStyle = "rgba(0,0,0,0.45)";
+          ctx.beginPath();
+          ctx.moveTo(cx, cy);
+          ctx.arc(cx, cy, radius, startAngle, endAngle);
+          ctx.closePath();
+          ctx.fill();
+
+          ctx.restore();
+        } else {
+          ctx.fillStyle = SEGMENT_COLORS[i % SEGMENT_COLORS.length];
+          ctx.fill();
+        }
+
+        // Wedge border
+        ctx.beginPath();
+        ctx.moveTo(cx, cy);
+        ctx.arc(cx, cy, radius, startAngle, endAngle);
+        ctx.closePath();
+        ctx.strokeStyle = "rgba(0,0,0,0.3)";
         ctx.lineWidth = 1;
         ctx.stroke();
 
@@ -89,8 +155,8 @@ export function SpinnerWheel({
         ctx.font = `bold ${Math.max(size * 0.028, 10)}px system-ui, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
-        ctx.shadowColor = "rgba(0,0,0,0.5)";
-        ctx.shadowBlur = 2;
+        ctx.shadowColor = "rgba(0,0,0,0.8)";
+        ctx.shadowBlur = 4;
         const maxChars = Math.max(8, Math.floor((sliceAngle * radius) / (size * 0.03)));
         const label =
           seg.label.length > maxChars
@@ -111,7 +177,7 @@ export function SpinnerWheel({
       ctx.lineWidth = 2;
       ctx.stroke();
     },
-    [segments, totalWeight]
+    [segments, totalWeight, loadedImages]
   );
 
   const render = useCallback(() => {

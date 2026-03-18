@@ -19,6 +19,14 @@ export default async function ProfilePage() {
     .eq("id", user.id)
     .single();
 
+  const { data: partner } = profile?.partner_id
+    ? await supabase
+        .from("profiles")
+        .select("display_name, avatar_url")
+        .eq("id", profile.partner_id)
+        .single()
+    : { data: null };
+
   const { data: collection } = await supabase
     .from("user_game_collection")
     .select("*, board_games(name, bgg_id)")
@@ -60,6 +68,22 @@ export default async function ProfilePage() {
             <div className="text-sm text-zinc-500 dark:text-zinc-400">
               {user.email}
             </div>
+            {partner && (
+              <div className="mt-1 flex items-center gap-1.5">
+                {partner.avatar_url && (
+                  <Image
+                    src={partner.avatar_url}
+                    alt=""
+                    width={16}
+                    height={16}
+                    className="h-4 w-4 rounded-full"
+                  />
+                )}
+                <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                  Married to {partner.display_name}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -83,7 +107,6 @@ export default async function ProfilePage() {
           </div>
           <div className="text-xs text-zinc-500">Ranked</div>
         </div>
-      </div>
-    </div>
+      </div>    </div>
   );
 }

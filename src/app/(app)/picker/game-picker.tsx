@@ -77,6 +77,7 @@ export function GamePicker({
   const [mode, setMode] = useState<PickerMode>("random");
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [aggression, setAggression] = useState(50);
+  const [minTime, setMinTime] = useState<number | null>(null);
   const [maxTime, setMaxTime] = useState<number | null>(null);
   const [spinning, setSpinning] = useState(false);
   const [targetIndex, setTargetIndex] = useState<number | null>(null);
@@ -120,14 +121,16 @@ export function GamePicker({
         return playerCount >= g.min_players && playerCount <= g.max_players;
       });
     }
-    if (maxTime != null) {
+    if (minTime != null || maxTime != null) {
       filtered = filtered.filter((g) => {
         if (g.playing_time == null) return false;
-        return g.playing_time <= maxTime;
+        if (minTime != null && g.playing_time < minTime) return false;
+        if (maxTime != null && g.playing_time > maxTime) return false;
+        return true;
       });
     }
     return filtered;
-  }, [supplierId, ownershipMap, games, category, selectedPlayers.size, maxTime]);
+  }, [supplierId, ownershipMap, games, category, selectedPlayers.size, minTime, maxTime]);
 
   const playerIds = useMemo(() => [...selectedPlayers], [selectedPlayers]);
 
@@ -143,7 +146,11 @@ export function GamePicker({
   }, [weights, mode, aggression]);
 
   const segments: WheelSegment[] = useMemo(
-    () => pool.map((g, i) => ({ label: g.name, weight: adjustedWeights[i] })),
+    () => pool.map((g, i) => ({
+      label: g.name,
+      weight: adjustedWeights[i],
+      imageUrl: g.thumbnail_url ?? g.image_url ?? undefined,
+    })),
     [pool, adjustedWeights]
   );
 
@@ -278,32 +285,34 @@ export function GamePicker({
       {/* Time filter */}
       <div>
         <div className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
-          Max Play Time
+          Play Time (minutes)
         </div>
-        <div className="flex flex-wrap gap-1">
-          {[
-            { value: null, label: "Any" },
-            { value: 30, label: "30m" },
-            { value: 60, label: "1h" },
-            { value: 90, label: "1.5h" },
-            { value: 120, label: "2h" },
-            { value: 180, label: "3h" },
-          ].map((opt) => (
-            <button
-              key={opt.label}
-              onClick={() => {
-                setMaxTime(opt.value);
-                setResult(null);
-              }}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                maxTime === opt.value
-                  ? "bg-blue-600 text-white"
-                  : "bg-zinc-100 text-zinc-500 hover:text-zinc-900 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:text-zinc-50"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            min={0}
+            placeholder="Min"
+            value={minTime ?? ""}
+            onChange={(e) => {
+              const val = e.target.value === "" ? null : Number(e.target.value);
+              setMinTime(val);
+              setResult(null);
+            }}
+            className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+          />
+          <span className="text-xs text-zinc-400 dark:text-zinc-500">to</span>
+          <input
+            type="number"
+            min={0}
+            placeholder="Max"
+            value={maxTime ?? ""}
+            onChange={(e) => {
+              const val = e.target.value === "" ? null : Number(e.target.value);
+              setMaxTime(val);
+              setResult(null);
+            }}
+            className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+          />
         </div>
       </div>
 

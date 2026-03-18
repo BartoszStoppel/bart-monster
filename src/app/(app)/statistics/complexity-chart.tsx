@@ -174,11 +174,11 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
   );
 
   return (
-    <section className="mb-8">
+    <section>
       <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
         Complexity vs Score
       </h2>
-      <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="flex flex-1 flex-col justify-center rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"

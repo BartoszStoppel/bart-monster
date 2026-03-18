@@ -2,6 +2,7 @@
 
 import { useState, useMemo, useRef, useEffect, useCallback } from "react";
 import { GameCard } from "@/components/game-card";
+import { createClient } from "@/lib/supabase/client";
 import type { BoardGame } from "@/types/database";
 
 type SortOption = "ours" | "bgg" | "name" | "weight";
@@ -50,15 +51,98 @@ interface SortableGameGridProps {
   games: BoardGame[];
   avgScoreMap: Record<string, number>;
   ownedSet: number[];
+  wishlistSet?: number[];
+  isAdmin?: boolean;
 }
 
 export function SortableGameGrid({
-  games,
+  games: initialGames,
   avgScoreMap,
   ownedSet,
+  wishlistSet: wishlistSetProp = [],
+  isAdmin: admin,
 }: SortableGameGridProps) {
+  const [games, setGames] = useState(initialGames);
   const [sort, setSort] = useState<SortOption>("ours");
   const [category, setCategory] = useState<CategoryFilter>("all");
+  const [ownedOnly, setOwnedOnly] = useState(false);
+  const [ownedIds, setOwnedIds] = useState(() => new Set(ownedSet));
+  const [wishlistIds, setWishlistIds] = useState(() => new Set(wishlistSetProp));
+
+  function handleGameUpdated(bggId: number, updates: Partial<BoardGame>) {
+    setGames((prev) =>
+      prev.map((g) => (g.bgg_id === bggId ? { ...g, ...updates } : g))
+    );
+  }
+
+  async function handleOwnershipToggle(bggId: number) {
+    const adding = !ownedIds.has(bggId);
+    setOwnedIds((prev) => {
+      const next = new Set(prev);
+      if (adding) next.add(bggId);
+      else next.delete(bggId);
+      return next;
+    });
+    if (adding) {
+      setWishlistIds((prev) => { const next = new Set(prev); next.delete(bggId); return next; });
+    }
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    if (adding) {
+      const { error } = await supabase.from("user_game_collection").upsert(
+        { user_id: user.id, bgg_id: bggId, owned: true, wishlist: false },
+        { onConflict: "user_id,bgg_id" }
+      );
+      if (error) {
+        setOwnedIds((prev) => { const next = new Set(prev); next.delete(bggId); return next; });
+      }
+    } else {
+      const { error } = await supabase
+        .from("user_game_collection")
+        .update({ owned: false })
+        .eq("user_id", user.id)
+        .eq("bgg_id", bggId);
+      if (error) {
+        setOwnedIds((prev) => { const next = new Set(prev); next.add(bggId); return next; });
+      }
+    }
+  }
+
+  async function handleWishlistToggle(bggId: number) {
+    const adding = !wishlistIds.has(bggId);
+    setWishlistIds((prev) => {
+      const next = new Set(prev);
+      if (adding) next.add(bggId);
+      else next.delete(bggId);
+      return next;
+    });
+
+    const supabase = createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return;
+
+    if (adding) {
+      const { error } = await supabase.from("user_game_collection").upsert(
+        { user_id: user.id, bgg_id: bggId, wishlist: true, owned: false },
+        { onConflict: "user_id,bgg_id" }
+      );
+      if (error) {
+        setWishlistIds((prev) => { const next = new Set(prev); next.delete(bggId); return next; });
+      }
+    } else {
+      const { error } = await supabase
+        .from("user_game_collection")
+        .update({ wishlist: false })
+        .eq("user_id", user.id)
+        .eq("bgg_id", bggId);
+      if (error) {
+        setWishlistIds((prev) => { const next = new Set(prev); next.add(bggId); return next; });
+      }
+    }
+  }
 
   const {
     containerRef: catContainerRef,
@@ -71,16 +155,18 @@ export function SortableGameGrid({
     pill: sortPillStyle,
   } = usePillIndicator(sort);
 
-  const owned = useMemo(() => new Set(ownedSet), [ownedSet]);
   const scores = useMemo(
     () => new Map(Object.entries(avgScoreMap).map(([k, v]) => [Number(k), v])),
     [avgScoreMap]
   );
 
   const sorted = useMemo(() => {
-    const filtered = category === "all"
+    let filtered = category === "all"
       ? games
       : games.filter((g) => g.category === category);
+    if (ownedOnly) {
+      filtered = filtered.filter((g) => ownedIds.has(g.bgg_id));
+    }
     const copy = [...filtered];
     switch (sort) {
       case "ours":
@@ -112,7 +198,7 @@ export function SortableGameGrid({
         break;
     }
     return copy;
-  }, [games, sort, scores, category]);
+  }, [games, sort, scores, category, ownedOnly, ownedIds]);
 
   return (
     <div>
@@ -166,6 +252,29 @@ export function SortableGameGrid({
             ))}
           </div>
         </div>
+        <button
+          onClick={() => setOwnedOnly((v) => !v)}
+          className={`ml-auto relative flex items-center gap-1.5 rounded-lg bg-zinc-100 px-3 py-1 text-xs font-medium transition-colors dark:bg-zinc-800 ${
+            ownedOnly
+              ? "text-green-600 dark:text-green-400"
+              : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+          }`}
+        >
+          <span
+            className={`inline-flex h-3 w-3 items-center justify-center rounded-sm border transition-colors ${
+              ownedOnly
+                ? "border-green-500 bg-green-500 text-white"
+                : "border-zinc-400 dark:border-zinc-500"
+            }`}
+          >
+            {ownedOnly && (
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-2.5 w-2.5">
+                <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+              </svg>
+            )}
+          </span>
+          Owned
+        </button>
       </div>
       <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
         {sorted.map((game) => (
@@ -173,7 +282,12 @@ export function SortableGameGrid({
             key={game.bgg_id}
             game={game}
             avgScore={scores.get(game.bgg_id)}
-            owned={owned.has(game.bgg_id)}
+            owned={ownedIds.has(game.bgg_id)}
+            wishlisted={wishlistIds.has(game.bgg_id)}
+            isAdmin={admin}
+            onOwnershipToggle={handleOwnershipToggle}
+            onWishlistToggle={handleWishlistToggle}
+            onGameUpdated={handleGameUpdated}
           />
         ))}
       </div>

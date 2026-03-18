@@ -1,20 +1,12 @@
 import Image from "next/image";
 import { createClient } from "@/lib/supabase/server";
+import {
+  type AchievementDisplay,
+  computeCollectorAchievement,
+  computeGameAchievements,
+} from "./computed-achievements";
 
 export const dynamic = "force-dynamic";
-
-interface AchievementHolder {
-  display_name: string;
-  avatar_url: string | null;
-  detail: string | null;
-}
-
-interface AchievementDisplay {
-  title: string;
-  description: string;
-  icon: string;
-  holders: AchievementHolder[];
-}
 
 const PLACE_LABELS = ["1st", "2nd", "3rd"];
 const PLACE_COLORS = [
@@ -67,39 +59,17 @@ export default async function AchievementsPage() {
             display_name: profile.display_name,
             avatar_url: profile.avatar_url,
             detail: award?.detail ?? null,
+            category_label: null,
           }]
         : [],
     });
   }
 
   // --- Computed: Board Game Collector (top 3) ---
-  const { data: ownership } = await supabase
-    .from("user_game_collection")
-    .select("user_id, owned");
+  achievements.push(await computeCollectorAchievement(supabase, profileMap));
 
-  const countByUser = new Map<string, number>();
-  for (const row of ownership ?? []) {
-    if (!row.owned) continue;
-    countByUser.set(row.user_id, (countByUser.get(row.user_id) ?? 0) + 1);
-  }
-
-  const topCollectors = [...countByUser.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 3);
-
-  achievements.push({
-    title: "Board Game Collector",
-    description: "Own the most board games in the group",
-    icon: "🏆",
-    holders: topCollectors.map(([userId, count]) => {
-      const profile = profileMap.get(userId);
-      return {
-        display_name: profile?.display_name ?? "Unknown",
-        avatar_url: profile?.avatar_url ?? null,
-        detail: `${count} ${count === 1 ? "game" : "games"}`,
-      };
-    }),
-  });
+  // --- Computed: Game-specific achievements ---
+  const gameAchievements = await computeGameAchievements(supabase);
 
   // --- Bounties ---
   const { data: dbBounties } = await supabase
@@ -130,6 +100,22 @@ export default async function AchievementsPage() {
         ))}
       </div>
 
+      {gameAchievements.length > 0 && (
+        <>
+          <h2 className="mb-4 mt-10 text-xl font-bold text-zinc-900 dark:text-zinc-50">
+            Game Awards
+          </h2>
+          <p className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+            Standout games based on community tier rankings
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {gameAchievements.map((a) => (
+              <AchievementCard key={a.title} {...a} />
+            ))}
+          </div>
+        </>
+      )}
+
       <h2 className="mb-4 mt-10 text-xl font-bold text-zinc-900 dark:text-zinc-50">
         Bounties
       </h2>
@@ -151,6 +137,7 @@ function AchievementCard({
   description,
   icon,
   holders,
+  ranked,
 }: AchievementDisplay) {
   return (
     <div className="rounded-lg border border-zinc-200 bg-white p-6 dark:border-zinc-800 dark:bg-zinc-900">
@@ -170,9 +157,14 @@ function AchievementCard({
             <div className="mt-3 space-y-2">
               {holders.map((holder, i) => (
                 <div key={holder.display_name} className="flex items-center gap-2">
-                  {holders.length > 1 && (
+                  {ranked && holders.length > 1 && (
                     <span className={`text-xs font-bold ${PLACE_COLORS[i] ?? "text-zinc-400"}`}>
                       {PLACE_LABELS[i] ?? `${i + 1}th`}
+                    </span>
+                  )}
+                  {holder.category_label && (
+                    <span className="text-xs font-semibold text-zinc-400 dark:text-zinc-500">
+                      {holder.category_label}
                     </span>
                   )}
                   {holder.avatar_url && (
@@ -181,10 +173,10 @@ function AchievementCard({
                       alt=""
                       width={24}
                       height={24}
-                      className="h-6 w-6 rounded-full"
+                      className="h-6 w-6 shrink-0 rounded border border-zinc-200 object-cover dark:border-zinc-700"
                     />
                   )}
-                  <span className="font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="truncate font-medium text-zinc-900 dark:text-zinc-100">
                     {holder.display_name}
                   </span>
                   {holder.detail && (

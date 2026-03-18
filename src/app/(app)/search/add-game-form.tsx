@@ -19,10 +19,26 @@ interface AddGameFormProps {
  */
 export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormProps) {
   const [category, setCategory] = useState<GameCategory | null>(null);
-  const [minPlayers, setMinPlayers] = useState(game.minPlayers || 1);
-  const [maxPlayers, setMaxPlayers] = useState(game.maxPlayers || 1);
-  const [playingTime, setPlayingTime] = useState(game.playingTime || 30);
+  const [minPlayers, setMinPlayers] = useState(String(game.minPlayers || 1));
+  const [maxPlayers, setMaxPlayers] = useState(String(game.maxPlayers || 1));
+  const [playingTime, setPlayingTime] = useState(String(game.playingTime || 30));
   const [saving, setSaving] = useState(false);
+
+  function clampInt(raw: string, min: number, max: number): number {
+    const n = parseInt(raw, 10);
+    if (isNaN(n) || n < min) return min;
+    if (n > max) return max;
+    return n;
+  }
+
+  function handleBlur(
+    raw: string,
+    min: number,
+    max: number,
+    setter: (v: string) => void
+  ) {
+    setter(String(clampInt(raw, min, max)));
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -39,9 +55,9 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
         image_url: game.imageUrl,
         thumbnail_url: game.thumbnailUrl,
         year_published: game.yearPublished,
-        min_players: minPlayers,
-        max_players: maxPlayers,
-        playing_time: playingTime,
+        min_players: clampInt(minPlayers, 1, 99),
+        max_players: clampInt(maxPlayers, 1, 99),
+        playing_time: clampInt(playingTime, 1, 9999),
         min_play_time: game.minPlayTime,
         max_play_time: game.maxPlayTime,
         min_age: game.minAge,
@@ -49,6 +65,20 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
         bgg_weight: game.bggWeight,
         categories: game.categories,
         mechanics: game.mechanics,
+        designers: game.designers,
+        artists: game.artists,
+        publishers: game.publishers,
+        alternate_names: game.alternateNames,
+        expansions: game.expansions,
+        bgg_users_rated: game.bggUsersRated || null,
+        bgg_std_dev: game.bggStdDev || null,
+        bgg_owned: game.bggOwned || null,
+        bgg_wanting: game.bggWanting || null,
+        bgg_wishing: game.bggWishing || null,
+        bgg_num_weights: game.bggNumWeights || null,
+        suggested_players: game.suggestedPlayers,
+        suggested_age: game.suggestedAge,
+        language_dependence: game.languageDependence,
         category,
         fetched_at: new Date().toISOString(),
       },
@@ -115,10 +145,9 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
           <input
             id="minPlayers"
             type="number"
-            min={1}
-            max={99}
             value={minPlayers}
-            onChange={(e) => setMinPlayers(parseInt(e.target.value, 10) || 1)}
+            onChange={(e) => setMinPlayers(e.target.value)}
+            onBlur={() => handleBlur(minPlayers, 1, 99, setMinPlayers)}
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
           />
         </div>
@@ -132,10 +161,9 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
           <input
             id="maxPlayers"
             type="number"
-            min={1}
-            max={99}
             value={maxPlayers}
-            onChange={(e) => setMaxPlayers(parseInt(e.target.value, 10) || 1)}
+            onChange={(e) => setMaxPlayers(e.target.value)}
+            onBlur={() => handleBlur(maxPlayers, 1, 99, setMaxPlayers)}
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
           />
         </div>
@@ -149,10 +177,9 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
           <input
             id="playingTime"
             type="number"
-            min={1}
-            max={9999}
             value={playingTime}
-            onChange={(e) => setPlayingTime(parseInt(e.target.value, 10) || 1)}
+            onChange={(e) => setPlayingTime(e.target.value)}
+            onBlur={() => handleBlur(playingTime, 1, 9999, setPlayingTime)}
             className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
           />
         </div>

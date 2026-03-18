@@ -13,6 +13,7 @@ interface OwnershipToggleProps {
   initialOwners: OwnerInfo[];
   initialOwned: boolean;
   currentUserId: string;
+  onOwnedChange?: (owned: boolean) => void;
 }
 
 /**
@@ -24,6 +25,7 @@ export function OwnershipToggle({
   initialOwners,
   initialOwned,
   currentUserId,
+  onOwnedChange,
 }: OwnershipToggleProps) {
   const [owned, setOwned] = useState(initialOwned);
   const [owners, setOwners] = useState(initialOwners);
@@ -48,6 +50,7 @@ export function OwnershipToggle({
           user_id: currentUserId,
           bgg_id: bggId,
           owned: true,
+          wishlist: false,
         },
         { onConflict: "user_id,bgg_id" }
       );
@@ -64,6 +67,7 @@ export function OwnershipToggle({
         .single();
 
       setOwned(true);
+      onOwnedChange?.(true);
       setOwners((prev) => [
         ...prev,
         { displayName: profile?.display_name ?? "You", userId: currentUserId },
@@ -81,6 +85,7 @@ export function OwnershipToggle({
       }
 
       setOwned(false);
+      onOwnedChange?.(false);
       setOwners((prev) => prev.filter((o) => o.userId !== currentUserId));
     }
 
@@ -89,19 +94,27 @@ export function OwnershipToggle({
 
   return (
     <div className="mt-3">
-      <div className="flex items-center gap-3">
+      <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
         <button
+          type="button"
+          role="checkbox"
+          aria-checked={owned}
           onClick={handleToggle}
           disabled={updating}
-          className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors disabled:opacity-50 ${
             owned
-              ? "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50"
-              : "border border-zinc-300 text-zinc-600 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              ? "border-green-500 bg-green-500 text-white"
+              : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:hover:border-zinc-500"
           }`}
         >
-          {owned ? "I own this" : "I don't own this"}
+          {owned && (
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3.5 w-3.5">
+              <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
+            </svg>
+          )}
         </button>
-      </div>
+        Ownership
+      </label>
 
       {owners.length > 0 && (
         <div className="mt-2">

@@ -4,8 +4,21 @@ export interface Profile {
   avatar_url: string | null;
   email: string | null;
   is_admin: boolean;
+  partner_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface BggExpansionRef {
+  id: number;
+  name: string;
+}
+
+export interface SuggestedPlayerCount {
+  numPlayers: string;
+  best: number;
+  recommended: number;
+  notRecommended: number;
 }
 
 export interface BoardGame {
@@ -25,6 +38,20 @@ export interface BoardGame {
   bgg_weight: number | null;
   categories: string[];
   mechanics: string[];
+  designers: string[];
+  artists: string[];
+  publishers: string[];
+  alternate_names: string[];
+  expansions: BggExpansionRef[];
+  bgg_users_rated: number | null;
+  bgg_std_dev: number | null;
+  bgg_owned: number | null;
+  bgg_wanting: number | null;
+  bgg_wishing: number | null;
+  bgg_num_weights: number | null;
+  suggested_players: SuggestedPlayerCount[];
+  suggested_age: number | null;
+  language_dependence: string | null;
   category: "party" | "board";
   fetched_at: string;
   created_at: string;

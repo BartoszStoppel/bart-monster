@@ -2,9 +2,11 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/admin";
 import { notFound } from "next/navigation";
 import Image from "next/image";
-import { CategoryChanger } from "./category-changer";
+import { EditGameButton } from "./edit-game-button";
 import { DeleteGameButton } from "./delete-game-button";
-import { OwnershipToggle } from "./ownership-toggle";
+import { CollectionToggles } from "./collection-toggles";
+import { BggDetails, SuggestedPlayersTable } from "./bgg-details";
+import { getHouseholdIds } from "@/lib/household";
 
 export const dynamic = "force-dynamic";
 
@@ -51,7 +53,24 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     }))
     .filter((o) => o.displayName !== "Unknown");
 
-  const currentUserOwns = ownerInfos.some((o) => o.userId === user?.id);
+  const householdIds = user ? await getHouseholdIds(supabase, user.id) : [];
+  const householdSet = new Set(householdIds);
+  const currentUserOwns = ownerInfos.some((o) => householdSet.has(o.userId));
+
+  const { data: wishlisters } = await supabase
+    .from("user_game_collection")
+    .select("*, profiles(id, display_name)")
+    .eq("bgg_id", bggId)
+    .eq("wishlist", true);
+
+  const wishlisterInfos = (wishlisters ?? [])
+    .map((w) => ({
+      displayName: (w.profiles as { display_name: string })?.display_name ?? "Unknown",
+      userId: w.user_id,
+    }))
+    .filter((w) => w.displayName !== "Unknown");
+
+  const currentUserWishlisted = wishlisterInfos.some((w) => householdSet.has(w.userId));
 
   const playerRange =
     game.min_players && game.max_players
@@ -94,7 +113,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
           </div>
           {admin && (
             <div className="flex flex-wrap items-center gap-3">
-              <CategoryChanger bggId={game.bgg_id} currentCategory={game.category} />
+              <EditGameButton game={game} />
               <DeleteGameButton bggId={game.bgg_id} gameName={game.name} />
             </div>
           )}
@@ -124,11 +143,13 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
           )}
 
           {user && (
-            <OwnershipToggle
+            <CollectionToggles
               bggId={bggId}
-              initialOwners={ownerInfos}
-              initialOwned={currentUserOwns}
               currentUserId={user.id}
+              initialOwned={currentUserOwns}
+              initialOwners={ownerInfos}
+              initialWishlisted={currentUserWishlisted}
+              initialWishlisters={wishlisterInfos}
             />
           )}
 
@@ -158,6 +179,14 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
           </div>
         </div>
       )}
+
+      {game.suggested_players?.length > 0 && (
+        <div className="mb-8">
+          <SuggestedPlayersTable data={game.suggested_players} />
+        </div>
+      )}
+
+      <BggDetails game={game} />
     </div>
   );
 }

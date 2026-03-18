@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { CategoryToggle } from "@/components/category-toggle";
 import { ComplexityChart } from "./complexity-chart";
+import { DistributionChart } from "./distribution-chart";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +18,7 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
 
   const { data: games } = await supabase
     .from("board_games")
-    .select("bgg_id, name, bgg_rating, bgg_weight")
+    .select("bgg_id, name, bgg_rating, bgg_weight, thumbnail_url")
     .eq("category", category)
     .order("name");
 
@@ -38,16 +39,23 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
   const totalGames = games?.length ?? 0;
   const rankedGames = new Set(filteredPlacements.map((p) => p.bgg_id)).size;
 
-  const avgScoreMap = new Map<number, { total: number; count: number }>();
+  const MIN_RATINGS = 3;
+  const scoreAcc = new Map<number, { total: number; count: number }>();
   const yourScoreMap = new Map<number, number>();
   for (const p of filteredPlacements) {
     if (p.score == null) continue;
-    const entry = avgScoreMap.get(p.bgg_id) ?? { total: 0, count: 0 };
+    const entry = scoreAcc.get(p.bgg_id) ?? { total: 0, count: 0 };
     entry.total += p.score;
     entry.count += 1;
-    avgScoreMap.set(p.bgg_id, entry);
+    scoreAcc.set(p.bgg_id, entry);
     if (user && p.user_id === user.id) {
       yourScoreMap.set(p.bgg_id, p.score);
+    }
+  }
+  const avgScoreMap = new Map<number, { total: number; count: number }>();
+  for (const [bggId, entry] of scoreAcc) {
+    if (entry.count >= MIN_RATINGS) {
+      avgScoreMap.set(bggId, entry);
     }
   }
 
@@ -88,9 +96,26 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
           if (bScore) return 1;
           return a.name.localeCompare(b.name);
         });
+        const gameScoresMap = new Map<number, number[]>();
+        for (const p of filteredPlacements) {
+          if (p.score == null) continue;
+          const arr = gameScoresMap.get(p.bgg_id) ?? [];
+          arr.push(p.score);
+          gameScoresMap.set(p.bgg_id, arr);
+        }
+        const distributionGames = games.map((g) => ({
+          name: g.name,
+          bggId: g.bgg_id,
+          bggRating: g.bgg_rating ? Number(g.bgg_rating) : null,
+          thumbnailUrl: g.thumbnail_url ?? null,
+          scores: gameScoresMap.get(g.bgg_id) ?? [],
+        }));
         return (
         <>
-        <ComplexityChart games={chartGames} />
+        <div className="mb-8 grid gap-6 lg:grid-cols-2 [&>section]:flex [&>section]:flex-col">
+          <ComplexityChart games={chartGames} />
+          <DistributionChart games={distributionGames} />
+        </div>
         <section>
           <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
             Games

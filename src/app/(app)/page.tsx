@@ -1,4 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
+import { isAdmin } from "@/lib/admin";
+import { getHouseholdIds } from "@/lib/household";
 import Link from "next/link";
 import { SortableGameGrid } from "./sortable-game-grid";
 
@@ -11,7 +13,9 @@ export default async function CollectionPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [{ data: games }, { data: placements }, { data: owned }] =
+  const householdIds = user ? await getHouseholdIds(supabase, user.id) : [];
+
+  const [{ data: games }, { data: placements }, { data: owned }, { data: wishlisted }] =
     await Promise.all([
       supabase.from("board_games").select("*").order("name"),
       supabase.from("tier_placements").select("bgg_id, score"),
@@ -19,12 +23,21 @@ export default async function CollectionPage() {
         ? supabase
             .from("user_game_collection")
             .select("bgg_id")
-            .eq("user_id", user.id)
+            .in("user_id", householdIds)
             .eq("owned", true)
+        : Promise.resolve({ data: [] as { bgg_id: number }[] }),
+      user
+        ? supabase
+            .from("user_game_collection")
+            .select("bgg_id")
+            .in("user_id", householdIds)
+            .eq("wishlist", true)
         : Promise.resolve({ data: [] as { bgg_id: number }[] }),
     ]);
 
   const ownedSet = new Set((owned ?? []).map((o) => o.bgg_id));
+  const wishlistSet = new Set((wishlisted ?? []).map((w) => w.bgg_id));
+  const admin = await isAdmin(supabase);
 
   const avgScoreMap = new Map<number, number>();
   const scoreAcc = new Map<number, { total: number; count: number }>();
@@ -35,8 +48,11 @@ export default async function CollectionPage() {
     entry.count += 1;
     scoreAcc.set(p.bgg_id, entry);
   }
+  const MIN_RATINGS = 3;
   for (const [bggId, { total, count }] of scoreAcc) {
-    avgScoreMap.set(bggId, total / count);
+    if (count >= MIN_RATINGS) {
+      avgScoreMap.set(bggId, total / count);
+    }
   }
 
   return (
@@ -63,6 +79,8 @@ export default async function CollectionPage() {
           games={games}
           avgScoreMap={Object.fromEntries(avgScoreMap)}
           ownedSet={[...ownedSet]}
+          wishlistSet={[...wishlistSet]}
+          isAdmin={admin}
         />
       ) : (
         <div className="rounded-lg border border-dashed border-zinc-300 py-16 text-center dark:border-zinc-700">

@@ -9,12 +9,12 @@ import type { User } from "@supabase/supabase-js";
 
 const NAV_LINKS = [
   { href: "/", label: "Collection" },
-  { href: "/tier-list", label: "Tier List" },
   { href: "/picker", label: "Picker" },
   { href: "/community", label: "Community" },
   { href: "/achievements", label: "Achievements" },
+  { href: "/furtch", label: "Furtch" },
   { href: "/statistics", label: "Statistics" },
-  { href: "/profile", label: "Profile" },
+  { href: "/chat", label: "Chat" },
 ];
 
 function useActiveIndicator(pathname: string) {
@@ -46,6 +46,87 @@ function useActiveIndicator(pathname: string) {
   }, []);
 
   return { containerRef, setLinkRef, indicatorStyle: style };
+}
+
+const AVATAR_MENU_LINKS = [
+  { href: "/profile", label: "Profile" },
+  { href: "/wishlist", label: "Wishlist" },
+  { href: "/tier-list", label: "Edit Tier List" },
+];
+
+function AvatarMenu({
+  user,
+  onSignOut,
+}: {
+  user: User;
+  onSignOut: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    function handleClick(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [open]);
+
+  const avatarUrl = user.user_metadata.avatar_url as string | undefined;
+
+  return (
+    <div ref={menuRef} className="relative shrink-0 pl-4">
+      <button
+        onClick={() => setOpen((prev) => !prev)}
+        className="flex items-center gap-2"
+      >
+        <span className="hidden text-sm text-zinc-500 dark:text-zinc-400 sm:block">
+          {user.user_metadata.full_name ?? user.email}
+        </span>
+        {avatarUrl ? (
+          <Image
+            src={avatarUrl}
+            alt=""
+            width={28}
+            height={28}
+            className="rounded-full"
+            referrerPolicy="no-referrer"
+          />
+        ) : (
+          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+            {(user.user_metadata.full_name ?? user.email ?? "?")
+              .charAt(0)
+              .toUpperCase()}
+          </div>
+        )}
+      </button>
+
+      {open && (
+        <div className="absolute right-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+          {AVATAR_MENU_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setOpen(false)}
+              className="block px-4 py-2 text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            >
+              {link.label}
+            </Link>
+          ))}
+          <div className="my-1 border-t border-zinc-200 dark:border-zinc-700" />
+          <button
+            onClick={onSignOut}
+            className="block w-full px-4 py-2 text-left text-sm text-zinc-700 hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-700"
+          >
+            Sign out
+          </button>
+        </div>
+      )}
+    </div>
+  );
 }
 
 export function Nav() {
@@ -92,29 +173,9 @@ export function Nav() {
           />
         </div>
 
-        {/* User info */}
+        {/* Avatar dropdown */}
         {user && (
-          <div className="flex shrink-0 items-center gap-2 pl-4">
-            <span className="hidden text-sm text-zinc-500 dark:text-zinc-400 sm:block">
-              {user.user_metadata.full_name ?? user.email}
-            </span>
-            {user.user_metadata.avatar_url && (
-              <Image
-                src={user.user_metadata.avatar_url as string}
-                alt=""
-                width={24}
-                height={24}
-                className="rounded-full"
-                referrerPolicy="no-referrer"
-              />
-            )}
-            <button
-              onClick={handleSignOut}
-              className="text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-            >
-              Sign out
-            </button>
-          </div>
+          <AvatarMenu user={user} onSignOut={handleSignOut} />
         )}
       </div>
     </nav>
