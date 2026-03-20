@@ -36,9 +36,13 @@ export default async function AchievementsPage() {
     .from("user_achievements")
     .select("achievement_id, detail, user_id");
 
-  const { data: profiles } = await supabase
+  const { data: profiles, error: profilesError } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url");
+    .select("id, display_name, avatar_url, partner_id");
+
+  if (profilesError) {
+    console.error("[achievements] Failed to load profiles:", profilesError);
+  }
 
   const profileMap = new Map(
     (profiles ?? []).map((p) => [p.id, p])
@@ -69,7 +73,7 @@ export default async function AchievementsPage() {
   achievements.push(await computeCollectorAchievement(supabase, profileMap));
 
   // --- Computed: Game-specific achievements ---
-  const gameAchievements = await computeGameAchievements(supabase);
+  const gameAchievements = await computeGameAchievements(supabase, profileMap);
 
   // --- Bounties ---
   const { data: dbBounties } = await supabase
@@ -156,7 +160,7 @@ function AchievementCard({
           {holders.length > 0 ? (
             <div className="mt-3 space-y-2">
               {holders.map((holder, i) => (
-                <div key={holder.display_name} className="flex items-center gap-2">
+                <div key={`${holder.display_name}-${i}`} className="flex items-center gap-2">
                   {ranked && holders.length > 1 && (
                     <span className={`text-xs font-bold ${PLACE_COLORS[i] ?? "text-zinc-400"}`}>
                       {PLACE_LABELS[i] ?? `${i + 1}th`}
@@ -167,7 +171,20 @@ function AchievementCard({
                       {holder.category_label}
                     </span>
                   )}
-                  {holder.avatar_url && (
+                  {holder.avatar_urls && holder.avatar_urls.length > 0 ? (
+                    <div className="flex -space-x-2">
+                      {holder.avatar_urls.map((url) => (
+                        <Image
+                          key={url}
+                          src={url}
+                          alt=""
+                          width={24}
+                          height={24}
+                          className="h-6 w-6 shrink-0 rounded-full border-2 border-white object-cover dark:border-zinc-900"
+                        />
+                      ))}
+                    </div>
+                  ) : holder.avatar_url ? (
                     <Image
                       src={holder.avatar_url}
                       alt=""
@@ -175,7 +192,7 @@ function AchievementCard({
                       height={24}
                       className="h-6 w-6 shrink-0 rounded border border-zinc-200 object-cover dark:border-zinc-700"
                     />
-                  )}
+                  ) : null}
                   <span className="truncate font-medium text-zinc-900 dark:text-zinc-100">
                     {holder.display_name}
                   </span>

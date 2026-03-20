@@ -85,9 +85,10 @@ function getPrimaryName(
   if (!name) return "Unknown";
   if (Array.isArray(name)) {
     const primary = name.find((n) => n["@_type"] === "primary");
-    return primary?.["@_value"] ?? name[0]?.["@_value"] ?? "Unknown";
+    const raw = primary?.["@_value"] ?? name[0]?.["@_value"] ?? "Unknown";
+    return decodeHtmlEntities(raw);
   }
-  return name["@_value"];
+  return decodeHtmlEntities(name["@_value"]);
 }
 
 function getAlternateNames(
@@ -96,7 +97,7 @@ function getAlternateNames(
   if (!name || !Array.isArray(name)) return [];
   return name
     .filter((n) => n["@_type"] === "alternate")
-    .map((n) => n["@_value"]);
+    .map((n) => decodeHtmlEntities(n["@_value"]));
 }
 
 function asArray<T>(val: T | T[] | undefined): T[] {

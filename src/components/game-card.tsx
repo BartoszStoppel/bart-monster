@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { GameEditForm } from "./game-edit-form";
+import { useDominantColor } from "@/lib/use-dominant-color";
 import type { BoardGame } from "@/types/database";
 
 interface GameCardProps {
@@ -27,9 +28,26 @@ export function GameCard({ game, avgScore, owned, wishlisted, isAdmin: admin, on
       : null;
 
   const imageUrl = game.image_url || game.thumbnail_url;
+  const dominantColor = useDominantColor(imageUrl);
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-lg border border-zinc-200 bg-white transition-shadow hover:shadow-md dark:border-zinc-800 dark:bg-zinc-900">
+    <div
+      className={`group relative flex flex-col overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md dark:bg-zinc-900 ${
+        dominantColor ? "" : "border-zinc-200 dark:border-zinc-800"
+      }`}
+      style={{
+        borderColor: dominantColor
+          ? `rgba(${dominantColor}, 0.4)`
+          : undefined,
+      }}
+    >
+      {/* Dominant color tint overlay */}
+      {dominantColor && (
+        <div
+          className="pointer-events-none absolute inset-0 z-0 opacity-20 dark:opacity-25"
+          style={{ backgroundColor: `rgb(${dominantColor})` }}
+        />
+      )}
       {editing && (
         <GameEditForm
           game={game}
@@ -39,7 +57,7 @@ export function GameCard({ game, avgScore, owned, wishlisted, isAdmin: admin, on
       )}
       <Link
         href={`/games/${game.bgg_id}`}
-        className="flex flex-col"
+        className="relative z-[1] flex flex-col"
       >
         {/* Image */}
         <div className="relative aspect-square w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
@@ -135,7 +153,7 @@ export function GameCard({ game, avgScore, owned, wishlisted, isAdmin: admin, on
       {admin && !editing && (
         <button
           onClick={() => setEditing(true)}
-          className="absolute right-1.5 bottom-1.5 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-zinc-800/70 text-white opacity-0 shadow transition-opacity group-hover:opacity-100"
+          className="absolute right-1.5 bottom-1.5 z-[11] flex h-5 w-5 items-center justify-center rounded-full bg-zinc-800/70 text-white opacity-0 shadow transition-opacity group-hover:opacity-100"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
             <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L6.75 6.774a2.75 2.75 0 0 0-.596.892l-.848 2.047a.75.75 0 0 0 .98.98l2.047-.848a2.75 2.75 0 0 0 .892-.596l4.261-4.262a1.75 1.75 0 0 0 0-2.474Z" />

@@ -3,6 +3,7 @@ import { SupabaseClient } from "@supabase/supabase-js";
 export interface AchievementHolder {
   display_name: string;
   avatar_url: string | null;
+  avatar_urls?: string[];
   detail: string | null;
   category_label: string | null;
 }
@@ -19,9 +20,72 @@ interface ProfileEntry {
   id: string;
   display_name: string;
   avatar_url: string | null;
+  partner_id: string | null;
 }
 
 type ProfileMap = Map<string, ProfileEntry>;
+
+interface Household {
+  memberIds: string[];
+  display_name: string;
+  avatar_urls: string[];
+}
+
+function buildHouseholdMap(profileMap: ProfileMap): Map<string, Household> {
+  const visited = new Set<string>();
+  const households = new Map<string, Household>();
+
+  for (const [userId, profile] of profileMap) {
+    if (visited.has(userId)) continue;
+    visited.add(userId);
+
+    if (profile.partner_id && profileMap.has(profile.partner_id)) {
+      const partner = profileMap.get(profile.partner_id)!;
+      visited.add(profile.partner_id);
+      const canonicalId =
+        userId < profile.partner_id ? userId : profile.partner_id;
+      const [first, second] =
+        userId < profile.partner_id
+          ? [profile, partner]
+          : [partner, profile];
+      households.set(canonicalId, {
+        memberIds: [first.id, second.id],
+        display_name: `${first.display_name} & ${second.display_name}`,
+        avatar_urls: [first.avatar_url, second.avatar_url].filter(
+          (url): url is string => url !== null
+        ),
+      });
+    } else {
+      households.set(userId, {
+        memberIds: [userId],
+        display_name: profile.display_name,
+        avatar_urls: profile.avatar_url ? [profile.avatar_url] : [],
+      });
+    }
+  }
+  return households;
+}
+
+function buildUserToHouseholdMap(profileMap: ProfileMap): Map<string, string> {
+  const map = new Map<string, string>();
+  const visited = new Set<string>();
+
+  for (const [userId, profile] of profileMap) {
+    if (visited.has(userId)) continue;
+    visited.add(userId);
+
+    if (profile.partner_id && profileMap.has(profile.partner_id)) {
+      visited.add(profile.partner_id);
+      const canonicalId =
+        userId < profile.partner_id ? userId : profile.partner_id;
+      map.set(userId, canonicalId);
+      map.set(profile.partner_id, canonicalId);
+    } else {
+      map.set(userId, userId);
+    }
+  }
+  return map;
+}
 
 const MIN_RATERS = 3;
 
@@ -83,16 +147,23 @@ export async function computeCollectorAchievement(
 ): Promise<AchievementDisplay> {
   const { data: ownership } = await supabase
     .from("user_game_collection")
-    .select("user_id, owned");
+    .select("user_id, bgg_id, owned");
 
-  const countByUser = new Map<string, number>();
+  const householdMap = buildHouseholdMap(profileMap);
+  const userToHousehold = buildUserToHouseholdMap(profileMap);
+
+  const gamesByHousehold = new Map<string, Set<number>>();
   for (const row of ownership ?? []) {
     if (!row.owned) continue;
-    countByUser.set(row.user_id, (countByUser.get(row.user_id) ?? 0) + 1);
+    const householdId = userToHousehold.get(row.user_id) ?? row.user_id;
+    const games = gamesByHousehold.get(householdId) ?? new Set<number>();
+    games.add(row.bgg_id);
+    gamesByHousehold.set(householdId, games);
   }
 
-  const topCollectors = [...countByUser.entries()]
-    .sort((a, b) => b[1] - a[1])
+  const topCollectors = [...gamesByHousehold.entries()]
+    .map(([householdId, games]) => ({ householdId, count: games.size }))
+    .sort((a, b) => b.count - a.count)
     .slice(0, 3);
 
   return {
@@ -100,11 +171,12 @@ export async function computeCollectorAchievement(
     description: "Own the most board games in the group",
     icon: "🏆",
     ranked: true,
-    holders: topCollectors.map(([userId, count]) => {
-      const profile = profileMap.get(userId);
+    holders: topCollectors.map(({ householdId, count }) => {
+      const household = householdMap.get(householdId);
       return {
-        display_name: profile?.display_name ?? "Unknown",
-        avatar_url: profile?.avatar_url ?? null,
+        display_name: household?.display_name ?? "Unknown",
+        avatar_url: household?.avatar_urls[0] ?? null,
+        avatar_urls: household?.avatar_urls ?? [],
         detail: `${count} ${count === 1 ? "game" : "games"}`,
         category_label: null,
       };
@@ -113,14 +185,15 @@ export async function computeCollectorAchievement(
 }
 
 export async function computeGameAchievements(
-  supabase: SupabaseClient
+  supabase: SupabaseClient,
+  profileMap: ProfileMap
 ): Promise<AchievementDisplay[]> {
   const [placementsRes, gamesRes, collectionRes] = await Promise.all([
     supabase.from("tier_placements").select("bgg_id, score"),
     supabase
       .from("board_games")
       .select("bgg_id, name, thumbnail_url, bgg_rating, category"),
-    supabase.from("user_game_collection").select("bgg_id, owned, wishlist"),
+    supabase.from("user_game_collection").select("user_id, bgg_id, owned, wishlist"),
   ]);
 
   const gameMap = new Map<number, GameInfo>(
@@ -266,32 +339,38 @@ export async function computeGameAchievements(
     }
   }
 
-  // --- Collection-based achievements ---
-  const ownedByCategory = new Map<number, number>();
-  const wishlistByCategory = new Map<number, number>();
+  // --- Collection-based achievements (household-aware) ---
+  const userToHousehold = buildUserToHouseholdMap(profileMap);
+  const householdMap = buildHouseholdMap(profileMap);
+
+  const ownedHouseholds = new Map<number, Set<string>>();
+  const wishlistHouseholds = new Map<number, Set<string>>();
   for (const row of collectionRes.data ?? []) {
+    const hhId = userToHousehold.get(row.user_id) ?? row.user_id;
     if (row.owned) {
-      ownedByCategory.set(
-        row.bgg_id,
-        (ownedByCategory.get(row.bgg_id) ?? 0) + 1
-      );
+      const set = ownedHouseholds.get(row.bgg_id) ?? new Set<string>();
+      set.add(hhId);
+      ownedHouseholds.set(row.bgg_id, set);
     }
     if (row.wishlist) {
-      wishlistByCategory.set(
-        row.bgg_id,
-        (wishlistByCategory.get(row.bgg_id) ?? 0) + 1
-      );
+      const set = wishlistHouseholds.get(row.bgg_id) ?? new Set<string>();
+      set.add(hhId);
+      wishlistHouseholds.set(row.bgg_id, set);
     }
   }
 
-  const ownedStats: GameStats[] = [...ownedByCategory.entries()]
-    .filter(([, count]) => count >= MIN_RATERS)
-    .map(([bggId, count]) => ({ bggId, avg: count, stdDev: 0, count }));
+  function householdNames(hhIds: Set<string>): string {
+    return [...hhIds]
+      .map((id) => householdMap.get(id)?.display_name ?? "Unknown")
+      .join(", ");
+  }
+
+  const ownedStats: GameStats[] = [...ownedHouseholds.entries()]
+    .filter(([, hhs]) => hhs.size >= MIN_RATERS)
+    .map(([bggId, hhs]) => ({ bggId, avg: hhs.size, stdDev: 0, count: hhs.size }));
   const byOwned = ownedStats.sort((a, b) => b.avg - a.avg);
-  const ownedHolders = categoryWinners(
-    byOwned,
-    gameMap,
-    (gs) => `owned by ${gs.count} people`
+  const ownedHolders = categoryWinners(byOwned, gameMap, (gs) =>
+    householdNames(ownedHouseholds.get(gs.bggId)!)
   );
   if (ownedHolders.length > 0) {
     achievements.push({
@@ -302,14 +381,12 @@ export async function computeGameAchievements(
     });
   }
 
-  const wishlistStats: GameStats[] = [...wishlistByCategory.entries()]
-    .filter(([, count]) => count >= MIN_RATERS)
-    .map(([bggId, count]) => ({ bggId, avg: count, stdDev: 0, count }));
+  const wishlistStats: GameStats[] = [...wishlistHouseholds.entries()]
+    .filter(([, hhs]) => hhs.size >= MIN_RATERS)
+    .map(([bggId, hhs]) => ({ bggId, avg: hhs.size, stdDev: 0, count: hhs.size }));
   const byWishlisted = wishlistStats.sort((a, b) => b.avg - a.avg);
-  const wishlistHolders = categoryWinners(
-    byWishlisted,
-    gameMap,
-    (gs) => `wishlisted by ${gs.count} people`
+  const wishlistHolders = categoryWinners(byWishlisted, gameMap, (gs) =>
+    householdNames(wishlistHouseholds.get(gs.bggId)!)
   );
   if (wishlistHolders.length > 0) {
     achievements.push({

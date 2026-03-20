@@ -94,7 +94,7 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="-my-6 flex h-[calc(100dvh-49px)] flex-col">
+    <div className="-mx-2 -my-6 flex h-[calc(100dvh-49px)] min-h-0 flex-col">
       <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
         <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
           Chat with Bort
@@ -104,7 +104,7 @@ export default function ChatPage() {
         </p>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
           <div className="flex h-full items-center justify-center">
             <div className="text-center">
@@ -162,7 +162,7 @@ export default function ChatPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="border-t border-zinc-200 px-4 py-3 dark:border-zinc-800"
+        className="shrink-0 border-t border-zinc-200 px-4 py-3 dark:border-zinc-800"
       >
         <div className="flex gap-2">
           <textarea
