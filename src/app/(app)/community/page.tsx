@@ -6,6 +6,7 @@ import { CommunityTierLists } from "./community-tier-lists";
 import { AlignmentTable } from "./alignment-table";
 import type { AlignmentEntry, UserAlignment } from "./compute-alignment";
 import { CollapsibleSection } from "./collapsible-section";
+import { SectionErrorBoundary } from "./section-error-boundary";
 import { buildUserTierData } from "./build-user-tier-data";
 
 export const dynamic = "force-dynamic";
@@ -26,7 +27,6 @@ export default async function CommunityPage({ searchParams }: PageProps) {
     { data: placements },
     { data: profiles },
     { data: collections },
-    { data: alignmentRows },
   ] = await Promise.all([
     supabase
       .from("board_games")
@@ -44,15 +44,23 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       .from("user_game_collection")
       .select("user_id")
       .eq("owned", true),
-    supabase
+  ]);
+
+  let alignmentRows: { user_id: string; display_name: string; avatar_url: string | null; allies: unknown; rivals: unknown }[] = [];
+  try {
+    const { data, error } = await supabase
       .from("user_alignments")
       .select("user_id, display_name, avatar_url, allies, rivals")
-      .eq("category", category)
-      .then((res) => {
-        if (res.error) console.error("[community] user_alignments query error:", res.error);
-        return res;
-      }),
-  ]);
+      .eq("category", category);
+
+    if (error) {
+      console.error("[community] alignment query failed:", JSON.stringify(error));
+    } else {
+      alignmentRows = data ?? [];
+    }
+  } catch (e) {
+    console.error("[community] alignment query threw:", e);
+  }
 
   const gameMap = new Map<number, BoardGame>();
   for (const g of games ?? []) {
@@ -81,8 +89,8 @@ export default async function CommunityPage({ searchParams }: PageProps) {
     userId: row.user_id,
     displayName: row.display_name,
     avatarUrl: row.avatar_url,
-    allies: row.allies as AlignmentEntry[],
-    rivals: row.rivals as AlignmentEntry[],
+    allies: Array.isArray(row.allies) ? row.allies as AlignmentEntry[] : [],
+    rivals: Array.isArray(row.rivals) ? row.rivals as AlignmentEntry[] : [],
   }));
 
   return (
@@ -109,13 +117,15 @@ export default async function CommunityPage({ searchParams }: PageProps) {
         <CommunityTierLists users={users} />
       </CollapsibleSection>
       <div className="mt-6">
-        <CollapsibleSection
-          title="Tier List Alignment"
-          description="Find your taste twins and sworn enemies"
-          preview={<AlignmentTable alignments={alignments} />}
-        >
-          <AlignmentTable alignments={alignments} />
-        </CollapsibleSection>
+        <SectionErrorBoundary name="Tier List Alignment">
+          <CollapsibleSection
+            title="Tier List Alignment"
+            description="Find your taste twins and sworn enemies"
+            preview={<AlignmentTable alignments={alignments} />}
+          >
+            <AlignmentTable alignments={alignments} />
+          </CollapsibleSection>
+        </SectionErrorBoundary>
       </div>
     </div>
   );

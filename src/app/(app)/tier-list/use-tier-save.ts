@@ -97,7 +97,9 @@ export function useTierSave() {
     }
 
     // Recompute alignment table in the background
-    recomputeAlignments().catch(() => {});
+    recomputeAlignments().catch((err) => {
+      console.error("[tier-save] alignment recompute failed:", err);
+    });
 
     setSaving(false);
   }, []);

@@ -123,17 +123,7 @@ export async function recomputeAlignments(): Promise<void> {
     }
   }
 
-  // Clear old data and insert fresh
-  const { error: deleteError } = await supabase
-    .from("user_alignments")
-    .delete()
-    .neq("user_id", "");
-
-  if (deleteError) {
-    console.error("[recompute-alignments] delete failed:", deleteError);
-    throw new Error(`Delete failed: ${deleteError.message}`);
-  }
-
+  // Upsert fresh data first — never delete before new data is written
   if (rows.length > 0) {
     const { error: upsertError } = await supabase
       .from("user_alignments")
@@ -142,6 +132,31 @@ export async function recomputeAlignments(): Promise<void> {
     if (upsertError) {
       console.error("[recompute-alignments] upsert failed:", upsertError);
       throw new Error(`Upsert failed: ${upsertError.message}`);
+    }
+  }
+
+  // Clean up orphaned rows for users/categories no longer in the computed set
+  const validKeys = new Set(rows.map((r) => `${r.user_id}:${r.category}`));
+  const { data: existing } = await supabase
+    .from("user_alignments")
+    .select("user_id, category");
+
+  if (existing) {
+    const orphanIds: string[] = [];
+    for (const row of existing) {
+      if (!validKeys.has(`${row.user_id}:${row.category}`)) {
+        orphanIds.push(row.user_id);
+      }
+    }
+    if (orphanIds.length > 0) {
+      const { error: deleteError } = await supabase
+        .from("user_alignments")
+        .delete()
+        .in("user_id", orphanIds);
+
+      if (deleteError) {
+        console.error("[recompute-alignments] orphan cleanup failed:", deleteError);
+      }
     }
   }
 }
