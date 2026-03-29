@@ -50,10 +50,10 @@ export function CollapsibleSection({
     <button
       type="button"
       onClick={() => setExpanded(true)}
-      className="group relative w-full cursor-pointer overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700"
+      className="group relative h-48 w-full cursor-pointer overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700"
     >
       {/* Preview content, clipped */}
-      <div className="pointer-events-none min-h-32 max-h-48 overflow-hidden">
+      <div className="pointer-events-none overflow-hidden">
         {preview}
       </div>
 

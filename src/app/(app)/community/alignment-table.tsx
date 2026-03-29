@@ -88,9 +88,9 @@ function AlignmentCell({
   }
   return (
     <td className={classes}>
-      <div className="flex items-center gap-1.5">
+      <div className="flex flex-col items-center gap-1">
         <Avatar name={entry.displayName} url={entry.avatarUrl} />
-        <SplitName name={entry.displayName} className="text-xs leading-tight text-zinc-800 dark:text-zinc-200" />
+        <SplitName name={entry.displayName} className="text-center text-xs leading-tight text-zinc-800 dark:text-zinc-200" />
       </div>
     </td>
   );
@@ -108,10 +108,10 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
   return (
     <div>
       <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-        <table className="text-left">
+        <table className="w-full text-left">
           <thead>
             <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50">
-              <th className="px-3 py-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              <th className="px-3 py-2 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 User
               </th>
               <th className={`${DIVIDER} px-3 py-2 text-center text-xs font-medium text-emerald-600 dark:text-emerald-400`} colSpan={3}>
@@ -126,13 +126,13 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
             {[...alignments].sort((a, b) => a.displayName.localeCompare(b.displayName)).map((row) => (
               <tr key={row.userId}>
                 <td className="min-w-[7.5rem] px-3 py-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col items-center gap-1">
                     <Avatar
                       name={row.displayName}
                       url={row.avatarUrl}
                       size={24}
                     />
-                    <SplitName name={row.displayName} className="text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-50" />
+                    <SplitName name={row.displayName} className="text-center text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-50" />
                   </div>
                 </td>
                 <AlignmentCell entry={row.allies[0]} divider bg={GREEN_BG[0]} />

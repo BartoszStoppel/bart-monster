@@ -46,21 +46,10 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       .eq("owned", true),
   ]);
 
-  let alignmentRows: { user_id: string; display_name: string; avatar_url: string | null; allies: unknown; rivals: unknown }[] = [];
-  try {
-    const { data, error } = await supabase
-      .from("user_alignments")
-      .select("user_id, display_name, avatar_url, allies, rivals")
-      .eq("category", category);
-
-    if (error) {
-      console.error("[community] alignment query failed:", JSON.stringify(error));
-    } else {
-      alignmentRows = data ?? [];
-    }
-  } catch (e) {
-    console.error("[community] alignment query threw:", e);
-  }
+  const { data: alignmentRows } = await supabase
+    .from("user_alignments")
+    .select("user_id, display_name, avatar_url, allies, rivals")
+    .eq("category", category);
 
   const gameMap = new Map<number, BoardGame>();
   for (const g of games ?? []) {
