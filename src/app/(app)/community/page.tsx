@@ -101,7 +101,8 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       .order("name"),
     supabase
       .from("tier_placements")
-      .select("bgg_id, tier, position, user_id"),
+      .select("bgg_id, tier, position, user_id")
+      .limit(10000),
     supabase
       .from("profiles")
       .select("id, display_name, avatar_url"),
@@ -153,7 +154,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       </div>
       <CollapsibleSection
         title="Tier Lists"
-        totalCount={users.length}
+        description="See how everyone ranked their games"
         preview={<CommunityTierLists users={users} />}
       >
         <CommunityTierLists users={users} />
@@ -161,7 +162,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       <div className="mt-6">
         <CollapsibleSection
           title="Tier List Alignment"
-          totalCount={alignments.length}
+          description="Find your taste twins and sworn enemies"
           preview={<AlignmentTable alignments={alignments} />}
         >
           <AlignmentTable alignments={alignments} />

@@ -86,7 +86,13 @@ function AlignmentCell({
 }
 
 export function AlignmentTable({ alignments }: AlignmentTableProps) {
-  if (alignments.length === 0) return null;
+  if (alignments.length === 0) {
+    return (
+      <p className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
+        Not enough shared games to compute alignment yet.
+      </p>
+    );
+  }
 
   return (
     <div>

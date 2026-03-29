@@ -239,7 +239,7 @@ export async function computeGameAchievements(
   profileMap: ProfileMap
 ): Promise<AchievementDisplay[]> {
   const [placementsRes, gamesRes, collectionRes] = await Promise.all([
-    supabase.from("tier_placements").select("bgg_id, score"),
+    supabase.from("tier_placements").select("bgg_id, score").limit(10000),
     supabase
       .from("board_games")
       .select("bgg_id, name, thumbnail_url, bgg_rating, category"),
@@ -467,7 +467,8 @@ export async function computePeopleAchievements(
     supabase.from("board_games").select("*").order("name"),
     supabase
       .from("tier_placements")
-      .select("bgg_id, tier, position, user_id"),
+      .select("bgg_id, tier, position, user_id")
+      .limit(10000),
   ]);
 
   if (!games?.length || !placements?.length) return [];

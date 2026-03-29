@@ -4,14 +4,14 @@ import { useState } from "react";
 
 interface CollapsibleSectionProps {
   title: string;
-  totalCount: number;
+  description: string;
   children: React.ReactNode;
   preview: React.ReactNode;
 }
 
 export function CollapsibleSection({
   title,
-  totalCount,
+  description,
   children,
   preview,
 }: CollapsibleSectionProps) {
@@ -53,7 +53,7 @@ export function CollapsibleSection({
       className="group relative w-full cursor-pointer overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700"
     >
       {/* Preview content, clipped */}
-      <div className="pointer-events-none max-h-48 overflow-hidden">
+      <div className="pointer-events-none min-h-32 max-h-48 overflow-hidden">
         {preview}
       </div>
 
@@ -63,7 +63,7 @@ export function CollapsibleSection({
           {title}
         </h2>
         <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          {totalCount} {totalCount === 1 ? "entry" : "entries"} — tap to expand
+          {description}
         </p>
       </div>
     </button>

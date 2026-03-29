@@ -25,7 +25,7 @@ export default async function PickerPage() {
       .from("user_game_collection")
       .select("user_id, bgg_id")
       .eq("owned", true),
-    supabase.from("tier_placements").select("user_id, bgg_id, score, tier"),
+    supabase.from("tier_placements").select("user_id, bgg_id, score, tier").limit(10000),
   ]);
 
   const ownershipMap: Record<string, number[]> = {};

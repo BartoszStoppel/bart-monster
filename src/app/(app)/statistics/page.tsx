@@ -26,7 +26,8 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
 
   const { data: placements } = await supabase
     .from("tier_placements")
-    .select("bgg_id, tier, user_id, score");
+    .select("bgg_id, tier, user_id, score")
+    .limit(10000);
 
   const gameBggIds = new Set((games ?? []).map((g) => g.bgg_id));
 

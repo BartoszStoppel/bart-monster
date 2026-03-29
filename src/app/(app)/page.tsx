@@ -18,7 +18,7 @@ export default async function CollectionPage() {
   const [{ data: games }, { data: placements }, { data: profiles }, { data: owned }, { data: wishlisted }] =
     await Promise.all([
       supabase.from("board_games").select("*").order("name"),
-      supabase.from("tier_placements").select("user_id, bgg_id, score, tier, position"),
+      supabase.from("tier_placements").select("user_id, bgg_id, score, tier, position").limit(10000),
       supabase.from("profiles").select("id, display_name"),
       user
         ? supabase
