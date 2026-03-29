@@ -6,10 +6,41 @@ import Link from "next/link";
 import { GameEditForm } from "./game-edit-form";
 import { useDominantColor } from "@/lib/use-dominant-color";
 import type { BoardGame } from "@/types/database";
+import type { GameBadges, CategoryBadges } from "@/app/(app)/sortable-game-grid";
+
+function BadgeRow({ cat, label }: { cat: CategoryBadges; label: string }) {
+  const hasBadges = cat.gold.length > 0 || cat.silver.length > 0 || cat.bronze.length > 0 || cat.trash.length > 0;
+  if (!hasBadges) return null;
+  return (
+    <div className="flex gap-0.5">
+      {cat.gold.length > 0 && (
+        <span className="flex items-center rounded-md bg-black/50 px-1 py-0.5 text-[10px] leading-none shadow" title={`#1 ${label} game for ${cat.gold.join(", ")}`}>
+          <span>🥇</span>{cat.gold.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.gold.length}</span>}
+        </span>
+      )}
+      {cat.silver.length > 0 && (
+        <span className="flex items-center rounded-md bg-black/50 px-1 py-0.5 text-[10px] leading-none shadow" title={`#2 ${label} game for ${cat.silver.join(", ")}`}>
+          <span>🥈</span>{cat.silver.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.silver.length}</span>}
+        </span>
+      )}
+      {cat.bronze.length > 0 && (
+        <span className="flex items-center rounded-md bg-black/50 px-1 py-0.5 text-[10px] leading-none shadow" title={`#3 ${label} game for ${cat.bronze.join(", ")}`}>
+          <span>🥉</span>{cat.bronze.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.bronze.length}</span>}
+        </span>
+      )}
+      {cat.trash.length > 0 && (
+        <span className="flex items-center rounded-md bg-black/50 px-1 py-0.5 text-[10px] leading-none shadow" title={`Last place ${label} game for ${cat.trash.join(", ")}`}>
+          <span>🗑️</span>{cat.trash.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.trash.length}</span>}
+        </span>
+      )}
+    </div>
+  );
+}
 
 interface GameCardProps {
   game: BoardGame;
   avgScore?: number;
+  badges?: GameBadges;
   owned?: boolean;
   wishlisted?: boolean;
   isAdmin?: boolean;
@@ -18,7 +49,7 @@ interface GameCardProps {
   onGameUpdated?: (bggId: number, updates: Partial<BoardGame>) => void;
 }
 
-export function GameCard({ game, avgScore, owned, wishlisted, isAdmin: admin, onOwnershipToggle, onWishlistToggle, onGameUpdated }: GameCardProps) {
+export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: admin, onOwnershipToggle, onWishlistToggle, onGameUpdated }: GameCardProps) {
   const [editing, setEditing] = useState(false);
   const playerRange =
     game.min_players && game.max_players
@@ -62,7 +93,7 @@ export function GameCard({ game, avgScore, owned, wishlisted, isAdmin: admin, on
         {/* Image */}
         <div className="relative aspect-square w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
           {/* Owned + Wishlist stacked indicators */}
-          <div className="absolute top-1.5 right-1.5 z-10 flex flex-col gap-1">
+          <div className="absolute right-1.5 top-1.5 z-10 flex flex-col gap-1">
             {onOwnershipToggle && (
               <button
                 onClick={(e) => {
@@ -135,6 +166,14 @@ export function GameCard({ game, avgScore, owned, wishlisted, isAdmin: admin, on
               </div>
             ) : null}
           </div>
+
+          {/* Medal and trash badges */}
+          {(badges?.board || badges?.party) && (
+            <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-0.5">
+              {badges?.board && <BadgeRow cat={badges.board} label="board" />}
+              {badges?.party && <BadgeRow cat={badges.party} label="party" />}
+            </div>
+          )}
         </div>
 
         {/* Info */}

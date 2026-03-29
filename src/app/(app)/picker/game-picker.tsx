@@ -7,8 +7,11 @@ import type { PickerMode } from "@/lib/picker-utils";
 import { calculateWeights, weightedRandomIndex } from "@/lib/picker-utils";
 import { SpinnerWheel } from "./spinner-wheel";
 import type { WheelSegment } from "./spinner-wheel";
+import { TierRangeSelector } from "./tier-range-selector";
 
 type CategoryFilter = "all" | "board" | "party";
+
+const TIERS = ["S", "A", "B", "C", "D", "F"] as const;
 
 const MODE_OPTIONS: { value: PickerMode; label: string }[] = [
   { value: "random", label: "Random" },
@@ -60,6 +63,7 @@ interface GamePickerProps {
   games: BoardGame[];
   ownershipMap: Record<string, number[]>;
   userScoreMap: Record<string, Record<string, number>>;
+  gameTiers: Record<string, string[]>;
   currentUserId: string | null;
 }
 
@@ -68,6 +72,7 @@ export function GamePicker({
   games,
   ownershipMap,
   userScoreMap,
+  gameTiers,
   currentUserId,
 }: GamePickerProps) {
   const [supplierId, setSupplierId] = useState<string | null>(currentUserId);
@@ -79,6 +84,9 @@ export function GamePicker({
   const [aggression, setAggression] = useState(50);
   const [minTime, setMinTime] = useState<number | null>(null);
   const [maxTime, setMaxTime] = useState<number | null>(null);
+  const [selectedTiers, setSelectedTiers] = useState<Set<string>>(
+    () => new Set(TIERS)
+  );
   const [spinning, setSpinning] = useState(false);
   const [targetIndex, setTargetIndex] = useState<number | null>(null);
   const [result, setResult] = useState<BoardGame | null>(null);
@@ -129,8 +137,16 @@ export function GamePicker({
         return true;
       });
     }
+    // Tier filter: include game if ANY user placed it in a selected tier
+    if (selectedTiers.size < TIERS.length) {
+      filtered = filtered.filter((g) => {
+        const tiers = gameTiers[String(g.bgg_id)];
+        if (!tiers) return true; // unrated games pass through
+        return tiers.some((t) => selectedTiers.has(t));
+      });
+    }
     return filtered;
-  }, [supplierId, ownershipMap, games, category, selectedPlayers.size, minTime, maxTime]);
+  }, [supplierId, ownershipMap, games, category, selectedPlayers.size, minTime, maxTime, selectedTiers, gameTiers]);
 
   const playerIds = useMemo(() => [...selectedPlayers], [selectedPlayers]);
 
@@ -173,33 +189,71 @@ export function GamePicker({
 
   return (
     <div className="space-y-6">
-      {/* Supplier selection */}
-      <div>
-        <label
-          htmlFor="supplier-select"
-          className="mb-1 block text-sm font-semibold text-zinc-900 dark:text-zinc-50"
-        >
-          Supplier
-        </label>
-        <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
-          Whose house are you at?
-        </p>
-        <select
-          id="supplier-select"
-          value={supplierId ?? ""}
-          onChange={(e) => {
-            setSupplierId(e.target.value || null);
-            setResult(null);
-          }}
-          className="w-full max-w-xs rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-        >
-          <option value="">Select a player...</option>
-          {profiles.map((p) => (
-            <option key={p.id} value={p.id}>
-              {p.display_name} ({(ownershipMap[p.id] ?? []).length} games)
-            </option>
-          ))}
-        </select>
+      {/* Supplier + Category row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <label
+            htmlFor="supplier-select"
+            className="mb-1 block text-sm font-semibold text-zinc-900 dark:text-zinc-50"
+          >
+            Supplier
+          </label>
+          <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
+            Whose house are you at?
+          </p>
+          <select
+            id="supplier-select"
+            value={supplierId ?? ""}
+            onChange={(e) => {
+              setSupplierId(e.target.value || null);
+              setResult(null);
+            }}
+            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+          >
+            <option value="">Select a player...</option>
+            {profiles.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.display_name} ({(ownershipMap[p.id] ?? []).length} games)
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <div className="mb-1 text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+            Category
+          </div>
+          <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
+            {supplierId
+              ? `${pool.length} ${pool.length === 1 ? "game" : "games"} from ${supplierProfile?.display_name ?? "supplier"}`
+              : "Select a supplier"}
+          </p>
+          <div
+            ref={catContainerRef}
+            className="relative inline-flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
+          >
+            <div
+              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
+              style={{ left: catPillStyle.left, width: catPillStyle.width }}
+            />
+            {CATEGORY_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                ref={(el) => setCatRef(opt.value, el)}
+                onClick={() => {
+                  setCategory(opt.value);
+                  setResult(null);
+                }}
+                className={`relative z-10 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                  category === opt.value
+                    ? "text-zinc-900 dark:text-zinc-50"
+                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Player selection */}
@@ -246,136 +300,121 @@ export function GamePicker({
         </div>
       </div>
 
-      {/* Controls row */}
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div
-          ref={catContainerRef}
-          className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
-        >
-          <div
-            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
-            style={{ left: catPillStyle.left, width: catPillStyle.width }}
-          />
-          {CATEGORY_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              ref={(el) => setCatRef(opt.value, el)}
-              onClick={() => {
-                setCategory(opt.value);
-                setResult(null);
-              }}
-              className={`relative z-10 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                category === opt.value
-                  ? "text-zinc-900 dark:text-zinc-50"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-
-        <span className="text-xs tabular-nums text-zinc-400 dark:text-zinc-500">
-          {supplierId
-            ? `${pool.length} ${pool.length === 1 ? "game" : "games"} from ${supplierProfile?.display_name ?? "supplier"}`
-            : "Select a supplier"}
-        </span>
-      </div>
-
-      {/* Time filter */}
-      <div>
-        <div className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
-          Play Time (minutes)
-        </div>
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            min={0}
-            placeholder="Min"
-            value={minTime ?? ""}
-            onChange={(e) => {
-              const val = e.target.value === "" ? null : Number(e.target.value);
-              setMinTime(val);
-              setResult(null);
-            }}
-            className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-          />
-          <span className="text-xs text-zinc-400 dark:text-zinc-500">to</span>
-          <input
-            type="number"
-            min={0}
-            placeholder="Max"
-            value={maxTime ?? ""}
-            onChange={(e) => {
-              const val = e.target.value === "" ? null : Number(e.target.value);
-              setMaxTime(val);
-              setResult(null);
-            }}
-            className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
-          />
-        </div>
-      </div>
-
-      {/* Mode toggle */}
-      <div>
-        <div className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
-          Weighting
-        </div>
-        <div
-          ref={modeContainerRef}
-          className="relative inline-flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
-        >
-          <div
-            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
-            style={{ left: modePillStyle.left, width: modePillStyle.width }}
-          />
-          {MODE_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              ref={(el) => setModeRef(opt.value, el)}
-              onClick={() => {
-                setMode(opt.value);
-                setResult(null);
-              }}
-              className={`relative z-10 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                mode === opt.value
-                  ? "text-zinc-900 dark:text-zinc-50"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Aggression slider */}
-      {mode !== "random" && (
+      {/* Tier + Time row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <TierRangeSelector
+          selectedTiers={selectedTiers}
+          onToggle={(tier) => {
+            setSelectedTiers((prev) => {
+              const next = new Set(prev);
+              if (next.has(tier)) {
+                if (next.size > 1) next.delete(tier);
+              } else {
+                next.add(tier);
+              }
+              return next;
+            });
+            setResult(null);
+          }}
+          onReset={() => {
+            setSelectedTiers(new Set(TIERS));
+            setResult(null);
+          }}
+        />
         <div>
           <div className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
-            Aggression
+            Play Time (minutes)
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-zinc-400 dark:text-zinc-500">
-              Equal
-            </span>
+          <div className="flex items-center gap-2">
             <input
-              type="range"
+              type="number"
               min={0}
-              max={100}
-              value={aggression}
+              placeholder="Min"
+              value={minTime ?? ""}
               onChange={(e) => {
-                setAggression(Number(e.target.value));
+                const val = e.target.value === "" ? null : Number(e.target.value);
+                setMinTime(val);
                 setResult(null);
               }}
-              className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-zinc-200 accent-blue-600 dark:bg-zinc-700"
+              className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
             />
-            <span className="text-xs text-zinc-400 dark:text-zinc-500">
-              Aggressive
-            </span>
+            <span className="text-xs text-zinc-400 dark:text-zinc-500">to</span>
+            <input
+              type="number"
+              min={0}
+              placeholder="Max"
+              value={maxTime ?? ""}
+              onChange={(e) => {
+                const val = e.target.value === "" ? null : Number(e.target.value);
+                setMaxTime(val);
+                setResult(null);
+              }}
+              className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            />
           </div>
         </div>
-      )}
+      </div>
+
+      {/* Weighting + Aggression row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div>
+          <div className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
+            Weighting
+          </div>
+          <div
+            ref={modeContainerRef}
+            className="relative inline-flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
+          >
+            <div
+              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
+              style={{ left: modePillStyle.left, width: modePillStyle.width }}
+            />
+            {MODE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                ref={(el) => setModeRef(opt.value, el)}
+                onClick={() => {
+                  setMode(opt.value);
+                  setResult(null);
+                }}
+                className={`relative z-10 rounded-md px-3 py-1 text-xs font-medium transition-colors ${
+                  mode === opt.value
+                    ? "text-zinc-900 dark:text-zinc-50"
+                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                }`}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+        {mode !== "random" && (
+          <div>
+            <div className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
+              Aggression
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                Equal
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={aggression}
+                onChange={(e) => {
+                  setAggression(Number(e.target.value));
+                  setResult(null);
+                }}
+                className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-zinc-200 accent-blue-600 dark:bg-zinc-700"
+              />
+              <span className="text-xs text-zinc-400 dark:text-zinc-500">
+                Aggressive
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Spinner */}
       <SpinnerWheel

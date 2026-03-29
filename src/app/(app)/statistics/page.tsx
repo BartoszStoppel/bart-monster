@@ -109,6 +109,7 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
           bggRating: g.bgg_rating ? Number(g.bgg_rating) : null,
           thumbnailUrl: g.thumbnail_url ?? null,
           scores: gameScoresMap.get(g.bgg_id) ?? [],
+          yourScore: yourScoreMap.get(g.bgg_id) ?? null,
         }));
         return (
         <>

@@ -1,4 +1,7 @@
-import { SupabaseClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import type { BoardGame, Tier } from "@/types/database";
+import { computeAlignments } from "../community/compute-alignment";
+import type { UserTierData } from "../community/community-tier-lists";
 
 export interface AchievementHolder {
   display_name: string;
@@ -8,12 +11,16 @@ export interface AchievementHolder {
   category_label: string | null;
 }
 
+export type AchievementTone = "positive" | "negative" | "neutral";
+
 export interface AchievementDisplay {
   title: string;
   description: string;
   icon: string;
   holders: AchievementHolder[];
   ranked?: boolean;
+  tone?: AchievementTone;
+  wide?: boolean;
 }
 
 interface ProfileEntry {
@@ -141,10 +148,30 @@ function categoryWinners(
   return holders;
 }
 
-export async function computeCollectorAchievement(
+/** Take entries covering the top N distinct values (includes all ties). */
+function topByDistinctValues(
+  entries: [string, number][],
+  n: number
+): [string, number][] {
+  const distinctValues = [...new Set(entries.map(([, v]) => v))].slice(0, n);
+  const cutoff = distinctValues[distinctValues.length - 1];
+  return entries.filter(([, v]) => v >= cutoff);
+}
+
+/** Same as topByDistinctValues but for lowest values. */
+function bottomByDistinctValues(
+  entries: [string, number][],
+  n: number
+): [string, number][] {
+  const distinctValues = [...new Set(entries.map(([, v]) => v))].slice(0, n);
+  const cutoff = distinctValues[distinctValues.length - 1];
+  return entries.filter(([, v]) => v <= cutoff);
+}
+
+export async function computeCollectorAchievements(
   supabase: SupabaseClient,
   profileMap: ProfileMap
-): Promise<AchievementDisplay> {
+): Promise<[AchievementDisplay, AchievementDisplay]> {
   const { data: ownership } = await supabase
     .from("user_game_collection")
     .select("user_id, bgg_id, owned");
@@ -152,7 +179,11 @@ export async function computeCollectorAchievement(
   const householdMap = buildHouseholdMap(profileMap);
   const userToHousehold = buildUserToHouseholdMap(profileMap);
 
+  // Seed all households with 0 so everyone appears
   const gamesByHousehold = new Map<string, Set<number>>();
+  for (const hhId of householdMap.keys()) {
+    gamesByHousehold.set(hhId, new Set<number>());
+  }
   for (const row of ownership ?? []) {
     if (!row.owned) continue;
     const householdId = userToHousehold.get(row.user_id) ?? row.user_id;
@@ -161,17 +192,12 @@ export async function computeCollectorAchievement(
     gamesByHousehold.set(householdId, games);
   }
 
-  const topCollectors = [...gamesByHousehold.entries()]
-    .map(([householdId, games]) => ({ householdId, count: games.size }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 3);
+  const sorted: [string, number][] = [...gamesByHousehold.entries()]
+    .map(([householdId, games]) => [householdId, games.size] as [string, number])
+    .sort((a, b) => b[1] - a[1]);
 
-  return {
-    title: "Board Game Collector",
-    description: "Own the most board games in the group",
-    icon: "🏆",
-    ranked: true,
-    holders: topCollectors.map(({ householdId, count }) => {
+  function toHolders(entries: [string, number][]): AchievementHolder[] {
+    return entries.map(([householdId, count]) => {
       const household = householdMap.get(householdId);
       return {
         display_name: household?.display_name ?? "Unknown",
@@ -180,8 +206,32 @@ export async function computeCollectorAchievement(
         detail: `${count} ${count === 1 ? "game" : "games"}`,
         category_label: null,
       };
-    }),
+    });
+  }
+
+  const topCollectors = topByDistinctValues(sorted, 3);
+  const bottomCollectors = bottomByDistinctValues(
+    [...sorted].reverse(),
+    3
+  );
+
+  const collector: AchievementDisplay = {
+    title: "Board Game Collector",
+    description: "Own the most board games in the group",
+    icon: "🏆",
+    ranked: true,
+    holders: toHolders(topCollectors),
   };
+
+  const freeloader: AchievementDisplay = {
+    title: "Professional Freeloader",
+    description: "Why buy games when your friends already did?",
+    icon: "🛋️",
+    ranked: true,
+    holders: toHolders(bottomCollectors),
+  };
+
+  return [collector, freeloader];
 }
 
 export async function computeGameAchievements(
@@ -378,6 +428,7 @@ export async function computeGameAchievements(
       description: "The game most people in the group own",
       icon: "📦",
       holders: ownedHolders,
+      wide: true,
     });
   }
 
@@ -398,4 +449,191 @@ export async function computeGameAchievements(
   }
 
   return achievements;
+}
+
+const PEOPLE_TIERS: Tier[] = ["S", "A", "B", "C", "D", "F"];
+const ALIGNMENT_POINTS = [3, 2, 1];
+
+/**
+ * Compute "people awards" from tier list alignment data.
+ * For each user, being someone's #1 taste twin = 3 pts, #2 = 2 pts, #3 = 1 pt.
+ * Highest total = most agreeable. Same logic inverted for sworn enemies.
+ */
+export async function computePeopleAchievements(
+  supabase: SupabaseClient,
+  profileMap: ProfileMap
+): Promise<AchievementDisplay[]> {
+  const [{ data: games }, { data: placements }] = await Promise.all([
+    supabase.from("board_games").select("*").order("name"),
+    supabase
+      .from("tier_placements")
+      .select("bgg_id, tier, position, user_id"),
+  ]);
+
+  if (!games?.length || !placements?.length) return [];
+
+  const gameMap = new Map<number, BoardGame>();
+  for (const g of games) gameMap.set(g.bgg_id, g);
+
+  const pleasers: AchievementDisplay[] = [];
+  const menaces: AchievementDisplay[] = [];
+  const loners: AchievementDisplay[] = [];
+
+  const categoryConfig = [
+    {
+      category: "board" as const,
+      label: "Board Games",
+      pleaser: { title: "The People Pleaser", icon: "🤝" },
+      menace: { title: "The Menace", icon: "😈" },
+      loner: { title: "Vanilla Villain", icon: "🧍" },
+    },
+    {
+      category: "party" as const,
+      label: "Party Games",
+      pleaser: { title: "Life of the Party", icon: "🎉" },
+      menace: { title: "The Party Pooper", icon: "💩" },
+      loner: { title: "The Wallflower", icon: "🕵️" },
+    },
+  ];
+
+  for (const config of categoryConfig) {
+    const categoryGameIds = new Set(
+      games.filter((g) => g.category === config.category).map((g) => g.bgg_id)
+    );
+
+    const byUser = new Map<
+      string,
+      { bgg_id: number; tier: Tier; position: number }[]
+    >();
+    for (const p of placements) {
+      if (!categoryGameIds.has(p.bgg_id)) continue;
+      let list = byUser.get(p.user_id);
+      if (!list) {
+        list = [];
+        byUser.set(p.user_id, list);
+      }
+      list.push({ bgg_id: p.bgg_id, tier: p.tier as Tier, position: p.position });
+    }
+
+    const users: UserTierData[] = [];
+    for (const [userId, userPlacements] of byUser) {
+      const profile = profileMap.get(userId);
+      if (!profile) continue;
+
+      const buckets: Record<Tier, BoardGame[]> = {
+        S: [], A: [], B: [], C: [], D: [], F: [],
+      };
+      for (const tier of PEOPLE_TIERS) {
+        const tierPlacements = userPlacements
+          .filter((p) => p.tier === tier)
+          .sort((a, b) => a.position - b.position);
+        for (const p of tierPlacements) {
+          const game = gameMap.get(p.bgg_id);
+          if (game) buckets[tier].push(game);
+        }
+      }
+
+      const totalRanked = PEOPLE_TIERS.reduce(
+        (sum, tier) => sum + buckets[tier].length, 0
+      );
+      if (totalRanked < MIN_RATERS) continue;
+
+      users.push({
+        userId,
+        displayName: profile.display_name,
+        avatarUrl: profile.avatar_url,
+        buckets,
+        gamesOwned: 0,
+      });
+    }
+
+    const alignments = computeAlignments(users);
+
+    const allyPoints = new Map<string, number>();
+    const rivalPoints = new Map<string, number>();
+    const participantIds = new Set<string>();
+
+    for (const row of alignments) {
+      participantIds.add(row.userId);
+      for (let i = 0; i < row.allies.length; i++) {
+        const id = row.allies[i].userId;
+        allyPoints.set(id, (allyPoints.get(id) ?? 0) + ALIGNMENT_POINTS[i]);
+      }
+      for (let i = 0; i < row.rivals.length; i++) {
+        const id = row.rivals[i].userId;
+        rivalPoints.set(id, (rivalPoints.get(id) ?? 0) + ALIGNMENT_POINTS[i]);
+      }
+    }
+
+    function toHolders(entries: [string, number][]): AchievementHolder[] {
+      return entries.map(([userId, pts]) => {
+        const profile = profileMap.get(userId);
+        return {
+          display_name: profile?.display_name ?? "Unknown",
+          avatar_url: profile?.avatar_url ?? null,
+          detail: `${pts} pts`,
+          category_label: null,
+        };
+      });
+    }
+
+    // Most agreeable
+    const sortedAllies = [...allyPoints.entries()]
+      .sort((a, b) => b[1] - a[1]);
+    const topAllies = topByDistinctValues(sortedAllies, 3);
+    if (topAllies.length > 0) {
+      pleasers.push({
+        title: config.pleaser.title,
+        description: `${config.label} — everyone's taste twin`,
+        icon: config.pleaser.icon,
+        holders: toHolders(topAllies),
+        ranked: true,
+        tone: "positive",
+      });
+    }
+
+    // Least agreeable
+    const sortedRivals = [...rivalPoints.entries()]
+      .sort((a, b) => b[1] - a[1]);
+    const topRivals = topByDistinctValues(sortedRivals, 3);
+    if (topRivals.length > 0) {
+      menaces.push({
+        title: config.menace.title,
+        description: `${config.label} — champion of the sworn enemies columns`,
+        icon: config.menace.icon,
+        holders: toHolders(topRivals),
+        ranked: true,
+        tone: "negative",
+      });
+    }
+
+    // Loner — lowest combined ally + rival points (exclude pleasers & menaces)
+    const excludedFromLoner = new Set([
+      ...topAllies.map(([id]) => id),
+      ...topRivals.map(([id]) => id),
+    ]);
+    const combinedPoints = new Map<string, number>();
+    for (const id of participantIds) {
+      if (excludedFromLoner.has(id)) continue;
+      combinedPoints.set(
+        id,
+        (allyPoints.get(id) ?? 0) + (rivalPoints.get(id) ?? 0)
+      );
+    }
+    const sortedCombined = [...combinedPoints.entries()]
+      .sort((a, b) => a[1] - b[1]);
+    const bottomCombined = bottomByDistinctValues(sortedCombined, 3);
+    if (bottomCombined.length > 0) {
+      loners.push({
+        title: config.loner.title,
+        description: `${config.label} — nobody's best friend or worst enemy`,
+        icon: config.loner.icon,
+        holders: toHolders(bottomCombined),
+        ranked: true,
+        tone: "neutral",
+      });
+    }
+  }
+
+  return [...pleasers, ...menaces, ...loners];
 }

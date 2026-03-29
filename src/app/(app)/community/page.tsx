@@ -4,6 +4,9 @@ import { CategoryToggle } from "@/components/category-toggle";
 import type { BoardGame, Tier, TierPlacement } from "@/types/database";
 import { CommunityTierLists } from "./community-tier-lists";
 import type { UserTierData } from "./community-tier-lists";
+import { AlignmentTable } from "./alignment-table";
+import { computeAlignments } from "./compute-alignment";
+import { CollapsibleSection } from "./collapsible-section";
 
 export const dynamic = "force-dynamic";
 
@@ -130,6 +133,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
   }
 
   const users = buildUserTierData(placements ?? [], gameMap, profileMap, ownershipCounts);
+  const alignments = computeAlignments(users);
 
   return (
     <div>
@@ -147,7 +151,22 @@ export default async function CommunityPage({ searchParams }: PageProps) {
           <CategoryToggle category={category} basePath="/community" />
         </div>
       </div>
-      <CommunityTierLists users={users} />
+      <CollapsibleSection
+        title="Tier Lists"
+        totalCount={users.length}
+        preview={<CommunityTierLists users={users} />}
+      >
+        <CommunityTierLists users={users} />
+      </CollapsibleSection>
+      <div className="mt-6">
+        <CollapsibleSection
+          title="Tier List Alignment"
+          totalCount={alignments.length}
+          preview={<AlignmentTable alignments={alignments} />}
+        >
+          <AlignmentTable alignments={alignments} />
+        </CollapsibleSection>
+      </div>
     </div>
   );
 }

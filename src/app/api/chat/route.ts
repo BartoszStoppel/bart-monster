@@ -2,10 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { NextRequest } from "next/server";
 
-import {
-  buildQueryPlannerPrompt,
-  buildResponsePrompt,
-} from "./build-system-prompt";
+import { buildSystemPrompt } from "./build-system-prompt";
 import { DATA_TOOLS } from "./data-tools";
 import { executeTool } from "./data-tool-executors";
 
@@ -36,7 +33,6 @@ export async function POST(request: NextRequest) {
 
   const client = new Anthropic();
 
-  // Fetch user's display name
   const { data: profile } = await supabase
     .from("profiles")
     .select("display_name")
@@ -44,52 +40,66 @@ export async function POST(request: NextRequest) {
     .single();
   const userName = profile?.display_name ?? "the user";
 
-  // Call 1: Sonnet decides which DB queries to run
-  const plannerPrompt = buildQueryPlannerPrompt(userName);
+  const systemPrompt = buildSystemPrompt(userName);
+  const apiMessages: Anthropic.MessageParam[] = messages.map((m) => ({
+    role: m.role,
+    content: m.content,
+  }));
 
-  const plannerResponse = await client.messages.create({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    system: plannerPrompt,
-    tools: DATA_TOOLS,
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
-  });
+  // Tool use loop: let Opus call tools, feed results back, repeat until it responds with text
+  let currentMessages = [...apiMessages];
+  const MAX_TOOL_ROUNDS = 5;
 
-  // Capture planner reasoning + execute tool calls
-  const plannerNotes: string[] = [];
-  const resultParts: string[] = [];
+  for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
+    const response = await client.messages.create({
+      model: "claude-opus-4-6",
+      max_tokens: 2048,
+      system: systemPrompt,
+      tools: DATA_TOOLS,
+      messages: currentMessages,
+    });
 
-  for (const block of plannerResponse.content) {
-    if (block.type === "text" && block.text.trim()) {
-      plannerNotes.push(block.text.trim());
+    const toolUseBlocks = response.content.filter(
+      (b): b is Anthropic.ContentBlock & { type: "tool_use" } =>
+        b.type === "tool_use",
+    );
+
+    // No tool calls — stream the final response
+    if (toolUseBlocks.length === 0) {
+      break;
     }
-    if (block.type === "tool_use") {
-      const result = await executeTool(
-        supabase,
-        user.id,
-        block.name,
-        block.input as Record<string, unknown>,
-      );
-      resultParts.push(`### ${block.name}\n${result}`);
-    }
+
+    // Execute all tool calls
+    const toolResults: Anthropic.ToolResultBlockParam[] = await Promise.all(
+      toolUseBlocks.map(async (block) => {
+        const result = await executeTool(
+          supabase,
+          user.id,
+          block.name,
+          block.input as Record<string, unknown>,
+        );
+        return {
+          type: "tool_result" as const,
+          tool_use_id: block.id,
+          content: result,
+        };
+      }),
+    );
+
+    // Add assistant response + tool results to conversation
+    currentMessages = [
+      ...currentMessages,
+      { role: "assistant" as const, content: response.content },
+      { role: "user" as const, content: toolResults },
+    ];
   }
 
-  const plannerContext = plannerNotes.length > 0
-    ? `## Query Planner Notes\n${plannerNotes.join("\n")}\n\n`
-    : "";
-
-  const queryResults = resultParts.length > 0
-    ? `${plannerContext}${resultParts.join("\n\n")}`
-    : "No data was queried. Answer based on general board game knowledge, noting you don't have collection-specific data for this question.";
-
-  // Call 2: Sonnet generates the response using exact DB results
-  const responsePrompt = buildResponsePrompt(userName, queryResults);
-
+  // Final streaming call (no tools, so it just responds)
   const stream = await client.messages.stream({
-    model: "claude-sonnet-4-6",
-    max_tokens: 1024,
-    system: responsePrompt,
-    messages: messages.map((m) => ({ role: m.role, content: m.content })),
+    model: "claude-opus-4-6",
+    max_tokens: 2048,
+    system: systemPrompt,
+    messages: currentMessages,
   });
 
   const encoder = new TextEncoder();

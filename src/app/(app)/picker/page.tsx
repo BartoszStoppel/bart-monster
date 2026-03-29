@@ -25,7 +25,7 @@ export default async function PickerPage() {
       .from("user_game_collection")
       .select("user_id, bgg_id")
       .eq("owned", true),
-    supabase.from("tier_placements").select("user_id, bgg_id, score"),
+    supabase.from("tier_placements").select("user_id, bgg_id, score, tier"),
   ]);
 
   const ownershipMap: Record<string, number[]> = {};
@@ -42,6 +42,20 @@ export default async function PickerPage() {
     userScoreMap[p.user_id][String(p.bgg_id)] = p.score;
   }
 
+  // Build per-game tier set: { [bggId]: Set of tiers any user placed it in }
+  const gameTierMap: Record<string, Set<string>> = {};
+  for (const p of placements ?? []) {
+    if (!p.tier) continue;
+    const key = String(p.bgg_id);
+    if (!gameTierMap[key]) gameTierMap[key] = new Set();
+    gameTierMap[key].add(p.tier);
+  }
+  // Convert sets to arrays for serialization
+  const gameTiers: Record<string, string[]> = {};
+  for (const [bggId, tiers] of Object.entries(gameTierMap)) {
+    gameTiers[bggId] = [...tiers];
+  }
+
   return (
     <div>
       <h1 className="mb-4 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
@@ -52,6 +66,7 @@ export default async function PickerPage() {
         games={games ?? []}
         ownershipMap={ownershipMap}
         userScoreMap={userScoreMap}
+        gameTiers={gameTiers}
         currentUserId={user?.id ?? null}
       />
     </div>

@@ -15,10 +15,11 @@ export default async function CollectionPage() {
 
   const householdIds = user ? await getHouseholdIds(supabase, user.id) : [];
 
-  const [{ data: games }, { data: placements }, { data: owned }, { data: wishlisted }] =
+  const [{ data: games }, { data: placements }, { data: profiles }, { data: owned }, { data: wishlisted }] =
     await Promise.all([
       supabase.from("board_games").select("*").order("name"),
-      supabase.from("tier_placements").select("bgg_id, score"),
+      supabase.from("tier_placements").select("user_id, bgg_id, score, tier, position"),
+      supabase.from("profiles").select("id, display_name"),
       user
         ? supabase
             .from("user_game_collection")
@@ -55,6 +56,49 @@ export default async function CollectionPage() {
     }
   }
 
+  const nameMap = new Map<string, string>();
+  for (const p of profiles ?? []) {
+    nameMap.set(p.id, p.display_name);
+  }
+
+  const gameCategory = new Map<number, string>();
+  for (const g of games ?? []) {
+    gameCategory.set(g.bgg_id, g.category);
+  }
+
+  const TIER_ORDER: Record<string, number> = { S: 0, A: 1, B: 2, C: 3, D: 4, F: 5 };
+  type CatBadges = { gold: string[]; silver: string[]; bronze: string[]; trash: string[] };
+  const badgeMap: Record<number, { board?: CatBadges; party?: CatBadges }> = {};
+  const byUserCat = new Map<string, { bgg_id: number; tier: string; position: number }[]>();
+  for (const p of placements ?? []) {
+    const cat = gameCategory.get(p.bgg_id) ?? "board";
+    const key = `${p.user_id}::${cat}`;
+    const list = byUserCat.get(key) ?? [];
+    list.push({ bgg_id: p.bgg_id, tier: p.tier, position: p.position });
+    byUserCat.set(key, list);
+  }
+  for (const [key, userPlacements] of byUserCat) {
+    const [userId, cat] = key.split("::");
+    const sorted = userPlacements.sort(
+      (a, b) => (TIER_ORDER[a.tier] ?? 6) - (TIER_ORDER[b.tier] ?? 6) || a.position - b.position
+    );
+    const name = nameMap.get(userId) ?? "Unknown";
+    const medalKeys: Array<"gold" | "silver" | "bronze"> = ["gold", "silver", "bronze"];
+    const catKey = cat as "board" | "party";
+    for (let i = 0; i < Math.min(3, sorted.length); i++) {
+      const id = sorted[i].bgg_id;
+      badgeMap[id] ??= {};
+      badgeMap[id][catKey] ??= { gold: [], silver: [], bronze: [], trash: [] };
+      badgeMap[id][catKey][medalKeys[i]].push(name);
+    }
+    if (sorted.length > 0) {
+      const lastId = sorted[sorted.length - 1].bgg_id;
+      badgeMap[lastId] ??= {};
+      badgeMap[lastId][catKey] ??= { gold: [], silver: [], bronze: [], trash: [] };
+      badgeMap[lastId][catKey].trash.push(name);
+    }
+  }
+
   return (
     <div>
       <div className="mb-6 flex items-center justify-between">
@@ -81,6 +125,7 @@ export default async function CollectionPage() {
           ownedSet={[...ownedSet]}
           wishlistSet={[...wishlistSet]}
           isAdmin={admin}
+          badgeMap={badgeMap}
         />
       ) : (
         <div className="rounded-lg border border-dashed border-zinc-300 py-16 text-center dark:border-zinc-700">

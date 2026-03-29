@@ -9,6 +9,7 @@ interface DistributionGame {
   bggRating: number | null;
   thumbnailUrl: string | null;
   scores: number[];
+  yourScore: number | null;
 }
 
 interface DistributionChartProps {
@@ -100,7 +101,11 @@ export function DistributionChart({ games }: DistributionChartProps) {
   );
 
   const bggLineX = selected?.bggRating ? toX(selected.bggRating) : null;
+  const communityAvg = selected && selected.scores.length > 0
+    ? selected.scores.reduce((a, b) => a + b, 0) / selected.scores.length
+    : null;
   const centerY = PAD.top + PLOT_H / 2;
+
 
   if (sortedGames.length === 0) return null;
 
@@ -194,27 +199,58 @@ export function DistributionChart({ games }: DistributionChartProps) {
             />
           ))}
 
-          {/* BGG rating line */}
-          {bggLineX != null && (
+          {/* Your score indicator */}
+          {selected?.yourScore != null && (
             <>
               <line
-                x1={bggLineX}
-                x2={bggLineX}
+                x1={toX(selected.yourScore)}
+                x2={toX(selected.yourScore)}
                 y1={PAD.top}
                 y2={PAD.top + PLOT_H}
-                className="stroke-orange-500 dark:stroke-orange-400"
-                strokeWidth={1.5}
-                strokeDasharray="4 2"
+                className="stroke-green-500 dark:stroke-green-400"
+                strokeWidth={1}
               />
-              <text
-                x={bggLineX}
-                y={PAD.top - 4}
-                textAnchor="middle"
-                className="fill-orange-500 text-[7px] font-semibold dark:fill-orange-400"
-              >
-                BGG {selected!.bggRating!.toFixed(1)}
-              </text>
+              <circle
+                cx={toX(selected.yourScore)}
+                cy={centerY}
+                r={3.5}
+                className="fill-green-500 stroke-white dark:fill-green-400 dark:stroke-zinc-900"
+                strokeWidth={1}
+              />
             </>
+          )}
+
+          {/* Community average indicator */}
+          {communityAvg != null && (
+            <>
+              <line
+                x1={toX(communityAvg)}
+                x2={toX(communityAvg)}
+                y1={PAD.top}
+                y2={PAD.top + PLOT_H}
+                className="stroke-blue-500 dark:stroke-blue-400"
+                strokeWidth={1}
+              />
+              <circle
+                cx={toX(communityAvg)}
+                cy={centerY}
+                r={3.5}
+                className="fill-blue-500 stroke-white dark:fill-blue-400 dark:stroke-zinc-900"
+                strokeWidth={1}
+              />
+            </>
+          )}
+
+          {/* BGG rating line */}
+          {bggLineX != null && (
+            <line
+              x1={bggLineX}
+              x2={bggLineX}
+              y1={PAD.top}
+              y2={PAD.top + PLOT_H}
+              className="stroke-orange-500 dark:stroke-orange-400"
+              strokeWidth={1}
+            />
           )}
 
           {/* Axis title */}
@@ -227,6 +263,36 @@ export function DistributionChart({ games }: DistributionChartProps) {
             Score
           </text>
         </svg>
+
+        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
+          {selected?.yourScore != null && (
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-green-500 dark:bg-green-400" />
+              <span className="text-zinc-500 dark:text-zinc-400">You</span>
+              <span className="font-semibold text-green-600 dark:text-green-400">
+                {selected.yourScore.toFixed(1)}
+              </span>
+            </div>
+          )}
+          {communityAvg != null && (
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-400" />
+              <span className="text-zinc-500 dark:text-zinc-400">Avg</span>
+              <span className="font-semibold text-blue-600 dark:text-blue-400">
+                {communityAvg.toFixed(1)}
+              </span>
+            </div>
+          )}
+          {selected?.bggRating != null && (
+            <div className="flex items-center gap-1.5">
+              <span className="inline-block h-2 w-2 rounded-full bg-orange-500 dark:bg-orange-400" />
+              <span className="text-zinc-500 dark:text-zinc-400">BGG</span>
+              <span className="font-semibold text-orange-600 dark:text-orange-400">
+                {selected.bggRating.toFixed(1)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     </section>
   );

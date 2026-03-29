@@ -5,7 +5,7 @@ import { GameCard } from "@/components/game-card";
 import { createClient } from "@/lib/supabase/client";
 import type { BoardGame } from "@/types/database";
 
-type SortOption = "ours" | "bgg" | "name" | "weight";
+type SortOption = "ours" | "bgg" | "name" | "weight" | "decorated";
 type CategoryFilter = "all" | "board" | "party";
 
 const SORT_OPTIONS: { value: SortOption; label: string }[] = [
@@ -13,6 +13,7 @@ const SORT_OPTIONS: { value: SortOption; label: string }[] = [
   { value: "bgg", label: "BGG Rating" },
   { value: "name", label: "Name" },
   { value: "weight", label: "Weight" },
+  { value: "decorated", label: "Decorated" },
 ];
 
 const CATEGORY_OPTIONS: { value: CategoryFilter; label: string }[] = [
@@ -47,12 +48,25 @@ function usePillIndicator<T extends string>(active: T) {
   return { containerRef, setRef, pill };
 }
 
+export interface CategoryBadges {
+  gold: string[];
+  silver: string[];
+  bronze: string[];
+  trash: string[];
+}
+
+export interface GameBadges {
+  board?: CategoryBadges;
+  party?: CategoryBadges;
+}
+
 interface SortableGameGridProps {
   games: BoardGame[];
   avgScoreMap: Record<string, number>;
   ownedSet: number[];
   wishlistSet?: number[];
   isAdmin?: boolean;
+  badgeMap?: Record<number, GameBadges>;
 }
 
 export function SortableGameGrid({
@@ -61,6 +75,7 @@ export function SortableGameGrid({
   ownedSet,
   wishlistSet: wishlistSetProp = [],
   isAdmin: admin,
+  badgeMap = {},
 }: SortableGameGridProps) {
   const [games, setGames] = useState(initialGames);
   const [sort, setSort] = useState<SortOption>("ours");
@@ -160,6 +175,22 @@ export function SortableGameGrid({
     [avgScoreMap]
   );
 
+  const decorationScore = useCallback(
+    (bggId: number): number => {
+      const badges = badgeMap[bggId];
+      if (!badges) return 0;
+      let score = 0;
+      for (const cat of [badges.board, badges.party]) {
+        if (!cat) continue;
+        score += cat.gold.length * 4;
+        score += cat.silver.length * 2;
+        score += cat.bronze.length * 1;
+      }
+      return score;
+    },
+    [badgeMap]
+  );
+
   const sorted = useMemo(() => {
     let filtered = category === "all"
       ? games
@@ -196,9 +227,16 @@ export function SortableGameGrid({
           return wb - wa || a.name.localeCompare(b.name);
         });
         break;
+      case "decorated":
+        copy.sort((a, b) => {
+          const da = decorationScore(a.bgg_id);
+          const db = decorationScore(b.bgg_id);
+          return db - da || a.name.localeCompare(b.name);
+        });
+        break;
     }
     return copy;
-  }, [games, sort, scores, category, ownedOnly, ownedIds]);
+  }, [games, sort, scores, category, ownedOnly, ownedIds, decorationScore]);
 
   return (
     <div>
@@ -285,6 +323,7 @@ export function SortableGameGrid({
             owned={ownedIds.has(game.bgg_id)}
             wishlisted={wishlistIds.has(game.bgg_id)}
             isAdmin={admin}
+            badges={badgeMap[game.bgg_id]}
             onOwnershipToggle={handleOwnershipToggle}
             onWishlistToggle={handleWishlistToggle}
             onGameUpdated={handleGameUpdated}

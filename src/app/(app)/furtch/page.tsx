@@ -117,6 +117,26 @@ const STORIES: FurtchStory[] = [
       "smk.",
     ],
   },
+  {
+    episode: 5,
+    title: "The Pile Is Warm",
+    date: "March 29, 2026",
+    paragraphs: [
+      "schkllllp schkllllp.",
+      "<name>. smk. Furtch is whispering now. Furtch does not know if beetles have ears but Furtch is not taking chances.",
+      "schklp.",
+      "The leaf pile is moving <name>. Not the beetles. The pile. It is taller now. Furtch did not see them add to it but it grew. smk smk. It was small like a pebble and now it is small like a bigger pebble. Furtch measured it with Furtch\u2019s toe. Then Furtch pulled the toe back very fast because the pile was warm <name>. A pile of leaf should not be warm.",
+      "hhhhhhhh.",
+      "The three beetles are not walking in the circle anymore. They are sitting. All facing the pile. Very still. Furtch has not seen them move in nine hours. smmmk. Furtch counted every hour. Furtch counted by watching the moon. The moon moved nine times. That is how moons work <name>. Probably.",
+      "smk smk smk.",
+      "Furtch\u2019s bones are all feeling many things right now. Too many things. smmmmk. Furtch will not leave the roof. Furtch cannot leave the roof. The beetles would notice.",
+      "schkllllp.",
+      "Do not open your window <name>. Do not look at the pile. Furtch will write again. smk. If Furtch can.",
+      "hhhhhhhh.",
+      "Good night <name>.",
+      "schklp.",
+    ],
+  },
 ];
 
 const SOUND_EFFECTS = new Set([
@@ -133,6 +153,8 @@ const SOUND_EFFECTS = new Set([
   "smmmk.",
   "smk smk smk.",
   "schklp schklp schklp.",
+  "schkllllp schkllllp.",
+  "smk smk.",
 ]);
 
 function isSoundEffect(text: string): boolean {

@@ -145,11 +145,7 @@ export default function ChatPage() {
                 msg.content ? (
                   <Markdown content={msg.content} />
                 ) : (
-                  <span className="inline-flex gap-1">
-                    <span className="animate-pulse">.</span>
-                    <span className="animate-pulse [animation-delay:200ms]">.</span>
-                    <span className="animate-pulse [animation-delay:400ms]">.</span>
-                  </span>
+                  <ThinkingIndicator />
                 )
               ) : (
                 <span className="whitespace-pre-wrap">{msg.content}</span>
@@ -183,6 +179,31 @@ export default function ChatPage() {
           </button>
         </div>
       </form>
+    </div>
+  );
+}
+
+function ThinkingIndicator() {
+  return (
+    <div className="flex items-center gap-3 py-1">
+      <div className="relative h-6 w-6">
+        {/* Outer orbiting ring */}
+        <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-blue-500 [animation-duration:1.5s]" />
+        {/* Inner orbiting ring — opposite direction */}
+        <div className="absolute inset-1 animate-spin rounded-full border-2 border-transparent border-b-violet-500 [animation-direction:reverse] [animation-duration:1s]" />
+        {/* Center glow dot */}
+        <div className="absolute inset-[7px] animate-pulse rounded-full bg-blue-500 shadow-[0_0_8px_2px_rgba(59,130,246,0.6)] [animation-duration:1.2s]" />
+      </div>
+      <span className="text-xs text-zinc-400 dark:text-zinc-500">
+        <span className="inline-flex items-baseline">
+          Bort is thinking
+          <span className="ml-0.5 inline-flex w-4">
+            <span className="animate-[dotPulse_1.4s_infinite_both] text-zinc-400 dark:text-zinc-500">.</span>
+            <span className="animate-[dotPulse_1.4s_0.2s_infinite_both] text-zinc-400 dark:text-zinc-500">.</span>
+            <span className="animate-[dotPulse_1.4s_0.4s_infinite_both] text-zinc-400 dark:text-zinc-500">.</span>
+          </span>
+        </span>
+      </span>
     </div>
   );
 }
