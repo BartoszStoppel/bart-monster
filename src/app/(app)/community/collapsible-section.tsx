@@ -47,13 +47,15 @@ export function CollapsibleSection({
   }
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => setExpanded(true)}
+      onKeyDown={(e) => { if (e.key === "Enter") setExpanded(true); }}
       className="group relative h-48 w-full cursor-pointer overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700"
     >
       {/* Preview content, clipped */}
-      <div className="pointer-events-none overflow-hidden">
+      <div className="pointer-events-none h-48 overflow-hidden">
         {preview}
       </div>
 
@@ -66,6 +68,6 @@ export function CollapsibleSection({
           {description}
         </p>
       </div>
-    </button>
+    </div>
   );
 }
