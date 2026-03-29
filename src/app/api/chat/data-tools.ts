@@ -15,6 +15,7 @@ export interface ToolInput {
   compare_against?: "bgg" | "community";
   direction?: "user_higher" | "user_lower" | "both";
   min_difference?: number;
+  user_name?: string;
 }
 
 /** Tool definitions given to the query-planning model. */
@@ -22,10 +23,15 @@ export const DATA_TOOLS: Anthropic.Tool[] = [
   {
     name: "get_user_rankings",
     description:
-      "Get the current user's ranked games with their tier, score (1-10), the game's BGG rating, and the community average score. Returns ALL ranked games by default. Use this for any question about the user's ratings, preferences, or taste analysis.",
+      "Get a user's ranked games with their tier, score (1-10), the game's BGG rating, and the community average score. Returns ALL ranked games by default. Use this for any question about a user's ratings, preferences, or taste analysis. Omit user_name to query the current user.",
     input_schema: {
       type: "object" as const,
       properties: {
+        user_name: {
+          type: "string",
+          description:
+            "Display name of the user to look up (case-insensitive). Omit to query the current user.",
+        },
         order_by: {
           type: "string",
           enum: ["score_desc", "score_asc", "name"],
@@ -120,10 +126,15 @@ export const DATA_TOOLS: Anthropic.Tool[] = [
   {
     name: "compare_scores",
     description:
-      "Compare the user's scores against BGG ratings or community averages. Returns ONLY games matching the comparison with the difference pre-computed and sorted. Use this whenever the user asks about disparities, differences, over/underrated games, or 'which games do I rate higher/lower than X'.",
+      "Compare a user's scores against BGG ratings or community averages. Returns ONLY games matching the comparison with the difference pre-computed and sorted. Use this whenever the user asks about disparities, differences, over/underrated games, or 'which games do I rate higher/lower than X'. Omit user_name to query the current user.",
     input_schema: {
       type: "object" as const,
       properties: {
+        user_name: {
+          type: "string",
+          description:
+            "Display name of the user to look up (case-insensitive). Omit to query the current user.",
+        },
         compare_against: {
           type: "string",
           enum: ["bgg", "community"],
@@ -157,10 +168,15 @@ export const DATA_TOOLS: Anthropic.Tool[] = [
   {
     name: "get_unranked_games",
     description:
-      "Get games in the collection that the user has NOT ranked yet. Use for discovering new games or recommending things they haven't tried.",
+      "Get games in the collection that a user has NOT ranked yet. Omit user_name to query the current user.",
     input_schema: {
       type: "object" as const,
       properties: {
+        user_name: {
+          type: "string",
+          description:
+            "Display name of the user to look up (case-insensitive). Omit to query the current user.",
+        },
         category: {
           type: "string",
           enum: ["party", "board"],

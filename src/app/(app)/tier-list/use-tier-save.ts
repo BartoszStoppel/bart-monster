@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import type { BoardGame, Tier } from "@/types/database";
 import { flatRanking, computeScores } from "./compute-scores";
+import { recomputeAlignments } from "../community/recompute-alignments";
 
 export interface TierEntry {
   tier: Tier;
@@ -94,6 +95,9 @@ export function useTierSave() {
         throw new Error(`Delete failed: ${deleteError.message}`);
       }
     }
+
+    // Recompute alignment table in the background
+    recomputeAlignments().catch(() => {});
 
     setSaving(false);
   }, []);

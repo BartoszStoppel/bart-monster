@@ -1,7 +1,7 @@
 INSERT INTO bounties (slug, title, description, icon)
 VALUES (
-  'hegemony-score-150',
-  'Hegemony: Score 150',
-  'Score 150 points in Hegemony',
+  'hegemony-score-175',
+  'Hegemony: Score 175',
+  'Score 175 points in Hegemony',
   '🏛️'
 );

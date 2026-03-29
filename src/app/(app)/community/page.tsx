@@ -1,84 +1,17 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CategoryToggle } from "@/components/category-toggle";
-import type { BoardGame, Tier, TierPlacement } from "@/types/database";
+import type { BoardGame } from "@/types/database";
 import { CommunityTierLists } from "./community-tier-lists";
-import type { UserTierData } from "./community-tier-lists";
 import { AlignmentTable } from "./alignment-table";
-import { computeAlignments } from "./compute-alignment";
+import type { AlignmentEntry, UserAlignment } from "./compute-alignment";
 import { CollapsibleSection } from "./collapsible-section";
+import { buildUserTierData } from "./build-user-tier-data";
 
 export const dynamic = "force-dynamic";
 
-const TIERS: Tier[] = ["S", "A", "B", "C", "D", "F"];
-
 interface PageProps {
   searchParams: Promise<{ category?: string }>;
-}
-
-function buildUserTierData(
-  placements: Pick<TierPlacement, "bgg_id" | "tier" | "position" | "user_id">[],
-  gameMap: Map<number, BoardGame>,
-  profileMap: Map<string, { display_name: string; avatar_url: string | null }>,
-  ownershipCounts: Map<string, number>
-): UserTierData[] {
-  const byUser = new Map<
-    string,
-    Pick<TierPlacement, "bgg_id" | "tier" | "position">[]
-  >();
-
-  for (const p of placements) {
-    if (!gameMap.has(p.bgg_id)) continue;
-    let list = byUser.get(p.user_id);
-    if (!list) {
-      list = [];
-      byUser.set(p.user_id, list);
-    }
-    list.push(p);
-  }
-
-  const result: UserTierData[] = [];
-
-  for (const [userId, userPlacements] of byUser) {
-    const profile = profileMap.get(userId);
-    if (!profile) continue;
-
-    const buckets: Record<Tier, BoardGame[]> = {
-      S: [],
-      A: [],
-      B: [],
-      C: [],
-      D: [],
-      F: [],
-    };
-
-    for (const tier of TIERS) {
-      const tierPlacements = userPlacements
-        .filter((p) => p.tier === tier)
-        .sort((a, b) => a.position - b.position);
-      for (const p of tierPlacements) {
-        const game = gameMap.get(p.bgg_id);
-        if (game) buckets[tier].push(game);
-      }
-    }
-
-    const totalRanked = TIERS.reduce(
-      (sum, tier) => sum + buckets[tier].length,
-      0
-    );
-    if (totalRanked === 0) continue;
-
-    result.push({
-      userId,
-      displayName: profile.display_name,
-      avatarUrl: profile.avatar_url,
-      buckets,
-      gamesOwned: ownershipCounts.get(userId) ?? 0,
-    });
-  }
-
-  result.sort((a, b) => a.displayName.localeCompare(b.displayName));
-  return result;
 }
 
 export default async function CommunityPage({ searchParams }: PageProps) {
@@ -93,6 +26,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
     { data: placements },
     { data: profiles },
     { data: collections },
+    { data: alignmentRows },
   ] = await Promise.all([
     supabase
       .from("board_games")
@@ -110,6 +44,10 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       .from("user_game_collection")
       .select("user_id")
       .eq("owned", true),
+    supabase
+      .from("user_alignments")
+      .select("user_id, display_name, avatar_url, allies, rivals")
+      .eq("category", category),
   ]);
 
   const gameMap = new Map<number, BoardGame>();
@@ -134,7 +72,14 @@ export default async function CommunityPage({ searchParams }: PageProps) {
   }
 
   const users = buildUserTierData(placements ?? [], gameMap, profileMap, ownershipCounts);
-  const alignments = computeAlignments(users);
+
+  const alignments: UserAlignment[] = (alignmentRows ?? []).map((row) => ({
+    userId: row.user_id,
+    displayName: row.display_name,
+    avatarUrl: row.avatar_url,
+    allies: row.allies as AlignmentEntry[],
+    rivals: row.rivals as AlignmentEntry[],
+  }));
 
   return (
     <div>

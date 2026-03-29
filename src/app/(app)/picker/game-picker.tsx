@@ -58,6 +58,13 @@ interface PickerProfile {
   avatar_url: string | null;
 }
 
+interface Household {
+  id: string;
+  label: string;
+  memberIds: string[];
+  gameCount: number;
+}
+
 interface GamePickerProps {
   profiles: PickerProfile[];
   games: BoardGame[];
@@ -65,6 +72,7 @@ interface GamePickerProps {
   userScoreMap: Record<string, Record<string, number>>;
   gameTiers: Record<string, string[]>;
   currentUserId: string | null;
+  households: Household[];
 }
 
 export function GamePicker({
@@ -74,8 +82,14 @@ export function GamePicker({
   userScoreMap,
   gameTiers,
   currentUserId,
+  households,
 }: GamePickerProps) {
-  const [supplierId, setSupplierId] = useState<string | null>(currentUserId);
+  const currentHousehold = households.find((h) =>
+    h.memberIds.includes(currentUserId ?? "")
+  );
+  const [supplierId, setSupplierId] = useState<string | null>(
+    currentHousehold?.id ?? currentUserId
+  );
   const [selectedPlayers, setSelectedPlayers] = useState<Set<string>>(
     () => new Set(currentUserId ? [currentUserId] : [])
   );
@@ -115,9 +129,13 @@ export function GamePicker({
     setResult(null);
   }, []);
 
+  const supplierHousehold = households.find((h) => h.id === supplierId);
+
   const pool = useMemo(() => {
-    if (!supplierId) return [];
-    const ownedIds = new Set(ownershipMap[supplierId] ?? []);
+    if (!supplierHousehold) return [];
+    const ownedIds = new Set(
+      supplierHousehold.memberIds.flatMap((mid) => ownershipMap[mid] ?? [])
+    );
     let filtered = games.filter((g) => ownedIds.has(g.bgg_id));
     if (category !== "all") {
       filtered = filtered.filter((g) => g.category === category);
@@ -146,7 +164,7 @@ export function GamePicker({
       });
     }
     return filtered;
-  }, [supplierId, ownershipMap, games, category, selectedPlayers.size, minTime, maxTime, selectedTiers, gameTiers]);
+  }, [supplierHousehold, ownershipMap, games, category, selectedPlayers.size, minTime, maxTime, selectedTiers, gameTiers]);
 
   const playerIds = useMemo(() => [...selectedPlayers], [selectedPlayers]);
 
@@ -185,8 +203,6 @@ export function GamePicker({
     }
   }, [targetIndex, pool]);
 
-  const supplierProfile = profiles.find((p) => p.id === supplierId);
-
   return (
     <div className="space-y-6">
       {/* Supplier + Category row */}
@@ -210,10 +226,10 @@ export function GamePicker({
             }}
             className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
           >
-            <option value="">Select a player...</option>
-            {profiles.map((p) => (
-              <option key={p.id} value={p.id}>
-                {p.display_name} ({(ownershipMap[p.id] ?? []).length} games)
+            <option value="">Select a household...</option>
+            {households.map((h) => (
+              <option key={h.id} value={h.id}>
+                {h.label} ({h.gameCount} games)
               </option>
             ))}
           </select>
@@ -224,7 +240,7 @@ export function GamePicker({
           </div>
           <p className="mb-2 text-xs text-zinc-400 dark:text-zinc-500">
             {supplierId
-              ? `${pool.length} ${pool.length === 1 ? "game" : "games"} from ${supplierProfile?.display_name ?? "supplier"}`
+              ? `${pool.length} ${pool.length === 1 ? "game" : "games"} from ${supplierHousehold?.label ?? "supplier"}`
               : "Select a supplier"}
           </p>
           <div

@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/admin";
 import { redirect } from "next/navigation";
 import { computeScores } from "@/app/(app)/tier-list/compute-scores";
+import { recomputeAlignments } from "@/app/(app)/community/recompute-alignments";
 import type { Tier } from "@/types/database";
 
 const TIER_ORDER: Tier[] = ["S", "A", "B", "C", "D", "F"];
@@ -41,6 +42,7 @@ export async function deleteGame(bggId: number) {
   }
 
   await recalculateScores(supabase, affectedUserIds);
+  await recomputeAlignments();
 
   redirect("/");
 }

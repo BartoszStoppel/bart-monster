@@ -7,6 +7,19 @@ interface AlignmentTableProps {
   alignments: UserAlignment[];
 }
 
+function SplitName({ name, className }: { name: string; className?: string }) {
+  const parts = name.split(" ");
+  const first = parts[0];
+  const last = parts.slice(1).join(" ");
+  return (
+    <span className={className}>
+      {first}
+      {last && <br />}
+      {last}
+    </span>
+  );
+}
+
 function Avatar({
   name,
   url,
@@ -77,9 +90,7 @@ function AlignmentCell({
     <td className={classes}>
       <div className="flex items-center gap-1.5">
         <Avatar name={entry.displayName} url={entry.avatarUrl} />
-        <span className="text-xs text-zinc-800 dark:text-zinc-200">
-          {entry.displayName}
-        </span>
+        <SplitName name={entry.displayName} className="text-xs leading-tight text-zinc-800 dark:text-zinc-200" />
       </div>
     </td>
   );
@@ -112,7 +123,7 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
-            {alignments.map((row) => (
+            {[...alignments].sort((a, b) => a.displayName.localeCompare(b.displayName)).map((row) => (
               <tr key={row.userId}>
                 <td className="px-3 py-2">
                   <div className="flex items-center gap-2">
@@ -121,9 +132,7 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
                       url={row.avatarUrl}
                       size={24}
                     />
-                    <span className="text-sm font-medium text-zinc-900 dark:text-zinc-50">
-                      {row.displayName}
-                    </span>
+                    <SplitName name={row.displayName} className="text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-50" />
                   </div>
                 </td>
                 <AlignmentCell entry={row.allies[0]} divider bg={GREEN_BG[0]} />

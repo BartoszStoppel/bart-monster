@@ -2,6 +2,36 @@ import type { SupabaseClient, ToolInput } from "./data-tools";
 
 const MIN_RATINGS = 3;
 
+/** Resolve an optional user_name to a user ID, falling back to the current user. */
+async function resolveUserId(
+  supabase: SupabaseClient,
+  currentUserId: string,
+  userName?: string,
+): Promise<{ userId: string; displayName: string } | string> {
+  if (!userName) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("display_name")
+      .eq("id", currentUserId)
+      .single();
+    return { userId: currentUserId, displayName: profile?.display_name ?? "You" };
+  }
+
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, display_name")
+    .ilike("display_name", `%${userName}%`);
+
+  if (!profiles || profiles.length === 0) {
+    return `No user found matching "${userName}". Check the spelling.`;
+  }
+  if (profiles.length > 1) {
+    const names = profiles.map((p) => p.display_name).join(", ");
+    return `Multiple users match "${userName}": ${names}. Be more specific.`;
+  }
+  return { userId: profiles[0].id, displayName: profiles[0].display_name };
+}
+
 /** Executes a tool call against Supabase and returns formatted results. */
 export async function executeTool(
   supabase: SupabaseClient,
@@ -29,9 +59,13 @@ export async function executeTool(
 
 async function executeUserRankings(
   supabase: SupabaseClient,
-  userId: string,
+  currentUserId: string,
   input: ToolInput,
 ): Promise<string> {
+  const resolved = await resolveUserId(supabase, currentUserId, input.user_name);
+  if (typeof resolved === "string") return resolved;
+  const { userId, displayName } = resolved;
+
   const { data: placements } = await supabase
     .from("tier_placements")
     .select("bgg_id, tier, score")
@@ -42,7 +76,7 @@ async function executeUserRankings(
     .select("bgg_id, score");
 
   const bggIds = (placements ?? []).map((p) => p.bgg_id);
-  if (bggIds.length === 0) return "No games ranked yet.";
+  if (bggIds.length === 0) return `${displayName} has no games ranked yet.`;
 
   const { data: games } = await supabase
     .from("board_games")
@@ -85,11 +119,12 @@ async function executeUserRankings(
 
   if (input.limit) rows = rows.slice(0, input.limit);
 
-  const header = "Game | Tier | User Score | BGG Rating | Community Avg";
+  const label = `Rankings for ${displayName}`;
+  const header = "Game | Tier | Score | BGG Rating | Community Avg";
   const lines = rows.map(
     (r) => `${r.name} | ${r.tier} | ${r.score.toFixed(1)} | ${r.bggRating} | ${r.communityAvg}`,
   );
-  return `${header}\n${lines.join("\n")}`;
+  return `${label}\n${header}\n${lines.join("\n")}`;
 }
 
 async function executeCollection(
@@ -191,7 +226,7 @@ async function executeCommunityRankings(
 
 async function executeGameDetails(
   supabase: SupabaseClient,
-  userId: string,
+  currentUserId: string,
   input: ToolInput,
 ): Promise<string> {
   const names = input.game_names ?? [];
@@ -206,7 +241,7 @@ async function executeGameDetails(
   const { data: userPlacements } = await supabase
     .from("tier_placements")
     .select("bgg_id, tier, score")
-    .eq("user_id", userId);
+    .eq("user_id", currentUserId);
 
   const { data: allPlacements } = await supabase
     .from("tier_placements")
@@ -255,9 +290,13 @@ async function executeGameDetails(
 
 async function executeCompareScores(
   supabase: SupabaseClient,
-  userId: string,
+  currentUserId: string,
   input: ToolInput,
 ): Promise<string> {
+  const resolved = await resolveUserId(supabase, currentUserId, input.user_name);
+  if (typeof resolved === "string") return resolved;
+  const { userId } = resolved;
+
   const compareAgainst = input.compare_against ?? "bgg";
   const direction = input.direction ?? "both";
   const minDiff = input.min_difference ?? 0;
@@ -359,9 +398,13 @@ async function executeCompareScores(
 
 async function executeUnrankedGames(
   supabase: SupabaseClient,
-  userId: string,
+  currentUserId: string,
   input: ToolInput,
 ): Promise<string> {
+  const resolved = await resolveUserId(supabase, currentUserId, input.user_name);
+  if (typeof resolved === "string") return resolved;
+  const { userId } = resolved;
+
   const { data: userPlacements } = await supabase
     .from("tier_placements")
     .select("bgg_id")

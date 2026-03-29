@@ -1,7 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { BoardGame, Tier } from "@/types/database";
-import { computeAlignments } from "../community/compute-alignment";
-import type { UserTierData } from "../community/community-tier-lists";
+import type { AlignmentEntry } from "../community/compute-alignment";
 
 export interface AchievementHolder {
   display_name: string;
@@ -451,11 +449,10 @@ export async function computeGameAchievements(
   return achievements;
 }
 
-const PEOPLE_TIERS: Tier[] = ["S", "A", "B", "C", "D", "F"];
 const ALIGNMENT_POINTS = [3, 2, 1];
 
 /**
- * Compute "people awards" from tier list alignment data.
+ * Compute "people awards" from stored alignment data in user_alignments table.
  * For each user, being someone's #1 taste twin = 3 pts, #2 = 2 pts, #3 = 1 pt.
  * Highest total = most agreeable. Same logic inverted for sworn enemies.
  */
@@ -463,18 +460,11 @@ export async function computePeopleAchievements(
   supabase: SupabaseClient,
   profileMap: ProfileMap
 ): Promise<AchievementDisplay[]> {
-  const [{ data: games }, { data: placements }] = await Promise.all([
-    supabase.from("board_games").select("*").order("name"),
-    supabase
-      .from("tier_placements")
-      .select("bgg_id, tier, position, user_id")
-      .limit(10000),
-  ]);
+  const { data: alignmentRows } = await supabase
+    .from("user_alignments")
+    .select("user_id, category, allies, rivals");
 
-  if (!games?.length || !placements?.length) return [];
-
-  const gameMap = new Map<number, BoardGame>();
-  for (const g of games) gameMap.set(g.bgg_id, g);
+  if (!alignmentRows?.length) return [];
 
   const pleasers: AchievementDisplay[] = [];
   const menaces: AchievementDisplay[] = [];
@@ -498,70 +488,23 @@ export async function computePeopleAchievements(
   ];
 
   for (const config of categoryConfig) {
-    const categoryGameIds = new Set(
-      games.filter((g) => g.category === config.category).map((g) => g.bgg_id)
-    );
-
-    const byUser = new Map<
-      string,
-      { bgg_id: number; tier: Tier; position: number }[]
-    >();
-    for (const p of placements) {
-      if (!categoryGameIds.has(p.bgg_id)) continue;
-      let list = byUser.get(p.user_id);
-      if (!list) {
-        list = [];
-        byUser.set(p.user_id, list);
-      }
-      list.push({ bgg_id: p.bgg_id, tier: p.tier as Tier, position: p.position });
-    }
-
-    const users: UserTierData[] = [];
-    for (const [userId, userPlacements] of byUser) {
-      const profile = profileMap.get(userId);
-      if (!profile) continue;
-
-      const buckets: Record<Tier, BoardGame[]> = {
-        S: [], A: [], B: [], C: [], D: [], F: [],
-      };
-      for (const tier of PEOPLE_TIERS) {
-        const tierPlacements = userPlacements
-          .filter((p) => p.tier === tier)
-          .sort((a, b) => a.position - b.position);
-        for (const p of tierPlacements) {
-          const game = gameMap.get(p.bgg_id);
-          if (game) buckets[tier].push(game);
-        }
-      }
-
-      const totalRanked = PEOPLE_TIERS.reduce(
-        (sum, tier) => sum + buckets[tier].length, 0
-      );
-      if (totalRanked < MIN_RATERS) continue;
-
-      users.push({
-        userId,
-        displayName: profile.display_name,
-        avatarUrl: profile.avatar_url,
-        buckets,
-        gamesOwned: 0,
-      });
-    }
-
-    const alignments = computeAlignments(users);
+    const rows = alignmentRows.filter((r) => r.category === config.category);
 
     const allyPoints = new Map<string, number>();
     const rivalPoints = new Map<string, number>();
     const participantIds = new Set<string>();
 
-    for (const row of alignments) {
-      participantIds.add(row.userId);
-      for (let i = 0; i < row.allies.length; i++) {
-        const id = row.allies[i].userId;
+    for (const row of rows) {
+      participantIds.add(row.user_id);
+      const allies = row.allies as AlignmentEntry[];
+      const rivals = row.rivals as AlignmentEntry[];
+
+      for (let i = 0; i < allies.length; i++) {
+        const id = allies[i].userId;
         allyPoints.set(id, (allyPoints.get(id) ?? 0) + ALIGNMENT_POINTS[i]);
       }
-      for (let i = 0; i < row.rivals.length; i++) {
-        const id = row.rivals[i].userId;
+      for (let i = 0; i < rivals.length; i++) {
+        const id = rivals[i].userId;
         rivalPoints.set(id, (rivalPoints.get(id) ?? 0) + ALIGNMENT_POINTS[i]);
       }
     }

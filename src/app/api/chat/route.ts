@@ -94,11 +94,12 @@ export async function POST(request: NextRequest) {
     ];
   }
 
-  // Final streaming call (no tools, so it just responds)
+  // Final streaming call — include tools so the model understands tool history in messages
   const stream = await client.messages.stream({
     model: "claude-opus-4-6",
     max_tokens: 2048,
     system: systemPrompt,
+    tools: DATA_TOOLS,
     messages: currentMessages,
   });
 

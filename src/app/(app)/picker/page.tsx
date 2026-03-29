@@ -18,7 +18,7 @@ export default async function PickerPage() {
   ] = await Promise.all([
     supabase
       .from("profiles")
-      .select("id, display_name, avatar_url")
+      .select("id, display_name, avatar_url, partner_id")
       .order("display_name"),
     supabase.from("board_games").select("*").order("name"),
     supabase
@@ -32,6 +32,37 @@ export default async function PickerPage() {
   for (const c of collections ?? []) {
     if (!ownershipMap[c.user_id]) ownershipMap[c.user_id] = [];
     ownershipMap[c.user_id].push(c.bgg_id);
+  }
+
+  // Build households: merge partnered users into a single entry with combined ownership
+  const visited = new Set<string>();
+  const households: { id: string; label: string; memberIds: string[]; gameCount: number }[] = [];
+  for (const p of profiles ?? []) {
+    if (visited.has(p.id)) continue;
+    visited.add(p.id);
+
+    if (p.partner_id && (profiles ?? []).some((pp) => pp.id === p.partner_id)) {
+      const partner = (profiles ?? []).find((pp) => pp.id === p.partner_id)!;
+      visited.add(partner.id);
+      const memberIds = [p.id, partner.id];
+      const combined = new Set([
+        ...(ownershipMap[p.id] ?? []),
+        ...(ownershipMap[partner.id] ?? []),
+      ]);
+      households.push({
+        id: p.id < partner.id ? p.id : partner.id,
+        label: `${p.display_name} & ${partner.display_name}`,
+        memberIds,
+        gameCount: combined.size,
+      });
+    } else {
+      households.push({
+        id: p.id,
+        label: p.display_name,
+        memberIds: [p.id],
+        gameCount: (ownershipMap[p.id] ?? []).length,
+      });
+    }
   }
 
   // Build per-user score map: { [userId]: { [bggId]: score } }
@@ -68,6 +99,7 @@ export default async function PickerPage() {
         userScoreMap={userScoreMap}
         gameTiers={gameTiers}
         currentUserId={user?.id ?? null}
+        households={households}
       />
     </div>
   );
