@@ -76,7 +76,7 @@ function AlignmentCell({
   const classes = [
     divider ? DIVIDER : "",
     bg ?? "",
-    "px-3 py-2",
+    "min-w-[6.5rem] px-3 py-2",
   ].filter(Boolean).join(" ");
 
   if (!entry) {
@@ -108,7 +108,7 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
   return (
     <div>
       <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
-        <table className="w-full text-left">
+        <table className="text-left">
           <thead>
             <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50">
               <th className="px-3 py-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">
@@ -125,7 +125,7 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
           <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
             {[...alignments].sort((a, b) => a.displayName.localeCompare(b.displayName)).map((row) => (
               <tr key={row.userId}>
-                <td className="px-3 py-2">
+                <td className="min-w-[7.5rem] px-3 py-2">
                   <div className="flex items-center gap-2">
                     <Avatar
                       name={row.displayName}

@@ -82,9 +82,13 @@ export function DistributionChart({ games }: DistributionChartProps) {
     [games]
   );
 
-  const [selectedId, setSelectedId] = useState<number | null>(
-    sortedGames[0]?.bggId ?? null
-  );
+  const [selectedId, setSelectedId] = useState<number | null>(() => {
+    if (sortedGames.length === 0) return null;
+    const mostRated = sortedGames.reduce((best, g) =>
+      g.scores.length > best.scores.length ? g : best
+    );
+    return mostRated.bggId;
+  });
 
   const selected = sortedGames.find((g) => g.bggId === selectedId) ?? null;
 
@@ -229,13 +233,6 @@ export function DistributionChart({ games }: DistributionChartProps) {
                 y1={PAD.top}
                 y2={PAD.top + PLOT_H}
                 className="stroke-blue-500 dark:stroke-blue-400"
-                strokeWidth={1}
-              />
-              <circle
-                cx={toX(communityAvg)}
-                cy={centerY}
-                r={3.5}
-                className="fill-blue-500 stroke-white dark:fill-blue-400 dark:stroke-zinc-900"
                 strokeWidth={1}
               />
             </>

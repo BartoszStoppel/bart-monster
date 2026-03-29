@@ -47,7 +47,11 @@ export default async function CommunityPage({ searchParams }: PageProps) {
     supabase
       .from("user_alignments")
       .select("user_id, display_name, avatar_url, allies, rivals")
-      .eq("category", category),
+      .eq("category", category)
+      .then((res) => {
+        if (res.error) console.error("[community] user_alignments query error:", res.error);
+        return res;
+      }),
   ]);
 
   const gameMap = new Map<number, BoardGame>();
