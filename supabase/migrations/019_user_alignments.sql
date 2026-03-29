@@ -17,5 +17,12 @@ ALTER TABLE user_alignments ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Auth users can read alignments" ON user_alignments
   FOR SELECT USING (auth.role() = 'authenticated');
 
-CREATE POLICY "Auth users can manage alignments" ON user_alignments
-  FOR ALL USING (auth.role() = 'authenticated');
+CREATE POLICY "Auth users can insert alignments" ON user_alignments
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Auth users can update alignments" ON user_alignments
+  FOR UPDATE USING (auth.role() = 'authenticated')
+  WITH CHECK (auth.role() = 'authenticated');
+
+CREATE POLICY "Auth users can delete alignments" ON user_alignments
+  FOR DELETE USING (auth.role() = 'authenticated');

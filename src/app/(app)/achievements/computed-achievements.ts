@@ -460,11 +460,24 @@ export async function computePeopleAchievements(
   supabase: SupabaseClient,
   profileMap: ProfileMap
 ): Promise<AchievementDisplay[]> {
-  const { data: alignmentRows } = await supabase
-    .from("user_alignments")
-    .select("user_id, category, allies, rivals");
+  const [{ data: alignmentRows }, { data: placementCounts }] = await Promise.all([
+    supabase
+      .from("user_alignments")
+      .select("user_id, category, allies, rivals"),
+    supabase
+      .from("tier_placements")
+      .select("user_id, bgg_id, board_games!inner(category)")
+  ]);
 
   if (!alignmentRows?.length) return [];
+
+  // Count placements per user per category
+  const userCategoryCounts = new Map<string, number>();
+  for (const row of placementCounts ?? []) {
+    const cat = (row.board_games as unknown as { category: string }).category;
+    const key = `${row.user_id}:${cat}`;
+    userCategoryCounts.set(key, (userCategoryCounts.get(key) ?? 0) + 1);
+  }
 
   const pleasers: AchievementDisplay[] = [];
   const menaces: AchievementDisplay[] = [];
@@ -476,14 +489,14 @@ export async function computePeopleAchievements(
       label: "Board Games",
       pleaser: { title: "The People Pleaser", icon: "🤝" },
       menace: { title: "The Menace", icon: "😈" },
-      loner: { title: "Vanilla Villain", icon: "🧍" },
+      loner: { title: "Vanilla Villain", icon: "🕵️" },
     },
     {
       category: "party" as const,
       label: "Party Games",
       pleaser: { title: "Life of the Party", icon: "🎉" },
       menace: { title: "The Party Pooper", icon: "💩" },
-      loner: { title: "The Wallflower", icon: "🕵️" },
+      loner: { title: "The Wallflower", icon: "🧍" },
     },
   ];
 
@@ -495,6 +508,8 @@ export async function computePeopleAchievements(
     const participantIds = new Set<string>();
 
     for (const row of rows) {
+      const count = userCategoryCounts.get(`${row.user_id}:${config.category}`) ?? 0;
+      if (count < MIN_RATERS) continue;
       participantIds.add(row.user_id);
       const allies = row.allies as AlignmentEntry[];
       const rivals = row.rivals as AlignmentEntry[];

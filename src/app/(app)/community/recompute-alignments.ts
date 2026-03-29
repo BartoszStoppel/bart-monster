@@ -124,11 +124,24 @@ export async function recomputeAlignments(): Promise<void> {
   }
 
   // Clear old data and insert fresh
-  await supabase.from("user_alignments").delete().neq("user_id", "");
+  const { error: deleteError } = await supabase
+    .from("user_alignments")
+    .delete()
+    .neq("user_id", "");
+
+  if (deleteError) {
+    console.error("[recompute-alignments] delete failed:", deleteError);
+    throw new Error(`Delete failed: ${deleteError.message}`);
+  }
 
   if (rows.length > 0) {
-    await supabase.from("user_alignments").upsert(rows, {
-      onConflict: "user_id,category",
-    });
+    const { error: upsertError } = await supabase
+      .from("user_alignments")
+      .upsert(rows, { onConflict: "user_id,category" });
+
+    if (upsertError) {
+      console.error("[recompute-alignments] upsert failed:", upsertError);
+      throw new Error(`Upsert failed: ${upsertError.message}`);
+    }
   }
 }
