@@ -2,6 +2,10 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import {
+  ScoreHistoryChart,
+  type ScoreSnapshot,
+} from "./score-history-chart";
 
 interface DistributionGame {
   name: string;
@@ -10,10 +14,12 @@ interface DistributionGame {
   thumbnailUrl: string | null;
   scores: number[];
   yourScore: number | null;
+  scoreHistory: ScoreSnapshot[];
 }
 
 interface DistributionChartProps {
   games: DistributionGame[];
+  currentUserId: string | null;
 }
 
 const W = 400;
@@ -76,7 +82,7 @@ function buildViolinPath(points: { x: number; density: number }[], maxDensity: n
   return `M${top[0]} L${top.join(" L")} L${bottom.reverse().join(" L")} Z`;
 }
 
-export function DistributionChart({ games }: DistributionChartProps) {
+export function DistributionChart({ games, currentUserId }: DistributionChartProps) {
   const sortedGames = useMemo(
     () => [...games].filter((g) => g.scores.length > 0).sort((a, b) => a.name.localeCompare(b.name)),
     [games]
@@ -290,6 +296,15 @@ export function DistributionChart({ games }: DistributionChartProps) {
             </div>
           )}
         </div>
+
+        {selected && selected.scoreHistory.length > 0 && (
+          <div className="mt-3 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+            <h3 className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+              Score Over Time
+            </h3>
+            <ScoreHistoryChart snapshots={selected.scoreHistory} bggRating={selected.bggRating} currentUserId={currentUserId} />
+          </div>
+        )}
       </div>
     </section>
   );

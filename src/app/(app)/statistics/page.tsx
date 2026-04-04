@@ -29,6 +29,16 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
     .select("bgg_id, tier, user_id, score")
     .limit(10000);
 
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("id, display_name");
+
+  const { data: snapshots } = await supabase
+    .from("score_snapshots")
+    .select("bgg_id, user_id, score, snapshot_at")
+    .order("snapshot_at")
+    .limit(50000);
+
   const gameBggIds = new Set((games ?? []).map((g) => g.bgg_id));
 
   const filteredPlacements = (placements ?? []).filter((p) =>
@@ -104,6 +114,22 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
           arr.push(p.score);
           gameScoresMap.set(p.bgg_id, arr);
         }
+        const profileNameMap = new Map<string, string>();
+        for (const p of profiles ?? []) {
+          profileNameMap.set(p.id, p.display_name);
+        }
+        const gameSnapshotMap = new Map<number, { userId: string | null; displayName: string; score: number; snapshotAt: string }[]>();
+        for (const s of snapshots ?? []) {
+          if (!gameBggIds.has(s.bgg_id)) continue;
+          const arr = gameSnapshotMap.get(s.bgg_id) ?? [];
+          arr.push({
+            userId: s.user_id ?? null,
+            displayName: s.user_id ? (profileNameMap.get(s.user_id) ?? "Unknown") : "Community Avg",
+            score: Number(s.score),
+            snapshotAt: s.snapshot_at,
+          });
+          gameSnapshotMap.set(s.bgg_id, arr);
+        }
         const distributionGames = games.map((g) => ({
           name: g.name,
           bggId: g.bgg_id,
@@ -111,12 +137,13 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
           thumbnailUrl: g.thumbnail_url ?? null,
           scores: gameScoresMap.get(g.bgg_id) ?? [],
           yourScore: yourScoreMap.get(g.bgg_id) ?? null,
+          scoreHistory: gameSnapshotMap.get(g.bgg_id) ?? [],
         }));
         return (
         <>
         <div className="mb-8 grid gap-6 lg:grid-cols-2 [&>section]:flex [&>section]:flex-col">
           <ComplexityChart games={chartGames} />
-          <DistributionChart games={distributionGames} />
+          <DistributionChart games={distributionGames} currentUserId={user?.id ?? null} />
         </div>
         <section>
           <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">

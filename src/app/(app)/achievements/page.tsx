@@ -8,6 +8,7 @@ import {
   computeGameAchievements,
   computePeopleAchievements,
 } from "./computed-achievements";
+import { computeActivityAchievements } from "./activity-achievements";
 
 export const dynamic = "force-dynamic";
 
@@ -76,15 +77,19 @@ export default async function AchievementsPage() {
   }
 
   // --- Computed: People achievements (alignment-based + collector) ---
-  const [collectorAchievement, freeloaderAchievement] = await computeCollectorAchievements(supabase, profileMap);
+  const [collectorAchievement, freeloaderAchievement, shameAchievement] = await computeCollectorAchievements(supabase, profileMap);
   const peopleAchievements = [
     ...(await computePeopleAchievements(supabase, profileMap)),
     collectorAchievement,
     freeloaderAchievement,
+    shameAchievement,
   ];
 
   // --- Computed: Game-specific achievements ---
   const gameAchievements = await computeGameAchievements(supabase, profileMap);
+
+  // --- Computed: Activity achievements ---
+  const activityAchievements = await computeActivityAchievements(supabase, profileMap);
 
   // --- Bounties ---
   const { data: dbBounties } = await supabase
@@ -142,6 +147,22 @@ export default async function AchievementsPage() {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {gameAchievements.map((a) => (
               <AchievementCard key={a.title} {...a} className={a.wide ? "sm:col-span-2" : ""} />
+            ))}
+          </div>
+        </>
+      )}
+
+      {activityAchievements.length > 0 && (
+        <>
+          <h2 className="mb-4 mt-10 text-xl font-bold text-zinc-900 dark:text-zinc-50">
+            Activity Awards
+          </h2>
+          <p className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+            Based on site visits and time spent
+          </p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            {activityAchievements.map((a) => (
+              <AchievementCard key={a.title} {...a} />
             ))}
           </div>
         </>

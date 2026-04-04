@@ -5,7 +5,7 @@ VALUES (
   'Slay the Spire: Ascension 13 Heart Kill',
   'Beat Ascension 13 with a heart kill in Slay the Spire',
   '🗡️'
-);
+) ON CONFLICT (slug) DO NOTHING;
 
 -- Achievement: Highest Ascension in Slay the Spire
 INSERT INTO achievements (slug, title, description, icon)
@@ -14,7 +14,7 @@ VALUES (
   'Slay the Spire: Highest Ascension',
   'Highest ascension beaten with a heart kill',
   '🃏'
-);
+) ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO user_achievements (user_id, achievement_id, detail)
 SELECT p.id, a.id, 'Ascension 9 with heart kill'
@@ -25,4 +25,5 @@ WHERE a.slug = 'sts-highest-ascension'
     'risnerm12@gmail.com',
     'rogiers19@gmail.com',
     'jthomasmmail@gmail.com'
-  );
+  )
+ON CONFLICT DO NOTHING;

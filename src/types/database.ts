@@ -80,6 +80,25 @@ export interface GameRatingWithProfile extends GameRating {
   profiles: Profile;
 }
 
+export type FeedbackCategory = "feature" | "bug" | "improvement";
+export type FeedbackStatus = "new" | "planned" | "in-progress" | "done" | "declined";
+
+export interface FeedbackItem {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  category: FeedbackCategory;
+  status: FeedbackStatus;
+  admin_note: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FeedbackItemWithProfile extends FeedbackItem {
+  profiles: Pick<Profile, "display_name" | "avatar_url">;
+}
+
 export type Tier = "S" | "A" | "B" | "C" | "D" | "F";
 
 export interface TierPlacement {

@@ -52,6 +52,7 @@ const AVATAR_MENU_LINKS = [
   { href: "/profile", label: "Profile" },
   { href: "/wishlist", label: "Wishlist" },
   { href: "/tier-list", label: "Edit Tier List" },
+  { href: "/feedback", label: "Feedback" },
 ];
 
 function AvatarMenu({

@@ -101,9 +101,9 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       <CollapsibleSection
         title="Tier Lists"
         description="See how everyone ranked their games"
-        preview={<CommunityTierLists users={users} />}
+        preview={<CommunityTierLists users={users} allGames={games ?? []} />}
       >
-        <CommunityTierLists users={users} />
+        <CommunityTierLists users={users} allGames={games ?? []} />
       </CollapsibleSection>
       <div className="mt-6">
         <SectionErrorBoundary name="Tier List Alignment">

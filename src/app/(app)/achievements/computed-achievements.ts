@@ -28,7 +28,7 @@ interface ProfileEntry {
   partner_id: string | null;
 }
 
-type ProfileMap = Map<string, ProfileEntry>;
+export type ProfileMap = Map<string, ProfileEntry>;
 
 interface Household {
   memberIds: string[];
@@ -36,7 +36,7 @@ interface Household {
   avatar_urls: string[];
 }
 
-function buildHouseholdMap(profileMap: ProfileMap): Map<string, Household> {
+export function buildHouseholdMap(profileMap: ProfileMap): Map<string, Household> {
   const visited = new Set<string>();
   const households = new Map<string, Household>();
 
@@ -71,7 +71,7 @@ function buildHouseholdMap(profileMap: ProfileMap): Map<string, Household> {
   return households;
 }
 
-function buildUserToHouseholdMap(profileMap: ProfileMap): Map<string, string> {
+export function buildUserToHouseholdMap(profileMap: ProfileMap): Map<string, string> {
   const map = new Map<string, string>();
   const visited = new Set<string>();
 
@@ -147,7 +147,7 @@ function categoryWinners(
 }
 
 /** Take entries covering the top N distinct values (includes all ties). */
-function topByDistinctValues(
+export function topByDistinctValues(
   entries: [string, number][],
   n: number
 ): [string, number][] {
@@ -169,10 +169,16 @@ function bottomByDistinctValues(
 export async function computeCollectorAchievements(
   supabase: SupabaseClient,
   profileMap: ProfileMap
-): Promise<[AchievementDisplay, AchievementDisplay]> {
-  const { data: ownership } = await supabase
-    .from("user_game_collection")
-    .select("user_id, bgg_id, owned");
+): Promise<[AchievementDisplay, AchievementDisplay, AchievementDisplay]> {
+  const [{ data: ownership }, { data: placements }] = await Promise.all([
+    supabase
+      .from("user_game_collection")
+      .select("user_id, bgg_id, owned"),
+    supabase
+      .from("tier_placements")
+      .select("user_id, bgg_id")
+      .limit(10000),
+  ]);
 
   const householdMap = buildHouseholdMap(profileMap);
   const userToHousehold = buildUserToHouseholdMap(profileMap);
@@ -190,18 +196,34 @@ export async function computeCollectorAchievements(
     gamesByHousehold.set(householdId, games);
   }
 
+  // Build per-user owned and ranked sets for shame calculation
+  const ownedByUser = new Map<string, Set<number>>();
+  for (const row of ownership ?? []) {
+    if (!row.owned) continue;
+    const games = ownedByUser.get(row.user_id) ?? new Set<number>();
+    games.add(row.bgg_id);
+    ownedByUser.set(row.user_id, games);
+  }
+
+  const rankedByUser = new Map<string, Set<number>>();
+  for (const row of placements ?? []) {
+    const games = rankedByUser.get(row.user_id) ?? new Set<number>();
+    games.add(row.bgg_id);
+    rankedByUser.set(row.user_id, games);
+  }
+
   const sorted: [string, number][] = [...gamesByHousehold.entries()]
     .map(([householdId, games]) => [householdId, games.size] as [string, number])
     .sort((a, b) => b[1] - a[1]);
 
-  function toHolders(entries: [string, number][]): AchievementHolder[] {
+  function toHolders(entries: [string, number][], label: string): AchievementHolder[] {
     return entries.map(([householdId, count]) => {
       const household = householdMap.get(householdId);
       return {
         display_name: household?.display_name ?? "Unknown",
         avatar_url: household?.avatar_urls[0] ?? null,
         avatar_urls: household?.avatar_urls ?? [],
-        detail: `${count} ${count === 1 ? "game" : "games"}`,
+        detail: `${count} ${count === 1 ? label : label + "s"}`,
         category_label: null,
       };
     });
@@ -213,12 +235,25 @@ export async function computeCollectorAchievements(
     3
   );
 
+  // Shame: games each person owns but hasn't ranked, summed per household
+  const shameByHousehold = new Map<string, number>();
+  for (const [userId, owned] of ownedByUser) {
+    const ranked = rankedByUser.get(userId) ?? new Set<number>();
+    const unranked = [...owned].filter((bggId) => !ranked.has(bggId)).length;
+    const hhId = userToHousehold.get(userId) ?? userId;
+    shameByHousehold.set(hhId, (shameByHousehold.get(hhId) ?? 0) + unranked);
+  }
+  const unrankedByHousehold: [string, number][] = [...shameByHousehold.entries()]
+    .filter(([, count]) => count > 0)
+    .sort((a, b) => b[1] - a[1]);
+  const topShamed = topByDistinctValues(unrankedByHousehold, 3);
+
   const collector: AchievementDisplay = {
     title: "Board Game Collector",
     description: "Own the most board games in the group",
     icon: "🏆",
     ranked: true,
-    holders: toHolders(topCollectors),
+    holders: toHolders(topCollectors, "game"),
   };
 
   const freeloader: AchievementDisplay = {
@@ -226,10 +261,19 @@ export async function computeCollectorAchievements(
     description: "Why buy games when your friends already did?",
     icon: "🛋️",
     ranked: true,
-    holders: toHolders(bottomCollectors),
+    holders: toHolders(bottomCollectors, "game"),
   };
 
-  return [collector, freeloader];
+  const shame: AchievementDisplay = {
+    title: "Shelf of Shame",
+    description: "Own the most games they haven't even ranked yet",
+    icon: "🫣",
+    ranked: true,
+    tone: "negative",
+    holders: toHolders(topShamed, "unranked game"),
+  };
+
+  return [collector, freeloader, shame];
 }
 
 export async function computeGameAchievements(

@@ -4,4 +4,4 @@ VALUES (
   'Hegemony: Score 175',
   'Score 175 points in Hegemony',
   '🏛️'
-);
+) ON CONFLICT (slug) DO NOTHING;

@@ -64,6 +64,38 @@ export function useTierSave() {
         throw new Error(`Upsert failed: ${upsertError.message}`);
       }
 
+      // Log score snapshots for the history chart (user + community avg)
+      const userSnapshots = placements.map((p) => ({
+        user_id: p.user_id,
+        bgg_id: p.bgg_id,
+        score: p.score,
+      }));
+      await supabase.from("score_snapshots").insert(userSnapshots);
+
+      // Compute and log community average snapshots
+      const rankedBggIdsForAvg = placements.map((p) => p.bgg_id);
+      const { data: allPlacementsForAvg } = await supabase
+        .from("tier_placements")
+        .select("bgg_id, score")
+        .in("bgg_id", rankedBggIdsForAvg)
+        .not("score", "is", null);
+
+      if (allPlacementsForAvg) {
+        const avgMap = new Map<number, { total: number; count: number }>();
+        for (const p of allPlacementsForAvg) {
+          const entry = avgMap.get(p.bgg_id) ?? { total: 0, count: 0 };
+          entry.total += Number(p.score);
+          entry.count += 1;
+          avgMap.set(p.bgg_id, entry);
+        }
+        const avgSnapshots = [...avgMap.entries()].map(([bggId, { total, count }]) => ({
+          user_id: null,
+          bgg_id: bggId,
+          score: Math.round((total / count) * 10) / 10,
+        }));
+        await supabase.from("score_snapshots").insert(avgSnapshots);
+      }
+
       const rankedBggIds = new Set(placements.map((p) => p.bgg_id));
       const unrankedCategoryIds = categoryGameIds.filter(
         (id) => !rankedBggIds.has(id)
