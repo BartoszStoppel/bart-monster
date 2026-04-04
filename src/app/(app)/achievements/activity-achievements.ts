@@ -3,8 +3,6 @@ import {
   type AchievementDisplay,
   type AchievementHolder,
   type ProfileMap,
-  buildHouseholdMap,
-  buildUserToHouseholdMap,
   topByDistinctValues,
 } from "./computed-achievements";
 
@@ -25,28 +23,23 @@ export async function computeActivityAchievements(
 
   if (!activity?.length) return [];
 
-  const householdMap = buildHouseholdMap(profileMap);
-  const userToHousehold = buildUserToHouseholdMap(profileMap);
-
-  const visitsByHousehold = new Map<string, number>();
-  const secondsByHousehold = new Map<string, number>();
+  const visitsByUser = new Map<string, number>();
+  const secondsByUser = new Map<string, number>();
 
   for (const row of activity) {
-    const hhId = userToHousehold.get(row.user_id) ?? row.user_id;
-    visitsByHousehold.set(hhId, (visitsByHousehold.get(hhId) ?? 0) + row.visit_count);
-    secondsByHousehold.set(hhId, (secondsByHousehold.get(hhId) ?? 0) + row.total_seconds);
+    visitsByUser.set(row.user_id, row.visit_count);
+    secondsByUser.set(row.user_id, row.total_seconds);
   }
 
   function toHolders(
     entries: [string, number][],
     formatFn: (val: number) => string
   ): AchievementHolder[] {
-    return entries.map(([hhId, val]) => {
-      const household = householdMap.get(hhId);
+    return entries.map(([userId, val]) => {
+      const profile = profileMap.get(userId);
       return {
-        display_name: household?.display_name ?? "Unknown",
-        avatar_url: household?.avatar_urls[0] ?? null,
-        avatar_urls: household?.avatar_urls ?? [],
+        display_name: profile?.display_name ?? "Unknown",
+        avatar_url: profile?.avatar_url ?? null,
         detail: formatFn(val),
         category_label: null,
       };
@@ -55,7 +48,7 @@ export async function computeActivityAchievements(
 
   const achievements: AchievementDisplay[] = [];
 
-  const sortedVisits: [string, number][] = [...visitsByHousehold.entries()]
+  const sortedVisits: [string, number][] = [...visitsByUser.entries()]
     .sort((a, b) => b[1] - a[1]);
   const topVisits = topByDistinctValues(sortedVisits, 3);
   if (topVisits.length > 0) {
@@ -68,7 +61,7 @@ export async function computeActivityAchievements(
     });
   }
 
-  const sortedTime: [string, number][] = [...secondsByHousehold.entries()]
+  const sortedTime: [string, number][] = [...secondsByUser.entries()]
     .sort((a, b) => b[1] - a[1]);
   const topTime = topByDistinctValues(sortedTime, 3);
   if (topTime.length > 0) {
