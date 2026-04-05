@@ -7,6 +7,7 @@ export interface AchievementHolder {
   avatar_urls?: string[];
   detail: string | null;
   category_label: string | null;
+  userId?: string;
 }
 
 export type AchievementTone = "positive" | "negative" | "neutral";
@@ -225,6 +226,7 @@ export async function computeCollectorAchievements(
         avatar_urls: household?.avatar_urls ?? [],
         detail: `${count} ${count === 1 ? label : label + "s"}`,
         category_label: null,
+        userId: householdId,
       };
     });
   }
@@ -569,13 +571,14 @@ export async function computePeopleAchievements(
     }
 
     function toHolders(entries: [string, number][]): AchievementHolder[] {
-      return entries.map(([userId, pts]) => {
-        const profile = profileMap.get(userId);
+      return entries.map(([id, pts]) => {
+        const profile = profileMap.get(id);
         return {
           display_name: profile?.display_name ?? "Unknown",
           avatar_url: profile?.avatar_url ?? null,
           detail: `${pts} pts`,
           category_label: null,
+          userId: id,
         };
       });
     }

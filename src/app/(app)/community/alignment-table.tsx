@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import type { UserAlignment, AlignmentEntry } from "./compute-alignment";
 
 interface AlignmentTableProps {
@@ -88,10 +89,10 @@ function AlignmentCell({
   }
   return (
     <td className={classes}>
-      <div className="flex flex-col items-center gap-1">
+      <Link href={`/users/${entry.userId}`} className="flex flex-col items-center gap-1 transition-opacity hover:opacity-80">
         <Avatar name={entry.displayName} url={entry.avatarUrl} />
         <SplitName name={entry.displayName} className="text-center text-xs leading-tight text-zinc-800 dark:text-zinc-200" />
-      </div>
+      </Link>
     </td>
   );
 }
@@ -126,14 +127,14 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
             {[...alignments].sort((a, b) => a.displayName.localeCompare(b.displayName)).map((row) => (
               <tr key={row.userId}>
                 <td className="min-w-[7.5rem] px-3 py-2">
-                  <div className="flex flex-col items-center gap-1">
+                  <Link href={`/users/${row.userId}`} className="flex flex-col items-center gap-1 transition-opacity hover:opacity-80">
                     <Avatar
                       name={row.displayName}
                       url={row.avatarUrl}
                       size={24}
                     />
                     <SplitName name={row.displayName} className="text-center text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-50" />
-                  </div>
+                  </Link>
                 </td>
                 <AlignmentCell entry={row.allies[0]} divider bg={GREEN_BG[0]} />
                 <AlignmentCell entry={row.allies[1]} bg={GREEN_BG[1]} />

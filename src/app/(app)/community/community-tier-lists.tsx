@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import type { BoardGame, Tier } from "@/types/database";
 import { ReadOnlyTierRow } from "./read-only-tier-row";
 import type { TierGameEntry } from "./read-only-tier-row";
@@ -26,6 +27,9 @@ interface CommunityTierListsProps {
   allGames?: BoardGame[];
 }
 
+/** Categories too generic to be interesting as tags. */
+const IGNORED_CATEGORIES = new Set(["Party Game", "Card Game"]);
+
 /** Compute top N category tags for a user weighted by their tier scores. */
 function topTags(
   buckets: Record<Tier, BoardGame[]>,
@@ -38,6 +42,7 @@ function topTags(
     for (const game of buckets[tier]) {
       const score = scoreMap.get(game.bgg_id) ?? 0;
       for (const cat of game.categories) {
+        if (IGNORED_CATEGORIES.has(cat)) continue;
         tagPoints.set(cat, (tagPoints.get(cat) ?? 0) + score);
       }
     }
@@ -219,22 +224,24 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
         return (
           <section key={user.userId}>
             <div className="mb-2 flex items-center gap-2">
-              {user.avatarUrl ? (
-                <Image
-                  src={user.avatarUrl}
-                  alt={user.displayName}
-                  width={28}
-                  height={28}
-                  className="rounded-full"
-                />
-              ) : (
-                <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
-                  {user.displayName.charAt(0).toUpperCase()}
-                </div>
-              )}
-              <h2 className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
-                {user.displayName}
-              </h2>
+              <Link href={`/users/${user.userId}`} className="flex items-center gap-2 transition-opacity hover:opacity-80">
+                {user.avatarUrl ? (
+                  <Image
+                    src={user.avatarUrl}
+                    alt={user.displayName}
+                    width={28}
+                    height={28}
+                    className="rounded-full"
+                  />
+                ) : (
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+                    {user.displayName.charAt(0).toUpperCase()}
+                  </div>
+                )}
+                <h2 className="text-sm font-semibold text-zinc-900 hover:text-blue-600 dark:text-zinc-50 dark:hover:text-blue-400">
+                  {user.displayName}
+                </h2>
+              </Link>
               <span className="text-xs text-zinc-400 dark:text-zinc-500">
                 {user.gamesOwned} {user.gamesOwned === 1 ? "game" : "games"} owned
               </span>

@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import {
   type AchievementDisplay,
@@ -70,6 +71,7 @@ export default async function AchievementsPage() {
             avatar_url: profile.avatar_url,
             detail: award.detail ?? null,
             category_label: null,
+            userId: award.user_id,
           };
         })
         .filter((h): h is NonNullable<typeof h> => h !== null),
@@ -167,6 +169,22 @@ export default async function AchievementsPage() {
   );
 }
 
+function HolderName({ holder }: { holder: AchievementHolder }) {
+  const name = (
+    <span className="font-medium text-zinc-900 dark:text-zinc-100">
+      {holder.display_name}
+    </span>
+  );
+  if (holder.userId) {
+    return (
+      <Link href={`/users/${holder.userId}`} className="hover:text-blue-600 dark:hover:text-blue-400">
+        {name}
+      </Link>
+    );
+  }
+  return name;
+}
+
 function HolderAvatar({ holder }: { holder: AchievementHolder }) {
   if (holder.avatar_urls && holder.avatar_urls.length > 0) {
     return (
@@ -233,9 +251,7 @@ function HoldersList({ holders, ranked }: { holders: AchievementHolder[]; ranked
                 {group.members.map((holder) => (
                   <div key={holder.display_name} className="flex items-center gap-2">
                     <HolderAvatar holder={holder} />
-                    <span className="font-medium text-zinc-900 dark:text-zinc-100">
-                      {holder.display_name}
-                    </span>
+                    <HolderName holder={holder} />
                   </div>
                 ))}
                 {group.detail && (
@@ -272,9 +288,7 @@ function HoldersList({ holders, ranked }: { holders: AchievementHolder[]; ranked
           )}
           <HolderAvatar holder={holder} />
           <div className="min-w-0">
-            <span className="font-medium text-zinc-900 dark:text-zinc-100">
-              {holder.display_name}
-            </span>
+            <HolderName holder={holder} />
             {!sharedDetail && holder.detail && (
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 {holder.detail}
