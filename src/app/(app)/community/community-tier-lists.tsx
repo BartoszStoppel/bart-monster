@@ -12,6 +12,7 @@ import {
   type ShadowPlacement,
 } from "./compute-shadow-ranks";
 import { RankBadge } from "@/components/rank-badge";
+import { RoleBadge } from "@/components/role-badge";
 
 const TIERS: Tier[] = ["S", "A", "B", "C", "D", "F"];
 
@@ -247,7 +248,8 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
                   {user.displayName}
                 </h2>
               </Link>
-              <RankBadge gamesRanked={user.totalGamesRanked} isAdmin={user.isAdmin} />
+              <RankBadge gamesRanked={user.totalGamesRanked} />
+              <RoleBadge role={user.isAdmin ? "admin" : null} />
               <span className="text-xs text-zinc-400 dark:text-zinc-500">
                 {user.gamesOwned} {user.gamesOwned === 1 ? "game" : "games"} owned
               </span>

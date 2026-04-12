@@ -238,7 +238,7 @@ function EpisodeCard({ story }: { story: FurtchStory }) {
         {/* Story card */}
         <div className="flex-1 overflow-hidden rounded-xl border border-zinc-200/80 bg-gradient-to-br from-white to-amber-50/30 shadow-sm transition-shadow hover:shadow-md dark:border-white/[0.06] dark:from-zinc-900 dark:to-amber-950/10">
           {/* Header */}
-          <div className="border-b border-zinc-100 bg-white/60 px-6 py-4 dark:border-white/[0.06]/60 dark:bg-white/5/60">
+          <div className="border-b border-zinc-100 bg-white/60 px-6 py-4 dark:border-white/[0.06] dark:bg-white/5">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="mb-1 flex items-center gap-2 md:hidden">

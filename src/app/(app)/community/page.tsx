@@ -7,6 +7,7 @@ import type { AlignmentEntry, UserAlignment } from "./compute-alignment";
 import { CollapsibleSection } from "./collapsible-section";
 import { SectionErrorBoundary } from "./section-error-boundary";
 import { buildUserTierData } from "./build-user-tier-data";
+import { RankLadder } from "./rank-ladder";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,13 @@ export default async function CommunityPage({ searchParams }: PageProps) {
 
   const users = buildUserTierData(placements ?? [], gameMap, profileMap, ownershipCounts, totalPlacementCounts);
 
+  const rankUsers = [...profileMap.entries()].map(([id, profile]) => ({
+    userId: id,
+    displayName: profile.display_name,
+    avatarUrl: profile.avatar_url,
+    totalGamesRanked: totalPlacementCounts.get(id) ?? 0,
+  }));
+
   const alignments: UserAlignment[] = (alignmentRows ?? []).map((row) => ({
     userId: row.user_id,
     displayName: row.display_name,
@@ -112,6 +120,15 @@ export default async function CommunityPage({ searchParams }: PageProps) {
             <AlignmentTable alignments={alignments} />
           </CollapsibleSection>
         </SectionErrorBoundary>
+      </div>
+      <div className="mt-6">
+        <CollapsibleSection
+          title="Places in Society"
+          description="Where everyone stands in the ranking hierarchy"
+          preview={<RankLadder users={rankUsers} />}
+        >
+          <RankLadder users={rankUsers} />
+        </CollapsibleSection>
       </div>
     </div>
   );

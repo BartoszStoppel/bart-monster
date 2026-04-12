@@ -1,16 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { getRank, RANKS, ARCHMAGE_RANK, type Rank } from "@/lib/ranks";
+import { getRank, RANKS, type Rank } from "@/lib/ranks";
 
 interface RankBadgeProps {
   gamesRanked: number;
-  isAdmin: boolean;
 }
 
 /** Max games threshold for the rank range label. */
 function rangeLabel(rank: Rank, index: number): string {
-  if (rank === ARCHMAGE_RANK) return "Admin";
   const next = index > 0 ? RANKS[index - 1] : null;
   const max = next ? next.minGames - 1 : null;
   return max !== null ? `${rank.minGames}–${max}` : `${rank.minGames}+`;
@@ -23,10 +21,10 @@ function rankClasses(rank: Rank): string {
 
 /**
  * Pill badge showing a user's RPG rank. Hover shows game count.
- * Click opens a popover listing all ranks with thresholds.
+ * Click opens a popover listing ranks up to one above the user's current rank.
  */
-export function RankBadge({ gamesRanked, isAdmin }: RankBadgeProps) {
-  const rank = getRank(gamesRanked, isAdmin);
+export function RankBadge({ gamesRanked }: RankBadgeProps) {
+  const rank = getRank(gamesRanked);
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -41,41 +39,40 @@ export function RankBadge({ gamesRanked, isAdmin }: RankBadgeProps) {
     return () => document.removeEventListener("mousedown", handleClick);
   }, [open]);
 
+  const currentIndex = RANKS.findIndex((r) => r.name === rank.name);
+  const cutoffIndex = Math.max(0, currentIndex - 1);
+  const visibleRanks = RANKS.slice(cutoffIndex);
+
   return (
     <div className="relative inline-block" ref={ref}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={`cursor-pointer text-xs transition-opacity hover:opacity-80 ${rankClasses(rank)}`}
-        title={isAdmin ? "Admin" : `${gamesRanked} games ranked`}
+        title={`${gamesRanked} games ranked`}
       >
         {rank.name}
       </button>
 
       {open && (
         <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
-          <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-            Rank Ladder
-          </p>
+          <div className="mb-2 flex items-center justify-between px-2">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+              Rank
+            </span>
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+              Games Ranked
+            </span>
+          </div>
 
-          {/* Archmage */}
-          <RankRow
-            rank={ARCHMAGE_RANK}
-            range="Admin"
-            active={isAdmin}
-          />
-
-          <div className="my-1.5 border-t border-zinc-100 dark:border-zinc-700" />
-
-          {/* All progression ranks (reversed so lowest is at bottom) */}
-          {[...RANKS].reverse().map((r, i) => {
-            const originalIndex = RANKS.length - 1 - i;
+          {[...visibleRanks].reverse().map((r) => {
+            const originalIndex = RANKS.indexOf(r);
             return (
               <RankRow
                 key={r.name}
                 rank={r}
                 range={rangeLabel(r, originalIndex)}
-                active={!isAdmin && rank.name === r.name}
+                active={rank.name === r.name}
               />
             );
           })}

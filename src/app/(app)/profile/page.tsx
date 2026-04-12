@@ -1,3 +1,8 @@
+/**
+ * Profile page — redirected to /users/{id} by middleware (proxy.ts).
+ * This file exists as a fallback; the middleware handles the redirect
+ * before this component renders.
+ */
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 

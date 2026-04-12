@@ -263,6 +263,8 @@ export async function computeCollectorAchievements(
     description: "Why buy games when your friends already did?",
     icon: "🛋️",
     ranked: true,
+    wide: true,
+    tone: "negative",
     holders: toHolders(bottomCollectors, "game"),
   };
 

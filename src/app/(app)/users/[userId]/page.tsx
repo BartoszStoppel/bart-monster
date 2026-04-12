@@ -9,6 +9,7 @@ import { buildScoreMap } from "../../community/compute-shadow-ranks";
 import type { AlignmentEntry } from "../../community/compute-alignment";
 import { ProfileEditor } from "../../profile/profile-editor";
 import { RankBadge } from "@/components/rank-badge";
+import { RoleBadge } from "@/components/role-badge";
 
 export const dynamic = "force-dynamic";
 
@@ -142,7 +143,8 @@ export default async function UserProfilePage({ params }: PageProps) {
             <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
               {profile.display_name}
             </h1>
-            <RankBadge gamesRanked={totalRanked} isAdmin={profile.is_admin} />
+            <RankBadge gamesRanked={totalRanked} />
+            <RoleBadge role={profile.is_admin ? "admin" : null} />
           </div>
           {isOwnProfile && currentUser.email && (
             <div className="text-sm text-zinc-500 dark:text-zinc-400">

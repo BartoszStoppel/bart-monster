@@ -1,5 +1,12 @@
 # Feature Ideas
 
+## Achivements
+- **Most games played**
+- **Stalest tier list**
+
+## Roles
+- Prefixes for games owned
+
 ## Social / Group
 
 - **Game night planner** — pick a date, vote on games from the collection, auto-filter by player count of RSVPs

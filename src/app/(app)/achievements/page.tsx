@@ -84,9 +84,9 @@ export default async function AchievementsPage() {
   const peopleAchievements = [
     ...(await computePeopleAchievements(supabase, profileMap)),
     collectorAchievement,
-    freeloaderAchievement,
     shameAchievement,
     ...activityAchievements,
+    freeloaderAchievement,
   ];
 
   // --- Computed: Game-specific achievements ---
@@ -131,7 +131,7 @@ export default async function AchievementsPage() {
           </p>
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             {peopleAchievements.map((a) => (
-              <AchievementCard key={a.title} {...a} />
+              <AchievementCard key={a.title} {...a} className={a.wide ? "sm:col-span-2" : ""} />
             ))}
           </div>
         </>
@@ -216,7 +216,51 @@ function HolderAvatar({ holder }: { holder: AchievementHolder }) {
   return null;
 }
 
-function HoldersList({ holders, ranked }: { holders: AchievementHolder[]; ranked?: boolean }) {
+function HoldersList({ holders, ranked, compact }: { holders: AchievementHolder[]; ranked?: boolean; compact?: boolean }) {
+  if (compact) {
+    const groups: { detail: string | null; members: AchievementHolder[] }[] = [];
+    for (const holder of holders) {
+      const last = groups[groups.length - 1];
+      if (last && last.detail === holder.detail) {
+        last.members.push(holder);
+      } else {
+        groups.push({ detail: holder.detail, members: [holder] });
+      }
+    }
+
+    let placeIndex = 0;
+    return (
+      <div className="mt-3 space-y-2">
+        {groups.map((group) => {
+          const currentPlace = placeIndex;
+          placeIndex += 1;
+          return (
+            <div key={`${group.detail}-${currentPlace}`} className="flex items-start gap-2">
+              {ranked && (
+                <span className={`mt-0.5 shrink-0 text-xs font-bold ${PLACE_COLORS[currentPlace] ?? "text-zinc-400"}`}>
+                  {PLACE_LABELS[currentPlace] ?? `${currentPlace + 1}th`}
+                </span>
+              )}
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+                {group.members.map((holder) => (
+                  <div key={holder.display_name} className="flex items-center gap-2">
+                    <HolderAvatar holder={holder} />
+                    <HolderName holder={holder} />
+                  </div>
+                ))}
+              </div>
+              {group.detail && (
+                <span className="mt-0.5 shrink-0 text-sm text-zinc-500 dark:text-zinc-400">
+                  {group.detail}
+                </span>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
   const sharedDetail =
     holders.length > 1 &&
     holders[0].detail &&
@@ -328,6 +372,7 @@ function AchievementCard({
   holders,
   ranked,
   tone,
+  wide,
   className,
 }: AchievementDisplay & { className?: string }) {
   const styles = tone ? TONE_STYLES[tone] : DEFAULT_STYLE;
@@ -347,7 +392,7 @@ function AchievementCard({
           </p>
 
           {holders.length > 0 ? (
-            <HoldersList holders={holders} ranked={ranked} />
+            <HoldersList holders={holders} ranked={ranked} compact={wide} />
           ) : (
             <p className="mt-3 text-sm italic text-zinc-400 dark:text-zinc-500">
               No one has claimed this yet

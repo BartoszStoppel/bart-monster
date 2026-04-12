@@ -32,7 +32,7 @@ function TagList({ label, items }: { label: string; items: string[] }) {
 
 function StatItem({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex flex-col items-center rounded-lg bg-zinc-50 px-3 py-2 dark:bg-white/5/50">
+    <div className="flex flex-col items-center rounded-lg bg-zinc-50 px-3 py-2 dark:bg-white/5">
       <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
         {typeof value === "number" ? value.toLocaleString() : value}
       </span>
@@ -71,7 +71,7 @@ export function SuggestedPlayersTable({ data }: { data: SuggestedPlayerCount[] }
                   ? "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
                   : isRec
                     ? "border-cyan-200 bg-cyan-50 dark:border-cyan-800 dark:bg-cyan-900/20"
-                    : "border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5/50"
+                    : "border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5"
               }`}
             >
               <span className="font-bold text-zinc-900 dark:text-zinc-100">

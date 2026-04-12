@@ -55,6 +55,12 @@ export async function proxy(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
+  if (user && request.nextUrl.pathname === "/profile") {
+    const url = request.nextUrl.clone();
+    url.pathname = `/users/${user.id}`;
+    return NextResponse.redirect(url);
+  }
+
   return supabaseResponse;
 }
 

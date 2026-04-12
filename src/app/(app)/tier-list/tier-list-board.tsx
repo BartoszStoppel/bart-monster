@@ -123,8 +123,8 @@ function UnplayedRow({
   return (
     <div
       className={`mt-4 rounded-lg border border-dashed border-zinc-300 dark:border-white/10 ${
-        isOver ? "bg-zinc-100 dark:bg-white/5/50" : ""
-      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-white/5/30" : ""}`}
+        isOver ? "bg-zinc-100 dark:bg-white/10" : ""
+      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-white/5" : ""}`}
     >
       <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
         Unplayed — tap to select, then tap to place
