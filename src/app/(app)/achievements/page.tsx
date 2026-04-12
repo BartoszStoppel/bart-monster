@@ -364,7 +364,7 @@ function BountyCard({ title, description, icon, claimedBy }: BountyDisplay) {
     <div className={`rounded-lg border p-6 ${
       claimedBy
         ? "border-zinc-200 bg-white dark:border-white/[0.06] dark:bg-white/5"
-        : "border-dashed border-zinc-300 bg-zinc-50 dark:border-white/10 dark:bg-white/5/50"
+        : "border-dashed border-red-200 bg-red-50/50 dark:border-red-900/40 dark:bg-red-950/20"
     }`}>
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 text-2xl dark:bg-red-900/30">
