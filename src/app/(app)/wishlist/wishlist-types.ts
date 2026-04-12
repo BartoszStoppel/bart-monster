@@ -10,6 +10,7 @@ export interface WishlistItem {
   game: BoardGame;
   priority: number | null;
   note: string | null;
+  communityScore: number | null;
   otherWishlisters: ProfileInfo[];
   owners: ProfileInfo[];
 }

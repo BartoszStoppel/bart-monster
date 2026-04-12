@@ -104,6 +104,8 @@ export async function recomputeAlignments(): Promise<void> {
         avatarUrl: profile.avatar_url,
         buckets,
         gamesOwned: 0,
+        totalGamesRanked: 0,
+        isAdmin: false,
       });
     }
 

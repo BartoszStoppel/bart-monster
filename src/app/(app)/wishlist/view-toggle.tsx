@@ -39,7 +39,7 @@ export function ViewToggle({
     <select
       value={currentValue}
       onChange={(e) => handleChange(e.target.value)}
-      className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 outline-none transition-colors hover:border-zinc-300 focus:border-cyan-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-300 dark:hover:border-white/20 dark:focus:border-cyan-400"
+      className="rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm font-medium text-zinc-700 outline-none transition-colors hover:border-zinc-300 focus:border-cyan-500 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:border-white/20 dark:focus:border-cyan-400"
     >
       <option value="mine">My Wishlist</option>
       <option value="shared">Everyone</option>

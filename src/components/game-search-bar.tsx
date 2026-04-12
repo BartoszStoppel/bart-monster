@@ -79,7 +79,7 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
       )}
 
       {showDropdown && results.length > 0 && (
-        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-white/10 dark:bg-white/5">
+        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-white/10 dark:bg-zinc-800">
           {results.slice(0, 20).map((game) => (
             <li key={game.id}>
               <button
@@ -119,7 +119,7 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
       )}
 
       {showDropdown && !loading && results.length === 0 && query.length >= 2 && (
-        <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white p-4 text-center text-sm text-zinc-500 shadow-lg dark:border-white/10 dark:bg-white/5">
+        <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white p-4 text-center text-sm text-zinc-500 shadow-lg dark:border-white/10 dark:bg-zinc-800">
           No games found
         </div>
       )}

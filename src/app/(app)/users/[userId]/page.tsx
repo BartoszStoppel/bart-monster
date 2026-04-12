@@ -8,6 +8,7 @@ import { ReadOnlyTierRow } from "../../community/read-only-tier-row";
 import { buildScoreMap } from "../../community/compute-shadow-ranks";
 import type { AlignmentEntry } from "../../community/compute-alignment";
 import { ProfileEditor } from "../../profile/profile-editor";
+import { RankBadge } from "@/components/rank-badge";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +24,7 @@ export default async function UserProfilePage({ params }: PageProps) {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, display_name, avatar_url, partner_id")
+    .select("id, display_name, avatar_url, partner_id, is_admin")
     .eq("id", userId)
     .single();
 
@@ -117,6 +118,7 @@ export default async function UserProfilePage({ params }: PageProps) {
   const ownedCount = ownedBggIds.length;
   const boardRanked = TIERS.reduce((sum, t) => sum + bucketsByCategory.board[t].length, 0);
   const partyRanked = TIERS.reduce((sum, t) => sum + bucketsByCategory.party[t].length, 0);
+  const totalRanked = boardRanked + partyRanked;
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -136,9 +138,12 @@ export default async function UserProfilePage({ params }: PageProps) {
           </div>
         )}
         <div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            {profile.display_name}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+              {profile.display_name}
+            </h1>
+            <RankBadge gamesRanked={totalRanked} isAdmin={profile.is_admin} />
+          </div>
           {isOwnProfile && currentUser.email && (
             <div className="text-sm text-zinc-500 dark:text-zinc-400">
               {currentUser.email}

@@ -3,13 +3,16 @@
 import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
 import type { WishlistItem, ProfileInfo } from "./wishlist-types";
-import {
-  updateWishlistPriority,
-  updateWishlistNote,
-  moveToOwned,
-  removeFromWishlist,
-} from "./actions";
+import { moveToOwned, removeFromWishlist } from "./actions";
+
+function weightColor(w: number): string {
+  if (w < 2) return "text-green-600 dark:text-green-400";
+  if (w < 3) return "text-yellow-600 dark:text-yellow-400";
+  if (w < 4) return "text-orange-600 dark:text-orange-400";
+  return "text-red-600 dark:text-red-400";
+}
 
 const CATEGORY_LABELS: Record<string, string> = {
   party: "Party",
@@ -84,14 +87,43 @@ export function WishlistCard({ item, readOnly, onRemove, onMoveToOwned }: Wishli
       : null;
 
   async function handlePriority(value: number) {
+    const prev = priority;
     const newVal = priority === value ? null : value;
     setPriority(newVal);
-    await updateWishlistPriority(game.bgg_id, newVal);
+
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setPriority(prev);
+      return;
+    }
+
+    const { error } = await supabase
+      .from("user_game_collection")
+      .update({ wishlist_priority: newVal })
+      .eq("user_id", user.id)
+      .eq("bgg_id", game.bgg_id);
+
+    if (error) {
+      setPriority(prev);
+    }
   }
 
   async function handleNoteSave() {
     setEditingNote(false);
-    await updateWishlistNote(game.bgg_id, note);
+    const supabase = createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return;
+
+    await supabase
+      .from("user_game_collection")
+      .update({ wishlist_note: note || null })
+      .eq("user_id", user.id)
+      .eq("bgg_id", game.bgg_id);
   }
 
   async function handleMoveToOwned() {
@@ -154,11 +186,18 @@ export function WishlistCard({ item, readOnly, onRemove, onMoveToOwned }: Wishli
           {playerRange && <span>{playerRange}</span>}
           {game.playing_time && <span>{game.playing_time}min</span>}
           {game.bgg_weight && (
-            <span>Wt {Number(game.bgg_weight).toFixed(1)}</span>
+            <span className={`font-medium ${weightColor(Number(game.bgg_weight))}`}>
+              Wt {Number(game.bgg_weight).toFixed(1)}
+            </span>
           )}
           {game.bgg_rating && (
             <span className="font-semibold text-amber-600 dark:text-amber-400">
               BGG {Number(game.bgg_rating).toFixed(1)}
+            </span>
+          )}
+          {item.communityScore != null && (
+            <span className="font-semibold text-cyan-600 dark:text-cyan-400">
+              Ours {item.communityScore.toFixed(1)}
             </span>
           )}
         </div>

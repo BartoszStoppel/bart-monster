@@ -10,8 +10,9 @@ const TIERS: Tier[] = ["S", "A", "B", "C", "D", "F"];
 export function buildUserTierData(
   placements: Pick<TierPlacement, "bgg_id" | "tier" | "position" | "user_id">[],
   gameMap: Map<number, BoardGame>,
-  profileMap: Map<string, { display_name: string; avatar_url: string | null }>,
-  ownershipCounts: Map<string, number>
+  profileMap: Map<string, { display_name: string; avatar_url: string | null; is_admin?: boolean }>,
+  ownershipCounts: Map<string, number>,
+  totalPlacementCounts?: Map<string, number>,
 ): UserTierData[] {
   const byUser = new Map<
     string,
@@ -65,6 +66,8 @@ export function buildUserTierData(
       avatarUrl: profile.avatar_url,
       buckets,
       gamesOwned: ownershipCounts.get(userId) ?? 0,
+      totalGamesRanked: totalPlacementCounts?.get(userId) ?? totalRanked,
+      isAdmin: profile.is_admin ?? false,
     });
   }
 

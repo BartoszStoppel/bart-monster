@@ -38,7 +38,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       .limit(10000),
     supabase
       .from("profiles")
-      .select("id, display_name, avatar_url"),
+      .select("id, display_name, avatar_url, is_admin"),
     supabase
       .from("user_game_collection")
       .select("user_id")
@@ -57,12 +57,13 @@ export default async function CommunityPage({ searchParams }: PageProps) {
 
   const profileMap = new Map<
     string,
-    { display_name: string; avatar_url: string | null }
+    { display_name: string; avatar_url: string | null; is_admin: boolean }
   >();
   for (const p of profiles ?? []) {
     profileMap.set(p.id, {
       display_name: p.display_name,
       avatar_url: p.avatar_url,
+      is_admin: p.is_admin,
     });
   }
 
@@ -71,7 +72,12 @@ export default async function CommunityPage({ searchParams }: PageProps) {
     ownershipCounts.set(c.user_id, (ownershipCounts.get(c.user_id) ?? 0) + 1);
   }
 
-  const users = buildUserTierData(placements ?? [], gameMap, profileMap, ownershipCounts);
+  const totalPlacementCounts = new Map<string, number>();
+  for (const p of placements ?? []) {
+    totalPlacementCounts.set(p.user_id, (totalPlacementCounts.get(p.user_id) ?? 0) + 1);
+  }
+
+  const users = buildUserTierData(placements ?? [], gameMap, profileMap, ownershipCounts, totalPlacementCounts);
 
   const alignments: UserAlignment[] = (alignmentRows ?? []).map((row) => ({
     userId: row.user_id,

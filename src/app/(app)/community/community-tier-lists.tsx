@@ -11,6 +11,7 @@ import {
   buildScoreMap,
   type ShadowPlacement,
 } from "./compute-shadow-ranks";
+import { RankBadge } from "@/components/rank-badge";
 
 const TIERS: Tier[] = ["S", "A", "B", "C", "D", "F"];
 
@@ -20,6 +21,8 @@ export interface UserTierData {
   avatarUrl: string | null;
   buckets: Record<Tier, BoardGame[]>;
   gamesOwned: number;
+  totalGamesRanked: number;
+  isAdmin: boolean;
 }
 
 interface CommunityTierListsProps {
@@ -244,6 +247,7 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
                   {user.displayName}
                 </h2>
               </Link>
+              <RankBadge gamesRanked={user.totalGamesRanked} isAdmin={user.isAdmin} />
               <span className="text-xs text-zinc-400 dark:text-zinc-500">
                 {user.gamesOwned} {user.gamesOwned === 1 ? "game" : "games"} owned
               </span>

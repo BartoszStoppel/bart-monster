@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { getHouseholdIds } from "@/lib/household";
 import { WishlistGrid } from "./wishlist-grid";
 import { SharedWishlistView } from "./shared-wishlist-view";
 import { ViewToggle } from "./view-toggle";
@@ -25,14 +24,8 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
 
   if (!user) redirect("/login");
 
-  const householdIds = await getHouseholdIds(supabase, user.id);
-  const householdSet = new Set(householdIds);
-
-  // Determine which user's wishlist to show
-  const viewingOther = selectedUserId && !householdSet.has(selectedUserId);
-  const targetIds = viewingOther
-    ? await getHouseholdIds(supabase, selectedUserId)
-    : householdIds;
+  const viewingOther = selectedUserId && selectedUserId !== user.id;
+  const targetUserId = viewingOther ? selectedUserId : user.id;
 
   const [
     { data: targetWishlist },
@@ -41,11 +34,12 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     { data: profiles },
     { data: boardGames },
     { data: tierPlacements },
+    { data: allPlacements },
   ] = await Promise.all([
     supabase
       .from("user_game_collection")
       .select("bgg_id, user_id, wishlist_priority, wishlist_note")
-      .in("user_id", targetIds)
+      .eq("user_id", targetUserId)
       .eq("wishlist", true),
     supabase
       .from("user_game_collection")
@@ -61,6 +55,11 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
       .from("tier_placements")
       .select("bgg_id, tier, score")
       .eq("user_id", user.id),
+    supabase
+      .from("tier_placements")
+      .select("bgg_id, score")
+      .not("score", "is", null)
+      .limit(10000),
   ]);
 
   const profileMap = new Map<string, ProfileInfo>();
@@ -77,6 +76,23 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     gameMap.set(g.bgg_id, g);
   }
 
+  // Compute community average scores (min 3 ratings)
+  const scoreAcc = new Map<number, { total: number; count: number }>();
+  for (const p of allPlacements ?? []) {
+    if (p.score == null) continue;
+    const entry = scoreAcc.get(p.bgg_id) ?? { total: 0, count: 0 };
+    entry.total += Number(p.score);
+    entry.count += 1;
+    scoreAcc.set(p.bgg_id, entry);
+  }
+  const MIN_RATINGS = 3;
+  const avgScoreMap = new Map<number, number>();
+  for (const [bggId, { total, count }] of scoreAcc) {
+    if (count >= MIN_RATINGS) {
+      avgScoreMap.set(bggId, total / count);
+    }
+  }
+
   // Build users-with-wishlists list (at least 1 wishlisted game)
   const userWishlistCounts = new Map<string, number>();
   for (const w of allWishlist ?? []) {
@@ -89,11 +105,10 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   }
   usersWithWishlists.sort((a, b) => a.displayName.localeCompare(b.displayName));
 
-  // Build per-game wishlister lists (excluding target household)
-  const targetSet = new Set(targetIds);
+  // Build per-game wishlister lists (excluding target user)
   const wishlistersByGame = new Map<number, ProfileInfo[]>();
   for (const w of allWishlist ?? []) {
-    if (targetSet.has(w.user_id)) continue;
+    if (w.user_id === targetUserId) continue;
     const list = wishlistersByGame.get(w.bgg_id) ?? [];
     const profile = profileMap.get(w.user_id);
     if (profile) list.push(profile);
@@ -109,18 +124,16 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     ownersByGame.set(o.bgg_id, list);
   }
 
-  // Build target wishlist items (deduplicated)
-  const seen = new Set<number>();
+  // Build target wishlist items
   const targetItems: WishlistItem[] = [];
   for (const entry of targetWishlist ?? []) {
-    if (seen.has(entry.bgg_id)) continue;
-    seen.add(entry.bgg_id);
     const game = gameMap.get(entry.bgg_id);
     if (!game) continue;
     targetItems.push({
       game,
       priority: entry.wishlist_priority,
       note: entry.wishlist_note,
+      communityScore: avgScoreMap.get(entry.bgg_id) ?? null,
       otherWishlisters: wishlistersByGame.get(entry.bgg_id) ?? [],
       owners: ownersByGame.get(entry.bgg_id) ?? [],
     });
@@ -154,19 +167,19 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
   }[];
 
   // Compute suggestions (only for own wishlist)
-  const householdOwnedIds = new Set(
+  const myOwnedIds = new Set(
     (allOwned ?? [])
-      .filter((o) => householdSet.has(o.user_id))
+      .filter((o) => o.user_id === user.id)
       .map((o) => o.bgg_id)
   );
-  const householdWishlistIds = new Set(
+  const myWishlistIds = new Set(
     (allWishlist ?? [])
-      .filter((w) => householdSet.has(w.user_id))
+      .filter((w) => w.user_id === user.id)
       .map((w) => w.bgg_id)
   );
 
   const candidateGames = [...sharedGameIds]
-    .filter((id) => !householdOwnedIds.has(id) && !householdWishlistIds.has(id))
+    .filter((id) => !myOwnedIds.has(id) && !myWishlistIds.has(id))
     .map((id) => gameMap.get(id))
     .filter(Boolean) as BoardGame[];
 
@@ -174,7 +187,6 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
     ? []
     : computeSuggestions(tierPlacements ?? [], candidateGames, gameMap);
 
-  // Header label
   const viewingProfile = viewingOther ? profileMap.get(selectedUserId) : null;
 
   return (
@@ -199,6 +211,7 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
         <SharedWishlistView items={sharedItems} />
       ) : (
         <WishlistGrid
+          key={targetUserId}
           items={targetItems}
           suggestions={suggestions}
           readOnly={!!viewingOther}
