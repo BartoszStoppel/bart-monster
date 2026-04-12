@@ -28,7 +28,7 @@ export default async function FeedbackPage() {
         Feedback
       </h1>
 
-      <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
+      <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
         <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
           Submit feedback
         </h2>

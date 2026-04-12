@@ -137,6 +137,33 @@ const STORIES: FurtchStory[] = [
       "schklp.",
     ],
   },
+  {
+    episode: 6,
+    title: "A Gift from the Circle",
+    date: "April 12, 2026",
+    paragraphs: [
+      "schkllllp.",
+      "<name>. smk. Furtch is still whispering.",
+      "The beetles moved. After nine hours. Maybe more. Furtch lost count because the moon went behind a cloud and Furtch cannot count without the moon <name>.",
+      "schklp.",
+      "They pushed it. The pile. All three beetles got behind it and pushed. Tiny legs on shingle. smk smk. The pile stopped right in front of Furtch. Close enough to touch. The three beetles backed away. And they sat. And they watched.",
+      "lip smack",
+      "<name> Furtch thinks this is a gift.",
+      "Furtch did not ask for a gift. Furtch did not do anything to earn a gift. Furtch sat on a roof and watched beetles for weeks and now they have given Furtch a warm pile of leaf. schklp. Usually someone says something <name>. Usually there is a card.",
+      "hhhhhhhh.",
+      "Furtch touched it. With one toe. It was warm like before but also soft now. Soft like it was breathing. smk.",
+      "Then one by one the beetles left. The original beetle stopped and faced Furtch. Just for a moment. smk. Then it was gone too. The long one was last. It walked very slow because of all the legs <name>. Then Furtch was alone.",
+      "smmmmk smmk.",
+      "<name> Furtch needs you to not make this a big thing. smk.",
+      "Furtch likes the pile.",
+      "It is warm and it hums a little and Furtch has been cold on this roof for weeks. Furtch is keeping it. The beetles looked satisfied when they left. Not kind <name>. Satisfied. Like a job completed. smk. But Furtch does not care. It is warm.",
+      "schklp.",
+      "Furtch is going to sleep now. With the pile. Everything is fine. Real fine.",
+      "hhhhhhhh.",
+      "Good night <name>.",
+      "smk.",
+    ],
+  },
 ];
 
 const SOUND_EFFECTS = new Set([
@@ -209,9 +236,9 @@ function EpisodeCard({ story }: { story: FurtchStory }) {
         </div>
 
         {/* Story card */}
-        <div className="flex-1 overflow-hidden rounded-xl border border-zinc-200/80 bg-gradient-to-br from-white to-amber-50/30 shadow-sm transition-shadow hover:shadow-md dark:border-zinc-800 dark:from-zinc-900 dark:to-amber-950/10">
+        <div className="flex-1 overflow-hidden rounded-xl border border-zinc-200/80 bg-gradient-to-br from-white to-amber-50/30 shadow-sm transition-shadow hover:shadow-md dark:border-white/[0.06] dark:from-zinc-900 dark:to-amber-950/10">
           {/* Header */}
-          <div className="border-b border-zinc-100 bg-white/60 px-6 py-4 dark:border-zinc-800/60 dark:bg-zinc-900/60">
+          <div className="border-b border-zinc-100 bg-white/60 px-6 py-4 dark:border-white/[0.06]/60 dark:bg-white/5/60">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="mb-1 flex items-center gap-2 md:hidden">
@@ -229,7 +256,7 @@ function EpisodeCard({ story }: { story: FurtchStory }) {
                   {story.title}
                 </h2>
               </div>
-              <time className="shrink-0 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+              <time className="shrink-0 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500 dark:bg-white/5 dark:text-zinc-400">
                 {story.date}
               </time>
             </div>
@@ -300,7 +327,7 @@ export default async function FurtchPage() {
 
       {/* Footer teaser */}
       <div className="mt-12 mb-4 text-center">
-        <div className="inline-block rounded-full border border-dashed border-zinc-300 px-5 py-2.5 dark:border-zinc-700">
+        <div className="inline-block rounded-full border border-dashed border-zinc-300 px-5 py-2.5 dark:border-white/10">
           <p className="text-sm italic text-zinc-400 dark:text-zinc-500">
             Furtch will return.
           </p>

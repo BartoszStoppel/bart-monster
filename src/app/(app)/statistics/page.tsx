@@ -107,16 +107,19 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
           if (bScore) return 1;
           return a.name.localeCompare(b.name);
         });
-        const gameScoresMap = new Map<number, number[]>();
-        for (const p of filteredPlacements) {
-          if (p.score == null) continue;
-          const arr = gameScoresMap.get(p.bgg_id) ?? [];
-          arr.push(p.score);
-          gameScoresMap.set(p.bgg_id, arr);
-        }
         const profileNameMap = new Map<string, string>();
         for (const p of profiles ?? []) {
           profileNameMap.set(p.id, p.display_name);
+        }
+        const gameScoresMap = new Map<number, { score: number; displayName: string }[]>();
+        for (const p of filteredPlacements) {
+          if (p.score == null) continue;
+          const arr = gameScoresMap.get(p.bgg_id) ?? [];
+          arr.push({
+            score: p.score,
+            displayName: profileNameMap.get(p.user_id) ?? "Unknown",
+          });
+          gameScoresMap.set(p.bgg_id, arr);
         }
         const gameSnapshotMap = new Map<number, { userId: string | null; displayName: string; score: number; snapshotAt: string }[]>();
         for (const s of snapshots ?? []) {
@@ -152,7 +155,7 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-left text-zinc-500 dark:border-zinc-800 dark:text-zinc-400">
+                <tr className="border-b border-zinc-200 text-left text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
                   <th className="pb-2 pr-4 font-medium">Game</th>
                   <th className="pb-2 pr-4 text-right font-medium">Yours</th>
                   <th className="pb-2 pr-4 text-right font-medium">Ours</th>
@@ -164,12 +167,12 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
                 {sorted.map((game) => (
                   <tr
                     key={game.bgg_id}
-                    className="border-b border-zinc-100 dark:border-zinc-800/50"
+                    className="border-b border-zinc-100 dark:border-white/[0.06]/50"
                   >
                     <td className="py-2 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
                       <a
                         href={`/games/${game.bgg_id}`}
-                        className="hover:text-blue-600 dark:hover:text-blue-400"
+                        className="hover:text-cyan-600 dark:hover:text-cyan-400"
                       >
                         {game.name}
                       </a>
@@ -179,7 +182,7 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
                         ? yourScoreMap.get(game.bgg_id)!.toFixed(1)
                         : "-"}
                     </td>
-                    <td className="py-2 pr-4 text-right font-semibold text-blue-600 dark:text-blue-400">
+                    <td className="py-2 pr-4 text-right font-semibold text-cyan-600 dark:text-cyan-400">
                       {avgScoreMap.has(game.bgg_id)
                         ? (
                             avgScoreMap.get(game.bgg_id)!.total /
@@ -206,7 +209,7 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
         </>
         );
       })() : (
-        <div className="rounded-lg border border-dashed border-zinc-300 py-16 text-center dark:border-zinc-700">
+        <div className="rounded-lg border border-dashed border-zinc-300 py-16 text-center dark:border-white/10">
           <p className="text-zinc-500 dark:text-zinc-400">
             No games yet. Add some games to see statistics here.
           </p>
@@ -218,7 +221,7 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
       <div className="text-xs text-zinc-500 dark:text-zinc-400">{label}</div>
       <div className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
         {value}

@@ -177,7 +177,7 @@ function HolderName({ holder }: { holder: AchievementHolder }) {
   );
   if (holder.userId) {
     return (
-      <Link href={`/users/${holder.userId}`} className="hover:text-blue-600 dark:hover:text-blue-400">
+      <Link href={`/users/${holder.userId}`} className="hover:text-cyan-600 dark:hover:text-cyan-400">
         {name}
       </Link>
     );
@@ -196,7 +196,7 @@ function HolderAvatar({ holder }: { holder: AchievementHolder }) {
             alt=""
             width={24}
             height={24}
-            className="h-6 w-6 shrink-0 rounded-full border-2 border-white object-cover dark:border-zinc-900"
+            className="h-6 w-6 shrink-0 rounded-full border-2 border-white object-cover dark:border-[#0f1420]"
           />
         ))}
       </div>
@@ -209,7 +209,7 @@ function HolderAvatar({ holder }: { holder: AchievementHolder }) {
         alt=""
         width={24}
         height={24}
-        className="mt-0.5 h-6 w-6 shrink-0 rounded border border-zinc-200 object-cover dark:border-zinc-700"
+        className="mt-0.5 h-6 w-6 shrink-0 rounded border border-zinc-200 object-cover dark:border-white/10"
       />
     );
   }
@@ -317,7 +317,7 @@ const TONE_STYLES: Record<AchievementTone, { card: string; badge: string }> = {
 };
 
 const DEFAULT_STYLE = {
-  card: "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900",
+  card: "border-zinc-200 bg-white dark:border-white/[0.06] dark:bg-white/5",
   badge: "bg-amber-100 dark:bg-amber-900/30",
 };
 
@@ -363,8 +363,8 @@ function BountyCard({ title, description, icon, claimedBy }: BountyDisplay) {
   return (
     <div className={`rounded-lg border p-6 ${
       claimedBy
-        ? "border-zinc-200 bg-white dark:border-zinc-800 dark:bg-zinc-900"
-        : "border-dashed border-zinc-300 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900/50"
+        ? "border-zinc-200 bg-white dark:border-white/[0.06] dark:bg-white/5"
+        : "border-dashed border-zinc-300 bg-zinc-50 dark:border-white/10 dark:bg-white/5/50"
     }`}>
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-red-100 text-2xl dark:bg-red-900/30">

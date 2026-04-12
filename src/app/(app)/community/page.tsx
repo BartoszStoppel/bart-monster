@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { CategoryToggle } from "@/components/category-toggle";
 import type { BoardGame } from "@/types/database";
@@ -88,15 +87,7 @@ export default async function CommunityPage({ searchParams }: PageProps) {
         <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
           Community
         </h1>
-        <div className="flex items-center gap-3">
-          <Link
-            href="/tier-list"
-            className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-          >
-            Add your rankings
-          </Link>
-          <CategoryToggle category={category} basePath="/community" />
-        </div>
+        <CategoryToggle category={category} basePath="/community" />
       </div>
       <CollapsibleSection
         title="Tier Lists"

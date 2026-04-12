@@ -24,7 +24,7 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
       <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
         Yours vs Ours vs BGG
       </h2>
-      <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
         <div className="space-y-4">
           {scored.map((game) => {
             const ours = game.ourScore ?? 0;
@@ -36,7 +36,7 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
                 <div className="mb-1.5 flex items-baseline justify-between gap-2">
                   <a
                     href={`/games/${game.bggId}`}
-                    className="truncate text-sm font-medium text-zinc-900 hover:text-blue-600 dark:text-zinc-100 dark:hover:text-blue-400"
+                    className="truncate text-sm font-medium text-zinc-900 hover:text-cyan-600 dark:text-zinc-100 dark:hover:text-cyan-400"
                   >
                     {game.name}
                   </a>
@@ -49,7 +49,7 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
                         <span className="text-zinc-300 dark:text-zinc-600">/</span>
                       </>
                     )}
-                    <span className="font-semibold text-blue-600 dark:text-blue-400">
+                    <span className="font-semibold text-cyan-600 dark:text-cyan-400">
                       {ours.toFixed(1)}
                     </span>
                     <span className="text-zinc-300 dark:text-zinc-600">/</span>
@@ -72,7 +72,7 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
                     )}
                   </div>
                 </div>
-                <div className="relative h-5 rounded bg-zinc-100 dark:bg-zinc-800">
+                <div className="relative h-5 rounded bg-zinc-100 dark:bg-white/5">
                   {bgg > 0 && (
                     <div
                       className="absolute inset-y-0 left-0 rounded bg-amber-400/40 dark:bg-amber-500/25"
@@ -80,7 +80,7 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
                     />
                   )}
                   <div
-                    className="absolute inset-y-0 left-0 rounded bg-blue-500"
+                    className="absolute inset-y-0 left-0 rounded bg-cyan-500"
                     style={{ width: `${(ours / 10) * 100}%`, opacity: 0.6 }}
                   />
                   {yours > 0 && (
@@ -100,7 +100,7 @@ export function ScoreComparisonChart({ games }: ScoreChartProps) {
             <span>Yours</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-5 rounded bg-blue-500 opacity-60" />
+            <div className="h-2.5 w-5 rounded bg-cyan-500 opacity-60" />
             <span>Ours</span>
           </div>
           <div className="flex items-center gap-1.5">

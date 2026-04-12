@@ -7,12 +7,17 @@ import {
   type ScoreSnapshot,
 } from "./score-history-chart";
 
+export interface UserScore {
+  score: number;
+  displayName: string;
+}
+
 interface DistributionGame {
   name: string;
   bggId: number;
   bggRating: number | null;
   thumbnailUrl: string | null;
-  scores: number[];
+  scores: UserScore[];
   yourScore: number | null;
   scoreHistory: ScoreSnapshot[];
 }
@@ -98,21 +103,28 @@ export function DistributionChart({ games, currentUserId }: DistributionChartPro
 
   const selected = sortedGames.find((g) => g.bggId === selectedId) ?? null;
 
+  const numericScores = useMemo(
+    () => selected?.scores.map((s) => s.score) ?? [],
+    [selected]
+  );
+
   const { points, maxDensity } = useMemo(() => {
     if (!selected) return { points: [], maxDensity: 0 };
-    const pts = kde(selected.scores, KDE_STEPS, BANDWIDTH);
+    const pts = kde(numericScores, KDE_STEPS, BANDWIDTH);
     const peak = Math.max(...pts.map((p) => p.density));
     return { points: pts, maxDensity: peak };
-  }, [selected]);
+  }, [selected, numericScores]);
 
   const violinPath = useMemo(
     () => buildViolinPath(points, maxDensity),
     [points, maxDensity]
   );
 
+  const [hoveredDot, setHoveredDot] = useState<number | null>(null);
+
   const bggLineX = selected?.bggRating ? toX(selected.bggRating) : null;
-  const communityAvg = selected && selected.scores.length > 0
-    ? selected.scores.reduce((a, b) => a + b, 0) / selected.scores.length
+  const communityAvg = numericScores.length > 0
+    ? numericScores.reduce((a, b) => a + b, 0) / numericScores.length
     : null;
   const centerY = PAD.top + PLOT_H / 2;
 
@@ -124,7 +136,7 @@ export function DistributionChart({ games, currentUserId }: DistributionChartPro
       <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
         Score Distribution
       </h2>
-      <div className="flex flex-1 flex-col rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="flex flex-1 flex-col rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
         <div className="mb-3 flex items-center gap-2">
           {selected?.thumbnailUrl && (
             <Image
@@ -132,13 +144,13 @@ export function DistributionChart({ games, currentUserId }: DistributionChartPro
               alt=""
               width={28}
               height={28}
-              className="h-7 w-7 shrink-0 rounded border border-zinc-200 object-cover dark:border-zinc-700"
+              className="h-7 w-7 shrink-0 rounded border border-zinc-200 object-cover dark:border-white/10"
             />
           )}
           <select
             value={selectedId ?? ""}
-            onChange={(e) => setSelectedId(Number(e.target.value) || null)}
-            className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            onChange={(e) => { setSelectedId(Number(e.target.value) || null); setHoveredDot(null); }}
+            className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
           >
             {sortedGames.map((g) => (
               <option key={g.bggId} value={g.bggId}>
@@ -152,6 +164,7 @@ export function DistributionChart({ games, currentUserId }: DistributionChartPro
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
           role="img"
+          onClick={(e) => { if (e.target === e.currentTarget) setHoveredDot(null); }}
         >
           {/* Grid lines */}
           {X_TICKS.map((t) => (
@@ -192,21 +205,34 @@ export function DistributionChart({ games, currentUserId }: DistributionChartPro
           {violinPath && (
             <path
               d={violinPath}
-              className="fill-blue-500/30 stroke-blue-500 dark:fill-blue-400/30 dark:stroke-blue-400"
+              className="fill-cyan-500/30 stroke-cyan-500 dark:fill-cyan-400/30 dark:stroke-cyan-400"
               strokeWidth={1}
             />
           )}
 
           {/* Individual score dots */}
-          {selected?.scores.map((score, i) => (
-            <circle
-              key={i}
-              cx={toX(score)}
-              cy={centerY}
-              r={2.5}
-              className="fill-blue-600 dark:fill-blue-300"
-              opacity={0.6}
-            />
+          {selected?.scores.map((entry, i) => (
+            <g key={i}>
+              {/* Invisible larger hit target for mobile taps */}
+              <circle
+                cx={toX(entry.score)}
+                cy={centerY}
+                r={12}
+                fill="transparent"
+                style={{ cursor: "default" }}
+                onPointerEnter={() => setHoveredDot(i)}
+                onPointerLeave={() => setHoveredDot(null)}
+                onClick={() => setHoveredDot(hoveredDot === i ? null : i)}
+              />
+              <circle
+                cx={toX(entry.score)}
+                cy={centerY}
+                r={hoveredDot === i ? 4.5 : 2.5}
+                className="fill-cyan-600 dark:fill-cyan-300"
+                opacity={hoveredDot === i ? 1 : 0.6}
+                style={{ pointerEvents: "none" }}
+              />
+            </g>
           ))}
 
           {/* Your score indicator */}
@@ -238,7 +264,7 @@ export function DistributionChart({ games, currentUserId }: DistributionChartPro
                 x2={toX(communityAvg)}
                 y1={PAD.top}
                 y2={PAD.top + PLOT_H}
-                className="stroke-blue-500 dark:stroke-blue-400"
+                className="stroke-cyan-500 dark:stroke-cyan-400"
                 strokeWidth={1}
               />
             </>
@@ -265,6 +291,42 @@ export function DistributionChart({ games, currentUserId }: DistributionChartPro
           >
             Score
           </text>
+
+          {/* Hover tooltip — rendered last so it draws on top of everything */}
+          {hoveredDot != null && selected?.scores[hoveredDot] && (() => {
+            const entry = selected.scores[hoveredDot];
+            const label = `${entry.displayName}: ${entry.score.toFixed(1)}`;
+            const tipW = Math.max(label.length * 4.5 + 16, 48);
+            const tipH = 20;
+            const dotX = toX(entry.score);
+            const tipX = Math.min(Math.max(tipW / 2 + 2, dotX), W - tipW / 2 - 2);
+            const tipY = centerY - 32;
+            const arrowY = tipY + tipH;
+            return (
+              <g style={{ pointerEvents: "none" }}>
+                <rect
+                  x={tipX - tipW / 2}
+                  y={tipY}
+                  width={tipW}
+                  height={tipH}
+                  rx={4}
+                  className="fill-zinc-900 dark:fill-zinc-100"
+                />
+                <polygon
+                  points={`${dotX - 4},${arrowY} ${dotX + 4},${arrowY} ${dotX},${arrowY + 5}`}
+                  className="fill-zinc-900 dark:fill-zinc-100"
+                />
+                <text
+                  x={tipX}
+                  y={tipY + 13.5}
+                  textAnchor="middle"
+                  className="fill-white text-[8px] font-semibold dark:fill-zinc-900"
+                >
+                  {label}
+                </text>
+              </g>
+            );
+          })()}
         </svg>
 
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
@@ -279,9 +341,9 @@ export function DistributionChart({ games, currentUserId }: DistributionChartPro
           )}
           {communityAvg != null && (
             <div className="flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-blue-500 dark:bg-blue-400" />
+              <span className="inline-block h-2 w-2 rounded-full bg-cyan-500 dark:bg-cyan-400" />
               <span className="text-zinc-500 dark:text-zinc-400">Avg</span>
-              <span className="font-semibold text-blue-600 dark:text-blue-400">
+              <span className="font-semibold text-cyan-600 dark:text-cyan-400">
                 {communityAvg.toFixed(1)}
               </span>
             </div>
@@ -298,7 +360,7 @@ export function DistributionChart({ games, currentUserId }: DistributionChartPro
         </div>
 
         {selected && selected.scoreHistory.length > 0 && (
-          <div className="mt-3 border-t border-zinc-100 pt-3 dark:border-zinc-800">
+          <div className="mt-3 border-t border-zinc-100 pt-3 dark:border-white/[0.06]">
             <h3 className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
               Score Over Time
             </h3>

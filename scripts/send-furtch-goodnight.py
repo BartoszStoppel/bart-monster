@@ -43,10 +43,10 @@ if not isinstance(profiles, list) or len(profiles) == 0:
 
 print(f"Found {len(profiles)} recipients\n")
 
-template = (PROJECT_DIR / "emails" / "05-furtch-the-pile-is-warm-3-29.txt").read_text()
+template = (PROJECT_DIR / "emails" / "06-furtch-a-gift-from-the-circle-4-12.txt").read_text()
 
 FROM = "Furtch <noreply@bart.monster>"
-SUBJECT = "do not open your window"
+SUBJECT = "usually there is a card"
 
 for profile in profiles:
     name = profile["display_name"].split()[0]

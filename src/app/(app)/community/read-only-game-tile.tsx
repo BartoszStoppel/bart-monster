@@ -16,13 +16,13 @@ export function ReadOnlyGameTile({ game, shadow, hotTake }: ReadOnlyGameTileProp
   } else if (shadow) {
     borderClass = "border-dashed border-purple-400 opacity-40 dark:border-purple-500";
   } else {
-    borderClass = "border-zinc-200 dark:border-zinc-700";
+    borderClass = "border-zinc-200 dark:border-white/10";
   }
 
   return (
     <div
       title={shadow ? `${game.name} (predicted)` : hotTake ? `${game.name} 🔥 Hottest take` : game.name}
-      className={`relative h-16 w-16 shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-zinc-800 ${borderClass}`}
+      className={`relative h-16 w-16 shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-white/5 ${borderClass}`}
     >
       {imageUrl ? (
         <Image

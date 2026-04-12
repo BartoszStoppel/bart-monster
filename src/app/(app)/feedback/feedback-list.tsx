@@ -16,8 +16,8 @@ const STATUS_OPTIONS: { value: FeedbackStatus; label: string }[] = [
 ];
 
 const STATUS_COLORS: Record<FeedbackStatus, string> = {
-  new: "bg-zinc-100 text-zinc-700 dark:bg-zinc-700 dark:text-zinc-300",
-  planned: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+  new: "bg-zinc-100 text-zinc-700 dark:bg-white/10 dark:text-zinc-300",
+  planned: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300",
   "in-progress":
     "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
   done: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
@@ -25,7 +25,7 @@ const STATUS_COLORS: Record<FeedbackStatus, string> = {
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  feature: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
+  feature: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300",
   bug: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
   improvement:
     "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
@@ -62,10 +62,11 @@ function FeedbackCard({
     month: "short",
     day: "numeric",
     year: "numeric",
+    timeZone: "UTC",
   });
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-700 dark:bg-zinc-800">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
         <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
           {item.title}
@@ -89,7 +90,7 @@ function FeedbackCard({
       </p>
 
       {item.admin_note && !editingStatus && (
-        <p className="mb-3 rounded border border-blue-200 bg-blue-50 px-3 py-2 text-sm text-blue-800 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300">
+        <p className="mb-3 rounded border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-800 dark:border-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">
           <span className="font-medium">Admin note:</span> {item.admin_note}
         </p>
       )}
@@ -103,7 +104,7 @@ function FeedbackCard({
           {isAdmin && (
             <button
               onClick={() => setEditingStatus(!editingStatus)}
-              className="text-blue-600 hover:underline dark:text-blue-400"
+              className="text-cyan-600 hover:underline dark:text-cyan-400"
             >
               {editingStatus ? "Cancel" : "Edit status"}
             </button>
@@ -121,7 +122,7 @@ function FeedbackCard({
       </div>
 
       {editingStatus && (
-        <div className="mt-3 space-y-3 border-t border-zinc-200 pt-3 dark:border-zinc-700">
+        <div className="mt-3 space-y-3 border-t border-zinc-200 pt-3 dark:border-white/10">
           <div className="flex items-center gap-3">
             <label
               htmlFor={`status-${item.id}`}
@@ -135,7 +136,7 @@ function FeedbackCard({
               onChange={(e) =>
                 setNewStatus(e.target.value as FeedbackStatus)
               }
-              className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -158,13 +159,13 @@ function FeedbackCard({
               value={adminNote}
               onChange={(e) => setAdminNote(e.target.value)}
               placeholder="Add a note..."
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
             />
           </div>
           <button
             onClick={handleStatusSave}
             disabled={isPending}
-            className="rounded-lg bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-3 py-1.5 text-sm font-medium text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
           >
             {isPending ? "Saving..." : "Save"}
           </button>

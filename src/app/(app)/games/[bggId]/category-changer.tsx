@@ -38,7 +38,7 @@ export function CategoryChanger({ bggId, currentCategory }: CategoryChangerProps
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs text-zinc-400">Category:</span>
-      <div className="flex gap-1 rounded-md bg-zinc-100 p-0.5 dark:bg-zinc-800">
+      <div className="flex gap-1 rounded-md bg-zinc-100 p-0.5 dark:bg-white/5">
         <button
           onClick={() => handleChange("party")}
           disabled={updating}
@@ -55,7 +55,7 @@ export function CategoryChanger({ bggId, currentCategory }: CategoryChangerProps
           disabled={updating}
           className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
             currentCategory === "board"
-              ? "bg-blue-600 text-white"
+              ? "bg-cyan-600 text-white"
               : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
           }`}
         >

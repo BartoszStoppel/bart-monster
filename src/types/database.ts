@@ -63,6 +63,8 @@ export interface UserGameCollection {
   bgg_id: number;
   owned: boolean;
   wishlist: boolean;
+  wishlist_priority: number | null;
+  wishlist_note: string | null;
   added_at: string;
 }
 

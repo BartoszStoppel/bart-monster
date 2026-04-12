@@ -69,7 +69,7 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
         }}
         onFocus={() => results.length > 0 && setShowDropdown(true)}
         placeholder="Search for a board game..."
-        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
       />
 
       {loading && (
@@ -79,12 +79,12 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
       )}
 
       {showDropdown && results.length > 0 && (
-        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-white/10 dark:bg-white/5">
           {results.slice(0, 20).map((game) => (
             <li key={game.id}>
               <button
                 onClick={() => handleSelect(game)}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-700"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-zinc-50 dark:hover:bg-white/10"
               >
                 {game.thumbnailUrl ? (
                   <Image
@@ -92,10 +92,10 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
                     alt=""
                     width={40}
                     height={40}
-                    className="h-10 w-10 shrink-0 rounded border border-zinc-200 object-cover dark:border-zinc-700"
+                    className="h-10 w-10 shrink-0 rounded border border-zinc-200 object-cover dark:border-white/10"
                   />
                 ) : (
-                  <div className="h-10 w-10 shrink-0 rounded border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800" />
+                  <div className="h-10 w-10 shrink-0 rounded border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5" />
                 )}
                 <div className="min-w-0 flex-1">
                   <span className="block truncate font-medium text-zinc-900 dark:text-zinc-100">
@@ -119,7 +119,7 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
       )}
 
       {showDropdown && !loading && results.length === 0 && query.length >= 2 && (
-        <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white p-4 text-center text-sm text-zinc-500 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+        <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white p-4 text-center text-sm text-zinc-500 shadow-lg dark:border-white/10 dark:bg-white/5">
           No games found
         </div>
       )}

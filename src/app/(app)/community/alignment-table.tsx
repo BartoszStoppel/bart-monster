@@ -43,7 +43,7 @@ function Avatar({
   }
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-zinc-200 text-[10px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300"
+      className="flex items-center justify-center rounded-full bg-zinc-200 text-[10px] font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300"
       style={{ width: size, height: size }}
     >
       {name.charAt(0).toUpperCase()}
@@ -51,7 +51,7 @@ function Avatar({
   );
 }
 
-const DIVIDER = "border-l-2 border-zinc-300 dark:border-zinc-600";
+const DIVIDER = "border-l-2 border-zinc-300 dark:border-white/10";
 
 const GREEN_BG = [
   "bg-emerald-100/70 dark:bg-emerald-900/30",
@@ -108,10 +108,10 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
 
   return (
     <div>
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-zinc-700">
+      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-white/10">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50">
+            <tr className="border-b border-zinc-200 dark:border-white/10">
               <th className="px-3 py-2 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">
                 User
               </th>

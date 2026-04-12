@@ -243,10 +243,10 @@ export function SortableGameGrid({
       <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
         <div
           ref={catContainerRef}
-          className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
+          className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
         >
           <div
-            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
+            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10 dark:shadow-cyan-500/5"
             style={{ left: catPillStyle.left, width: catPillStyle.width }}
           />
           {CATEGORY_OPTIONS.map((opt) => (
@@ -268,10 +268,10 @@ export function SortableGameGrid({
           <span className="text-xs text-zinc-400 dark:text-zinc-500">Sort by</span>
           <div
             ref={sortContainerRef}
-            className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
+            className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
           >
             <div
-              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
+              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10 dark:shadow-cyan-500/5"
               style={{ left: sortPillStyle.left, width: sortPillStyle.width }}
             />
             {SORT_OPTIONS.map((opt) => (
@@ -292,7 +292,7 @@ export function SortableGameGrid({
         </div>
         <button
           onClick={() => setOwnedOnly((v) => !v)}
-          className={`ml-auto relative flex items-center gap-1.5 rounded-lg bg-zinc-100 px-3 py-1 text-xs font-medium transition-colors dark:bg-zinc-800 ${
+          className={`ml-auto relative flex items-center gap-1.5 rounded-lg bg-zinc-100 px-3 py-1 text-xs font-medium transition-colors dark:bg-white/5 ${
             ownedOnly
               ? "text-green-600 dark:text-green-400"
               : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
@@ -302,7 +302,7 @@ export function SortableGameGrid({
             className={`inline-flex h-3 w-3 items-center justify-center rounded-sm border transition-colors ${
               ownedOnly
                 ? "border-green-500 bg-green-500 text-white"
-                : "border-zinc-400 dark:border-zinc-500"
+                : "border-zinc-400 dark:border-white/20"
             }`}
           >
             {ownedOnly && (

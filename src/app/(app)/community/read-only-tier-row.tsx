@@ -17,7 +17,7 @@ export function ReadOnlyTierRow({ tier, entries, hotTakeId }: ReadOnlyTierRowPro
   if (entries.length === 0) return null;
 
   return (
-    <div className="flex min-h-[4.5rem] items-stretch border-b border-zinc-200 last:border-b-0 dark:border-zinc-700">
+    <div className="flex min-h-[4.5rem] items-stretch border-b border-zinc-200 last:border-b-0 dark:border-white/10">
       <div
         className={`flex w-12 shrink-0 items-center justify-center text-lg font-bold text-white ${TIER_COLORS[tier]}`}
       >

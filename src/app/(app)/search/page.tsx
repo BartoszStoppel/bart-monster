@@ -68,7 +68,7 @@ export default function SearchPage() {
       <GameSearchBar onSelect={handleSelect} />
 
       {fetching && (
-        <div className="mt-4 rounded-lg border border-blue-200 bg-blue-50 p-3 text-sm text-blue-700 dark:border-blue-800 dark:bg-blue-900/20 dark:text-blue-300">
+        <div className="mt-4 rounded-lg border border-cyan-200 bg-cyan-50 p-3 text-sm text-cyan-700 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-300">
           Fetching game details...
         </div>
       )}

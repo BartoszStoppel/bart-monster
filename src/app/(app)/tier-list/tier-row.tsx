@@ -23,9 +23,9 @@ export function TierRow({ tier, games, selectedBggId, onTileTap, onTierTap }: Ti
 
   return (
     <div
-      className={`flex min-h-[4.5rem] items-stretch border-b border-zinc-200 dark:border-zinc-700 ${
-        isOver ? "bg-zinc-100 dark:bg-zinc-800/50" : ""
-      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-zinc-800/30" : ""}`}
+      className={`flex min-h-[4.5rem] items-stretch border-b border-zinc-200 dark:border-white/10 ${
+        isOver ? "bg-zinc-100 dark:bg-white/5/50" : ""
+      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-white/5/30" : ""}`}
     >
       <div
         className={`flex w-12 shrink-0 cursor-pointer items-center justify-center text-lg font-bold text-white ${TIER_COLORS[tier]}`}

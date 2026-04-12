@@ -112,7 +112,7 @@ export default async function CollectionPage() {
         </div>
         <Link
           href="/search"
-          className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700"
+          className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 hover:brightness-110"
         >
           Add Game
         </Link>
@@ -128,13 +128,13 @@ export default async function CollectionPage() {
           badgeMap={badgeMap}
         />
       ) : (
-        <div className="rounded-lg border border-dashed border-zinc-300 py-16 text-center dark:border-zinc-700">
+        <div className="glass-card rounded-xl border-dashed py-16 text-center">
           <p className="text-zinc-500 dark:text-zinc-400">
             No games in the collection yet.
           </p>
           <Link
             href="/search"
-            className="mt-2 inline-block text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400"
+            className="mt-2 inline-block text-sm font-medium text-cyan-600 hover:text-cyan-700 dark:text-cyan-400"
           >
             Search and add your first game
           </Link>

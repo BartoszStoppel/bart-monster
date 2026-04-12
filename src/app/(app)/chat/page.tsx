@@ -94,8 +94,8 @@ export default function ChatPage() {
   }
 
   return (
-    <div className="-mx-2 -my-6 flex h-[calc(100dvh-49px)] min-h-0 flex-col">
-      <div className="border-b border-zinc-200 px-4 py-3 dark:border-zinc-800">
+    <div className="-mx-2 -my-6 -mb-28 flex h-[calc(100dvh-49px)] min-h-0 flex-col overflow-hidden">
+      <div className="border-b border-zinc-200 px-4 py-3 dark:border-white/[0.06]">
         <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
           Chat with Bort
         </h1>
@@ -119,7 +119,7 @@ export default function ChatPage() {
                       setInput(s);
                       inputRef.current?.focus();
                     }}
-                    className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-zinc-700 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+                    className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-white/10 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
                   >
                     {s}
                   </button>
@@ -137,8 +137,8 @@ export default function ChatPage() {
             <div
               className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
                 msg.role === "user"
-                  ? "bg-blue-600 text-white"
-                  : "bg-zinc-100 text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100"
+                  ? "bg-cyan-600 text-white"
+                  : "bg-zinc-100 text-zinc-900 dark:bg-white/5 dark:text-zinc-100"
               }`}
             >
               {msg.role === "assistant" ? (
@@ -158,7 +158,7 @@ export default function ChatPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="shrink-0 border-t border-zinc-200 px-4 py-3 dark:border-zinc-800"
+        className="shrink-0 border-t border-zinc-200 px-4 py-3 dark:border-white/[0.06]"
       >
         <div className="flex gap-2">
           <textarea
@@ -168,12 +168,12 @@ export default function ChatPage() {
             onKeyDown={handleKeyDown}
             placeholder="Ask about games..."
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-blue-500"
+            className="flex-1 resize-none rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-cyan-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-cyan-500"
           />
           <button
             type="submit"
             disabled={streaming || !input.trim()}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-4 py-2 text-sm font-medium text-white transition-colors shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
           >
             Send
           </button>
@@ -188,11 +188,11 @@ function ThinkingIndicator() {
     <div className="flex items-center gap-3 py-1">
       <div className="relative h-6 w-6">
         {/* Outer orbiting ring */}
-        <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-blue-500 [animation-duration:1.5s]" />
+        <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-cyan-500 [animation-duration:1.5s]" />
         {/* Inner orbiting ring — opposite direction */}
         <div className="absolute inset-1 animate-spin rounded-full border-2 border-transparent border-b-violet-500 [animation-direction:reverse] [animation-duration:1s]" />
         {/* Center glow dot */}
-        <div className="absolute inset-[7px] animate-pulse rounded-full bg-blue-500 shadow-[0_0_8px_2px_rgba(59,130,246,0.6)] [animation-duration:1.2s]" />
+        <div className="absolute inset-[7px] animate-pulse rounded-full bg-cyan-500 shadow-[0_0_8px_2px_rgba(6,182,212,0.6)] [animation-duration:1.2s]" />
       </div>
       <span className="text-xs text-zinc-400 dark:text-zinc-500">
         <span className="inline-flex items-baseline">

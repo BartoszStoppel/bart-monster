@@ -87,7 +87,7 @@ export function WishlistToggle({
             className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors disabled:opacity-50 ${
               wishlisted
                 ? "border-purple-500 bg-purple-500 text-white"
-                : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-zinc-600 dark:bg-zinc-800 dark:hover:border-zinc-500"
+                : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-white/10 dark:bg-white/5 dark:hover:border-zinc-500"
             }`}
           >
             {wishlisted && (

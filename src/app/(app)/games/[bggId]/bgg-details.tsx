@@ -20,7 +20,7 @@ function TagList({ label, items }: { label: string; items: string[] }) {
         {[...new Set(items)].map((item) => (
           <span
             key={item}
-            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-white/5 dark:text-zinc-400"
           >
             {item}
           </span>
@@ -32,7 +32,7 @@ function TagList({ label, items }: { label: string; items: string[] }) {
 
 function StatItem({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex flex-col items-center rounded-lg bg-zinc-50 px-3 py-2 dark:bg-zinc-800/50">
+    <div className="flex flex-col items-center rounded-lg bg-zinc-50 px-3 py-2 dark:bg-white/5/50">
       <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
         {typeof value === "number" ? value.toLocaleString() : value}
       </span>
@@ -70,8 +70,8 @@ export function SuggestedPlayersTable({ data }: { data: SuggestedPlayerCount[] }
                 isBest
                   ? "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
                   : isRec
-                    ? "border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-900/20"
-                    : "border-zinc-200 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800/50"
+                    ? "border-cyan-200 bg-cyan-50 dark:border-cyan-800 dark:bg-cyan-900/20"
+                    : "border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5/50"
               }`}
             >
               <span className="font-bold text-zinc-900 dark:text-zinc-100">
@@ -82,7 +82,7 @@ export function SuggestedPlayersTable({ data }: { data: SuggestedPlayerCount[] }
                   isBest
                     ? "text-green-700 dark:text-green-400"
                     : isRec
-                      ? "text-blue-600 dark:text-blue-400"
+                      ? "text-cyan-600 dark:text-cyan-400"
                       : "text-zinc-400 dark:text-zinc-500"
                 }`}
               >
@@ -111,7 +111,7 @@ function ExpansionList({ expansions }: { expansions: BggExpansionRef[] }) {
             href={`https://boardgamegeek.com/boardgameexpansion/${exp.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 transition-colors hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
           >
             {exp.name}
           </Link>

@@ -49,7 +49,7 @@ export function WishlistList({ items: initialItems, userId }: WishlistListProps)
         <li key={item.bggId} className="flex items-center justify-between py-2">
           <Link
             href={`/games/${item.bggId}`}
-            className="text-sm font-medium text-zinc-900 hover:text-blue-600 dark:text-zinc-50 dark:hover:text-blue-400"
+            className="text-sm font-medium text-zinc-900 hover:text-cyan-600 dark:text-zinc-50 dark:hover:text-cyan-400"
           >
             {item.name}
           </Link>

@@ -7,6 +7,7 @@ import { DeleteGameButton } from "./delete-game-button";
 import { CollectionToggles } from "./collection-toggles";
 import { BggDetails, SuggestedPlayersTable } from "./bgg-details";
 import { getHouseholdIds } from "@/lib/household";
+import { TIER_COLORS } from "@/lib/tier-colors";
 
 export const dynamic = "force-dynamic";
 
@@ -70,6 +71,23 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     }))
     .filter((w) => w.displayName !== "Unknown");
 
+  const { data: tierPlacements } = await supabase
+    .from("tier_placements")
+    .select("tier, score, user_id, profiles(display_name)")
+    .eq("bgg_id", bggId)
+    .order("score", { ascending: false });
+
+  const rankings = (tierPlacements ?? [])
+    .map((tp) => {
+      const profile = Array.isArray(tp.profiles) ? tp.profiles[0] : tp.profiles;
+      return {
+        displayName: (profile as { display_name: string } | null)?.display_name ?? "Unknown",
+        tier: tp.tier,
+        score: tp.score ? Number(tp.score) : null,
+      };
+    })
+    .filter((r) => r.displayName !== "Unknown");
+
   const currentUserWishlisted = wishlisterInfos.some((w) => householdSet.has(w.userId));
 
   const playerRange =
@@ -83,7 +101,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     <div className="mx-auto max-w-3xl">
       <div className="mb-8 flex flex-col gap-6 sm:flex-row">
         {(game.image_url || game.thumbnail_url) && (
-          <div className="relative h-64 w-48 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-zinc-800">
+          <div className="relative h-64 w-48 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-white/5">
             <Image
               src={(game.image_url || game.thumbnail_url)!}
               alt={game.name}
@@ -104,7 +122,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
                 className={`rounded-full px-2 py-0.5 text-xs font-medium ${
                   game.category === "party"
                     ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                    : "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300"
+                    : "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
                 }`}
               >
                 {CATEGORY_LABELS[game.category] ?? game.category}
@@ -158,7 +176,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
               {game.categories.map((cat: string) => (
                 <span
                   key={cat}
-                  className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+                  className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-white/5 dark:text-zinc-400"
                 >
                   {cat}
                 </span>
@@ -167,6 +185,36 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
           )}
         </div>
       </div>
+
+      {rankings.length > 0 && (
+        <div className="mb-8">
+          <h2 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            Rankings ({rankings.length})
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            {rankings.map((r) => (
+              <div
+                key={r.displayName}
+                className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-white/[0.06] dark:bg-white/5"
+              >
+                <span
+                  className={`inline-flex h-6 w-6 items-center justify-center rounded text-xs font-bold text-white ${TIER_COLORS[r.tier] ?? "bg-zinc-400"}`}
+                >
+                  {r.tier}
+                </span>
+                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  {r.displayName}
+                </span>
+                {r.score != null && (
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
+                    {r.score.toFixed(1)}
+                  </span>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {game.description && (
         <div className="mb-8">

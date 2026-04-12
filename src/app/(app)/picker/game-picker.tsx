@@ -224,7 +224,7 @@ export function GamePicker({
               setSupplierId(e.target.value || null);
               setResult(null);
             }}
-            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+            className="w-full rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
           >
             <option value="">Select a household...</option>
             {households.map((h) => (
@@ -245,10 +245,10 @@ export function GamePicker({
           </p>
           <div
             ref={catContainerRef}
-            className="relative inline-flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
+            className="relative inline-flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
           >
             <div
-              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
+              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10"
               style={{ left: catPillStyle.left, width: catPillStyle.width }}
             />
             {CATEGORY_OPTIONS.map((opt) => (
@@ -286,8 +286,8 @@ export function GamePicker({
                 onClick={() => togglePlayer(p.id)}
                 className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition-all ${
                   selected
-                    ? "border-blue-500 bg-blue-50 text-blue-700 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300"
-                    : "border-zinc-200 text-zinc-400 dark:border-zinc-700 dark:text-zinc-500"
+                    ? "border-cyan-500 bg-cyan-50 text-cyan-700 dark:border-cyan-400 dark:bg-cyan-900/30 dark:text-cyan-300"
+                    : "border-zinc-200 text-zinc-400 dark:border-white/10 dark:text-zinc-500"
                 }`}
               >
                 {p.avatar_url ? (
@@ -302,8 +302,8 @@ export function GamePicker({
                   <div
                     className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${
                       selected
-                        ? "bg-blue-200 text-blue-700 dark:bg-blue-800 dark:text-blue-300"
-                        : "bg-zinc-200 text-zinc-500 dark:bg-zinc-700 dark:text-zinc-400"
+                        ? "bg-cyan-200 text-cyan-700 dark:bg-cyan-800 dark:text-cyan-300"
+                        : "bg-zinc-200 text-zinc-500 dark:bg-white/10 dark:text-zinc-400"
                     }`}
                   >
                     {p.display_name.charAt(0).toUpperCase()}
@@ -352,7 +352,7 @@ export function GamePicker({
                 setMinTime(val);
                 setResult(null);
               }}
-              className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
             />
             <span className="text-xs text-zinc-400 dark:text-zinc-500">to</span>
             <input
@@ -365,7 +365,7 @@ export function GamePicker({
                 setMaxTime(val);
                 setResult(null);
               }}
-              className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-100"
+              className="w-20 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm tabular-nums text-zinc-900 placeholder-zinc-400 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
             />
           </div>
         </div>
@@ -379,10 +379,10 @@ export function GamePicker({
           </div>
           <div
             ref={modeContainerRef}
-            className="relative inline-flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800"
+            className="relative inline-flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
           >
             <div
-              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
+              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10"
               style={{ left: modePillStyle.left, width: modePillStyle.width }}
             />
             {MODE_OPTIONS.map((opt) => (
@@ -422,7 +422,7 @@ export function GamePicker({
                   setAggression(Number(e.target.value));
                   setResult(null);
                 }}
-                className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-zinc-200 accent-blue-600 dark:bg-zinc-700"
+                className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-zinc-200 accent-cyan-600 dark:bg-white/10"
               />
               <span className="text-xs text-zinc-400 dark:text-zinc-500">
                 Aggressive
@@ -445,7 +445,7 @@ export function GamePicker({
         <button
           onClick={handleSpin}
           disabled={spinning || pool.length === 0}
-          className="rounded-xl bg-blue-600 px-8 py-3 text-sm font-bold text-white shadow-lg transition-all hover:bg-blue-700 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:active:scale-100"
+          className="rounded-xl bg-gradient-to-r from-cyan-500 to-cyan-600 px-8 py-3 text-sm font-bold text-white shadow-lg transition-all shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:active:scale-100"
         >
           {spinning ? "Spinning..." : result ? "Spin Again" : "Spin!"}
         </button>
@@ -458,7 +458,7 @@ export function GamePicker({
           onClick={() => setResult(null)}
         >
           <div
-            className="animate-pop-in mx-4 w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-700 dark:bg-zinc-900"
+            className="animate-pop-in mx-4 w-full max-w-sm rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-white/10 dark:bg-white/5"
             onClick={(e) => e.stopPropagation()}
           >
             {(result.image_url || result.thumbnail_url) && (
@@ -491,7 +491,7 @@ export function GamePicker({
             </div>
             <button
               onClick={() => setResult(null)}
-              className="mt-4 w-full rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
+              className="mt-4 w-full rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-4 py-2.5 text-sm font-semibold text-white transition-colors shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110"
             >
               Got it!
             </button>

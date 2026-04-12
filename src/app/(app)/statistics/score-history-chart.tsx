@@ -22,7 +22,7 @@ const Y_MIN = 1;
 const Y_MAX = 10;
 
 const YOU_COLOR = { light: "#22c55e", dark: "#4ade80" };
-const AVG_COLOR = { light: "#3b82f6", dark: "#60a5fa" };
+const AVG_COLOR = { light: "#06b6d4", dark: "#22d3ee" };
 const BGG_COLOR = { light: "#f97316", dark: "#fb923c" };
 
 function toY(score: number): number {
@@ -31,7 +31,7 @@ function toY(score: number): number {
 
 function formatDate(iso: string): string {
   const d = new Date(iso);
-  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 }
 
 interface Point {

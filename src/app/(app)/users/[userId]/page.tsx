@@ -7,6 +7,7 @@ import type { BoardGame, Tier } from "@/types/database";
 import { ReadOnlyTierRow } from "../../community/read-only-tier-row";
 import { buildScoreMap } from "../../community/compute-shadow-ranks";
 import type { AlignmentEntry } from "../../community/compute-alignment";
+import { ProfileEditor } from "../../profile/profile-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -27,6 +28,11 @@ export default async function UserProfilePage({ params }: PageProps) {
     .single();
 
   if (!profile) notFound();
+
+  const {
+    data: { user: currentUser },
+  } = await supabase.auth.getUser();
+  const isOwnProfile = currentUser?.id === userId;
 
   const householdIds = await getHouseholdIds(supabase, userId);
 
@@ -125,7 +131,7 @@ export default async function UserProfilePage({ params }: PageProps) {
             className="h-18 w-18 rounded-full"
           />
         ) : (
-          <div className="flex h-18 w-18 items-center justify-center rounded-full bg-zinc-200 text-2xl font-bold text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+          <div className="flex h-18 w-18 items-center justify-center rounded-full bg-zinc-200 text-2xl font-bold text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
             {profile.display_name.charAt(0).toUpperCase()}
           </div>
         )}
@@ -133,6 +139,11 @@ export default async function UserProfilePage({ params }: PageProps) {
           <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
             {profile.display_name}
           </h1>
+          {isOwnProfile && currentUser.email && (
+            <div className="text-sm text-zinc-500 dark:text-zinc-400">
+              {currentUser.email}
+            </div>
+          )}
           {partner && (
             <div className="mt-1 flex items-center gap-1.5">
               {partner.avatar_url && (
@@ -151,6 +162,12 @@ export default async function UserProfilePage({ params }: PageProps) {
           )}
         </div>
       </div>
+
+      {isOwnProfile && (
+        <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
+          <ProfileEditor currentName={profile.display_name} userId={userId} />
+        </div>
+      )}
 
       {/* Stats row */}
       <div className="mb-8 grid grid-cols-3 gap-4">
@@ -173,7 +190,7 @@ export default async function UserProfilePage({ params }: PageProps) {
                   key={game.bgg_id}
                   href={`/games/${game.bgg_id}`}
                   title={game.name}
-                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 transition-opacity hover:opacity-80 dark:border-zinc-700 dark:bg-zinc-800"
+                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 transition-opacity hover:opacity-80 dark:border-white/10 dark:bg-white/5"
                 >
                   {img ? (
                     <Image
@@ -212,7 +229,7 @@ export default async function UserProfilePage({ params }: PageProps) {
         <h2 className="mb-4 text-lg font-bold text-zinc-900 dark:text-zinc-50">
           🎁 Wishlist
         </h2>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
           {wishlist.length > 0 ? (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {wishlist.map((item) => (
@@ -227,10 +244,10 @@ export default async function UserProfilePage({ params }: PageProps) {
                       alt={item.name}
                       width={40}
                       height={40}
-                      className="h-10 w-10 rounded border border-zinc-200 object-contain dark:border-zinc-700"
+                      className="h-10 w-10 rounded border border-zinc-200 object-contain dark:border-white/10"
                     />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded border border-zinc-200 bg-zinc-100 text-[8px] text-zinc-400 dark:border-zinc-700 dark:bg-zinc-800">
+                    <div className="flex h-10 w-10 items-center justify-center rounded border border-zinc-200 bg-zinc-100 text-[8px] text-zinc-400 dark:border-white/10 dark:bg-white/5">
                       ?
                     </div>
                   )}
@@ -242,7 +259,9 @@ export default async function UserProfilePage({ params }: PageProps) {
             </div>
           ) : (
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              No games on their wishlist yet.
+              {isOwnProfile
+                ? "No games on your wishlist yet."
+                : "No games on their wishlist yet."}
             </p>
           )}
         </div>
@@ -299,7 +318,7 @@ export default async function UserProfilePage({ params }: PageProps) {
 
 function StatCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 text-center dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4 text-center dark:border-white/[0.06] dark:bg-white/5">
       <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
         {value}
       </div>
@@ -313,7 +332,7 @@ function FavoriteCard({ game, label }: { game: BoardGame; label: string }) {
   return (
     <Link
       href={`/games/${game.bgg_id}`}
-      className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-900 dark:hover:border-zinc-700"
+      className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 dark:border-white/[0.06] dark:bg-white/5 dark:hover:border-zinc-700"
     >
       {imageUrl ? (
         <Image
@@ -321,10 +340,10 @@ function FavoriteCard({ game, label }: { game: BoardGame; label: string }) {
           alt={game.name}
           width={48}
           height={48}
-          className="h-12 w-12 rounded border border-zinc-200 object-contain dark:border-zinc-700"
+          className="h-12 w-12 rounded border border-zinc-200 object-contain dark:border-white/10"
         />
       ) : (
-        <div className="flex h-12 w-12 items-center justify-center rounded border border-zinc-200 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800">
+        <div className="flex h-12 w-12 items-center justify-center rounded border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
           ?
         </div>
       )}
@@ -338,13 +357,13 @@ function FavoriteCard({ game, label }: { game: BoardGame; label: string }) {
 
 function TagsCard({ tags, label }: { tags: string[]; label: string }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
       <p className="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">{label}</p>
       <div className="flex flex-wrap gap-1.5">
         {tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-400"
+            className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:bg-white/5 dark:text-zinc-400"
           >
             {tag}
           </span>
@@ -364,7 +383,7 @@ function AlignmentCard({
   rivals: AlignmentEntry[];
 }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
       <p className="mb-3 text-xs font-medium text-zinc-500 dark:text-zinc-400">
         {category}
       </p>
@@ -413,7 +432,7 @@ function AlignmentPerson({ entry }: { entry: AlignmentEntry }) {
           className="h-5 w-5 rounded-full"
         />
       ) : (
-        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-200 text-[9px] font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-200 text-[9px] font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
           {entry.displayName.charAt(0)}
         </div>
       )}
@@ -439,7 +458,7 @@ function TierListSection({
       <h2 className="mb-4 text-lg font-bold text-zinc-900 dark:text-zinc-50">
         {title}
       </h2>
-      <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+      <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
         {TIERS.map((tier) => (
           <ReadOnlyTierRow
             key={tier}

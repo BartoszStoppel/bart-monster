@@ -14,22 +14,22 @@ function BadgeRow({ cat, label }: { cat: CategoryBadges; label: string }) {
   return (
     <div className="flex gap-0.5">
       {cat.gold.length > 0 && (
-        <span className="flex items-center rounded-md bg-black/50 px-1 py-0.5 text-[10px] leading-none shadow" title={`#1 ${label} game for ${cat.gold.join(", ")}`}>
+        <span className="flex items-center rounded-md bg-black/60 px-1 py-0.5 text-[10px] leading-none shadow-lg backdrop-blur-sm" title={`#1 ${label} game for ${cat.gold.join(", ")}`}>
           <span>🥇</span>{cat.gold.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.gold.length}</span>}
         </span>
       )}
       {cat.silver.length > 0 && (
-        <span className="flex items-center rounded-md bg-black/50 px-1 py-0.5 text-[10px] leading-none shadow" title={`#2 ${label} game for ${cat.silver.join(", ")}`}>
+        <span className="flex items-center rounded-md bg-black/60 px-1 py-0.5 text-[10px] leading-none shadow-lg backdrop-blur-sm" title={`#2 ${label} game for ${cat.silver.join(", ")}`}>
           <span>🥈</span>{cat.silver.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.silver.length}</span>}
         </span>
       )}
       {cat.bronze.length > 0 && (
-        <span className="flex items-center rounded-md bg-black/50 px-1 py-0.5 text-[10px] leading-none shadow" title={`#3 ${label} game for ${cat.bronze.join(", ")}`}>
+        <span className="flex items-center rounded-md bg-black/60 px-1 py-0.5 text-[10px] leading-none shadow-lg backdrop-blur-sm" title={`#3 ${label} game for ${cat.bronze.join(", ")}`}>
           <span>🥉</span>{cat.bronze.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.bronze.length}</span>}
         </span>
       )}
       {cat.trash.length > 0 && (
-        <span className="flex items-center rounded-md bg-black/50 px-1 py-0.5 text-[10px] leading-none shadow" title={`Last place ${label} game for ${cat.trash.join(", ")}`}>
+        <span className="flex items-center rounded-md bg-black/60 px-1 py-0.5 text-[10px] leading-none shadow-lg backdrop-blur-sm" title={`Last place ${label} game for ${cat.trash.join(", ")}`}>
           <span>🗑️</span>{cat.trash.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.trash.length}</span>}
         </span>
       )}
@@ -63,19 +63,19 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
 
   return (
     <div
-      className={`group relative flex flex-col overflow-hidden rounded-lg border bg-white transition-shadow hover:shadow-md dark:bg-zinc-900 ${
-        dominantColor ? "" : "border-zinc-200 dark:border-zinc-800"
+      className={`glass-card group relative flex flex-col overflow-hidden rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/5 ${
+        dominantColor ? "" : ""
       }`}
       style={{
         borderColor: dominantColor
-          ? `rgba(${dominantColor}, 0.4)`
+          ? `rgba(${dominantColor}, 0.25)`
           : undefined,
       }}
     >
       {/* Dominant color tint overlay */}
       {dominantColor && (
         <div
-          className="pointer-events-none absolute inset-0 z-0 opacity-20 dark:opacity-25"
+          className="pointer-events-none absolute inset-0 z-0 opacity-15 dark:opacity-20"
           style={{ backgroundColor: `rgb(${dominantColor})` }}
         />
       )}
@@ -91,7 +91,7 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
         className="relative z-[1] flex flex-col"
       >
         {/* Image */}
-        <div className="relative aspect-square w-full overflow-hidden bg-zinc-100 dark:bg-zinc-800">
+        <div className="relative aspect-square w-full overflow-hidden bg-zinc-100 dark:bg-white/5">
           {/* Owned + Wishlist stacked indicators */}
           <div className="absolute right-1.5 top-1.5 z-10 flex flex-col gap-1">
             {onOwnershipToggle && (
@@ -103,8 +103,8 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
                 }}
                 className={`flex h-4.5 w-4.5 items-center justify-center rounded transition-all ${
                   owned
-                    ? "bg-green-500 text-white shadow-sm"
-                    : "bg-white/90 text-zinc-500 opacity-0 group-hover:opacity-100 dark:bg-zinc-700/90 dark:text-zinc-300"
+                    ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
+                    : "bg-white/90 text-zinc-500 opacity-0 group-hover:opacity-100 dark:bg-white/10 dark:text-zinc-300"
                 }`}
                 title={owned ? "You own this" : "Not owned"}
               >
@@ -126,8 +126,8 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
                 }}
                 className={`flex h-4.5 w-4.5 items-center justify-center rounded transition-all ${
                   wishlisted
-                    ? "bg-purple-500 text-white shadow-sm"
-                    : "bg-white/90 text-zinc-500 opacity-0 group-hover:opacity-100 dark:bg-zinc-700/90 dark:text-zinc-300"
+                    ? "bg-violet-500 text-white shadow-sm shadow-violet-500/30"
+                    : "bg-white/90 text-zinc-500 opacity-0 group-hover:opacity-100 dark:bg-white/10 dark:text-zinc-300"
                 }`}
                 title={wishlisted ? "On your wishlist" : "Add to wishlist"}
               >
@@ -142,11 +142,11 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
               src={imageUrl}
               alt={game.name}
               fill
-              className="object-contain transition-transform group-hover:scale-105"
+              className="object-contain transition-transform duration-300 group-hover:scale-105"
               sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-zinc-400">
+            <div className="flex h-full items-center justify-center text-zinc-400 dark:text-zinc-600">
               No image
             </div>
           )}
@@ -154,13 +154,13 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
           {/* Score overlays on image */}
           <div className="absolute bottom-1.5 left-1.5 flex flex-col gap-0.5">
             {avgScore != null && (
-              <div className="flex items-center gap-1 rounded-md bg-blue-600 px-1.5 py-0.5 shadow">
-                <span className="text-[9px] font-medium text-blue-200">Ours</span>
+              <div className="flex items-center gap-1 rounded-md bg-cyan-600/90 px-1.5 py-0.5 shadow-lg shadow-cyan-500/20 backdrop-blur-sm">
+                <span className="text-[9px] font-medium text-cyan-200">Ours</span>
                 <span className="text-xs font-bold text-white">{avgScore.toFixed(1)}</span>
               </div>
             )}
             {game.bgg_rating ? (
-              <div className="flex items-center gap-1 rounded-md bg-orange-500 px-1.5 py-0.5 shadow">
+              <div className="flex items-center gap-1 rounded-md bg-orange-500/90 px-1.5 py-0.5 shadow-lg shadow-orange-500/20 backdrop-blur-sm">
                 <span className="text-[9px] font-medium text-orange-200">BGG</span>
                 <span className="text-xs font-bold text-white">{game.bgg_rating.toFixed(1)}</span>
               </div>
@@ -178,7 +178,7 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
 
         {/* Info */}
         <div className="p-2">
-          <h3 className="truncate text-xs font-semibold text-zinc-900 dark:text-zinc-50">
+          <h3 className="truncate text-xs font-semibold text-zinc-900 dark:text-zinc-100">
             {game.name}
           </h3>
           <div className="mt-0.5 flex items-center justify-between text-[10px] text-zinc-400 dark:text-zinc-500">
@@ -192,7 +192,7 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
       {admin && !editing && (
         <button
           onClick={() => setEditing(true)}
-          className="absolute right-1.5 bottom-1.5 z-[11] flex h-5 w-5 items-center justify-center rounded-full bg-zinc-800/70 text-white opacity-0 shadow transition-opacity group-hover:opacity-100"
+          className="absolute right-1.5 bottom-1.5 z-[11] flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 shadow-lg backdrop-blur-sm transition-opacity group-hover:opacity-100"
         >
           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
             <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L6.75 6.774a2.75 2.75 0 0 0-.596.892l-.848 2.047a.75.75 0 0 0 .98.98l2.047-.848a2.75 2.75 0 0 0 .892-.596l4.261-4.262a1.75 1.75 0 0 0 0-2.474Z" />

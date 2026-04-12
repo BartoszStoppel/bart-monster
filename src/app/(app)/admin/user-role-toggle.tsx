@@ -30,7 +30,7 @@ export function UserRoleToggle({
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
       <div>
         <div className="flex items-center gap-2">
           <span className="font-medium text-zinc-900 dark:text-zinc-50">

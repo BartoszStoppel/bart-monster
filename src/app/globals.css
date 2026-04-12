@@ -1,17 +1,21 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
+  --background: #f0f2f5;
   --foreground: #171717;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-accent: #06b6d4;
+  --color-accent-hover: #0891b2;
+  --color-accent-light: #a5f3fc;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-pop-in: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
 }
 
 @keyframes fade-in {
@@ -45,10 +49,19 @@
   }
 }
 
+@keyframes glow-pulse {
+  0%, 100% {
+    opacity: 0.4;
+  }
+  50% {
+    opacity: 0.8;
+  }
+}
+
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: #080b12;
+    --foreground: #e8eaed;
   }
 }
 
@@ -58,6 +71,100 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* Dark mode gradient backdrop */
+@media (prefers-color-scheme: dark) {
+  body {
+    background:
+      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.08), transparent),
+      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.05), transparent),
+      #080b12;
+  }
+}
+
+/* Glass panel utility */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(15, 20, 30, 0.7);
+    border-color: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* Glass card with subtle border sheen */
+.glass-card {
+  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass-card {
+    background: rgba(15, 20, 35, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+/* Accent glow for buttons and interactive elements */
+.glow-cyan {
+  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 60px rgba(6, 182, 212, 0.1);
+}
+
+
+/* Card hand nav */
+.card-hand-container {
+  pointer-events: none;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.card-hand-wrapper {
+  pointer-events: none;
+}
+
+.nav-card {
+  pointer-events: auto;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+              z-index 0s;
+  transform-origin: bottom center;
+}
+
+.nav-card:hover {
+  z-index: 25 !important;
+}
+
+.nav-card-active {
+  animation: card-played 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes card-played {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1.1); }
+}
+
+/* Force native dropdown options to have readable text */
+select option {
+  color: #171717;
+  background: #fff;
+}
+
+@media (prefers-color-scheme: dark) {
+  select {
+    background-color: #27272a; /* zinc-800 */
+    color: #f4f4f5; /* zinc-100 */
+  }
+
+  select option {
+    background-color: #27272a;
+    color: #f4f4f5;
+  }
+}
+
 * {
   scrollbar-width: thin;
   scrollbar-color: #a1a1aa transparent;
@@ -65,6 +172,6 @@ body {
 
 @media (prefers-color-scheme: dark) {
   * {
-    scrollbar-color: #3f3f46 transparent;
+    scrollbar-color: #1e293b transparent;
   }
 }

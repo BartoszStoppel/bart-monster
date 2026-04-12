@@ -97,7 +97,7 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800"
+      className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/5"
     >
       <p className="mb-4 text-sm font-medium text-zinc-900 dark:text-zinc-50">
         Adding <span className="font-bold">{game.name}</span>
@@ -115,7 +115,7 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
             className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               category === "party"
                 ? "bg-purple-600 text-white"
-                : "border border-zinc-300 text-zinc-600 hover:border-purple-400 hover:text-purple-600 dark:border-zinc-600 dark:text-zinc-400"
+                : "border border-zinc-300 text-zinc-600 hover:border-purple-400 hover:text-purple-600 dark:border-white/10 dark:text-zinc-400"
             }`}
           >
             Party Game
@@ -125,8 +125,8 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
             onClick={() => setCategory("board")}
             className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
               category === "board"
-                ? "bg-blue-600 text-white"
-                : "border border-zinc-300 text-zinc-600 hover:border-blue-400 hover:text-blue-600 dark:border-zinc-600 dark:text-zinc-400"
+                ? "bg-cyan-600 text-white"
+                : "border border-zinc-300 text-zinc-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-white/10 dark:text-zinc-400"
             }`}
           >
             Board Game
@@ -148,7 +148,7 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
             value={minPlayers}
             onChange={(e) => setMinPlayers(e.target.value)}
             onBlur={() => handleBlur(minPlayers, 1, 99, setMinPlayers)}
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/10 dark:bg-white/10 dark:text-zinc-100"
           />
         </div>
         <div>
@@ -164,7 +164,7 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
             value={maxPlayers}
             onChange={(e) => setMaxPlayers(e.target.value)}
             onBlur={() => handleBlur(maxPlayers, 1, 99, setMaxPlayers)}
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/10 dark:bg-white/10 dark:text-zinc-100"
           />
         </div>
         <div>
@@ -180,7 +180,7 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
             value={playingTime}
             onChange={(e) => setPlayingTime(e.target.value)}
             onBlur={() => handleBlur(playingTime, 1, 9999, setPlayingTime)}
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-zinc-600 dark:bg-zinc-700 dark:text-zinc-100"
+            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/10 dark:bg-white/10 dark:text-zinc-100"
           />
         </div>
       </div>

@@ -122,9 +122,9 @@ function UnplayedRow({
 
   return (
     <div
-      className={`mt-4 rounded-lg border border-dashed border-zinc-300 dark:border-zinc-600 ${
-        isOver ? "bg-zinc-100 dark:bg-zinc-800/50" : ""
-      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-zinc-800/30" : ""}`}
+      className={`mt-4 rounded-lg border border-dashed border-zinc-300 dark:border-white/10 ${
+        isOver ? "bg-zinc-100 dark:bg-white/5/50" : ""
+      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-white/5/30" : ""}`}
     >
       <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
         Unplayed — tap to select, then tap to place
@@ -426,9 +426,9 @@ export function TierListBoard({
         </div>
       )}
       <div className="mb-4 flex items-center justify-between">
-        <div ref={toggleContainerRef} className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
+        <div ref={toggleContainerRef} className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5">
           <div
-            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
+            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10"
             style={{ left: pillStyle.left, width: pillStyle.width }}
           />
           <button
@@ -459,14 +459,14 @@ export function TierListBoard({
             <button
               onClick={handleDiscard}
               disabled={saving}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-zinc-600 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-zinc-800"
             >
               Discard
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+              className="rounded-md bg-gradient-to-r from-cyan-500 to-cyan-600 px-3 py-1.5 text-sm font-medium text-white transition-colors shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save"}
             </button>
@@ -488,7 +488,7 @@ export function TierListBoard({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+        <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
           {TIERS.map((tier) => (
             <TierRow
               key={tier}

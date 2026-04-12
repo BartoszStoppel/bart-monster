@@ -52,7 +52,7 @@ export function CollapsibleSection({
       tabIndex={0}
       onClick={() => setExpanded(true)}
       onKeyDown={(e) => { if (e.key === "Enter") setExpanded(true); }}
-      className="group relative h-48 w-full cursor-pointer overflow-hidden rounded-xl border border-zinc-200 dark:border-zinc-700"
+      className="group relative h-48 w-full cursor-pointer overflow-hidden rounded-xl border border-zinc-200 dark:border-white/10"
     >
       {/* Preview content, clipped */}
       <div className="pointer-events-none h-48 overflow-hidden">
@@ -60,7 +60,7 @@ export function CollapsibleSection({
       </div>
 
       {/* Glass overlay */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/60 backdrop-blur-sm transition-colors group-hover:bg-white/50 dark:bg-zinc-900/60 dark:group-hover:bg-zinc-900/50">
+      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/30 backdrop-blur-[2px] transition-colors group-hover:bg-white/15 dark:bg-zinc-900/30 dark:group-hover:bg-zinc-900/15">
         <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
           {title}
         </h2>

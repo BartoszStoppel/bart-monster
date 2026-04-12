@@ -178,7 +178,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
       <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
         Complexity vs Score
       </h2>
-      <div className="flex flex-1 flex-col justify-center rounded-lg border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+      <div className="flex flex-1 flex-col justify-center rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
@@ -268,7 +268,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             <path
               d={ourTrend}
               fill="none"
-              className="stroke-blue-400 dark:stroke-blue-500"
+              className="stroke-cyan-400 dark:stroke-cyan-500"
               strokeWidth={LINE_W}
               opacity={0.4}
               strokeLinecap="round"
@@ -322,7 +322,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
                 />
                 <circle cx={cx} cy={cy}
                   r={active ? DOT_R_HOVER : DOT_R}
-                  className="fill-blue-500 dark:fill-blue-400"
+                  className="fill-cyan-500 dark:fill-cyan-400"
                   opacity={active ? 1 : 0.75}
                 />
               </a>
@@ -403,7 +403,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             onClick={() => setVisible((v) => ({ ...v, ours: !v.ours }))}
           >
             <circle cx={W - PAD.right - 74} cy={PAD.top - 10} r={2}
-              className="fill-blue-500" opacity={visible.ours ? 1 : 0.25}
+              className="fill-cyan-500" opacity={visible.ours ? 1 : 0.25}
             />
             <text x={W - PAD.right - 69} y={PAD.top - 7.5}
               className="fill-zinc-400 text-[7px]" opacity={visible.ours ? 1 : 0.35}

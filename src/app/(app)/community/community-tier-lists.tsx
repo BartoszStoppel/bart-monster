@@ -194,21 +194,23 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
             className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
               showPredictions
                 ? "bg-purple-600 text-white hover:bg-purple-700"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-400 dark:hover:bg-zinc-700"
+                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
             }`}
           >
             {showPredictions ? "Hide predictions" : "Show predictions"}
           </button>
         )}
-        <label className="flex cursor-pointer items-center gap-1.5 text-sm text-zinc-600 dark:text-zinc-400">
-          <input
-            type="checkbox"
-            checked={showHotTakes}
-            onChange={(e) => setShowHotTakes(e.target.checked)}
-            className="h-4 w-4 rounded border-zinc-300 text-red-500 accent-red-500"
-          />
-          🔥 Hot takes
-        </label>
+        <button
+          type="button"
+          onClick={() => setShowHotTakes((v) => !v)}
+          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+            showHotTakes
+              ? "bg-red-600 text-white hover:bg-red-700"
+              : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+          }`}
+        >
+          {showHotTakes ? "Hide hot takes 🔥" : "Show hot takes 🔥"}
+        </button>
         {showPredictions && (
           <span className="text-xs text-zinc-400 dark:text-zinc-500">
             Ghost tiles show predicted placements for unranked games
@@ -234,11 +236,11 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
                     className="rounded-full"
                   />
                 ) : (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-zinc-700 dark:text-zinc-300">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
                     {user.displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <h2 className="text-sm font-semibold text-zinc-900 hover:text-blue-600 dark:text-zinc-50 dark:hover:text-blue-400">
+                <h2 className="text-sm font-semibold text-zinc-900 hover:text-cyan-600 dark:text-zinc-50 dark:hover:text-cyan-400">
                   {user.displayName}
                 </h2>
               </Link>
@@ -250,7 +252,7 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400"
+                      className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500 dark:bg-white/5 dark:text-zinc-400"
                     >
                       {tag}
                     </span>
@@ -258,7 +260,7 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
                 </div>
               )}
             </div>
-            <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-zinc-700">
+            <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
               {TIERS.map((tier) => {
                 const shadows = userShadows?.get(tier) ?? [];
                 const entries =

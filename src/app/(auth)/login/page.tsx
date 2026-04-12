@@ -14,10 +14,15 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 dark:bg-zinc-950">
-      <div className="w-full max-w-sm rounded-xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-50 dark:bg-[#080b12]">
+      {/* Ambient gradient orbs */}
+      <div className="pointer-events-none absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-cyan-500/20 blur-[120px]" />
+      <div className="pointer-events-none absolute -bottom-40 -right-40 h-[400px] w-[400px] rounded-full bg-violet-500/15 blur-[120px]" />
+      <div className="pointer-events-none absolute top-1/2 left-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[80px]" />
+
+      <div className="glass-card relative w-full max-w-sm rounded-2xl p-8 shadow-2xl shadow-cyan-500/5">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+          <h1 className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-3xl font-bold text-transparent dark:from-cyan-300 dark:to-violet-400">
             Board Game Hub
           </h1>
           <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
@@ -27,7 +32,7 @@ export default function LoginPage() {
 
         <button
           onClick={signInWithGoogle}
-          className="flex w-full items-center justify-center gap-3 rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700"
+          className="glass-card flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium text-zinc-700 transition-all hover:shadow-lg dark:text-zinc-200 dark:hover:border-white/10 dark:hover:bg-white/10"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path

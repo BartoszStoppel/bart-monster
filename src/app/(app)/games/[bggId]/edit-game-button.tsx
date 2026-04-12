@@ -17,7 +17,7 @@ export function EditGameButton({ game }: EditGameButtonProps) {
     <div className="relative">
       <button
         onClick={() => setEditing(true)}
-        className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+        className="rounded-md bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-300 dark:hover:bg-white/10"
       >
         Edit
       </button>

@@ -58,9 +58,9 @@ export function GameTile({ game, overlay, isSelected, onTileTap }: GameTileProps
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       title={game.name}
-      className={`relative h-16 w-16 shrink-0 cursor-grab overflow-hidden rounded border border-zinc-200 bg-zinc-100 active:cursor-grabbing dark:border-zinc-700 dark:bg-zinc-800 ${
+      className={`relative h-16 w-16 shrink-0 cursor-grab overflow-hidden rounded border border-zinc-200 bg-zinc-100 active:cursor-grabbing dark:border-white/10 dark:bg-white/5 ${
         isDragging && !overlay ? "opacity-30" : ""
-      } ${overlay ? "shadow-lg ring-2 ring-blue-500" : ""} ${
+      } ${overlay ? "shadow-lg ring-2 ring-cyan-500" : ""} ${
         isSelected ? "ring-2 ring-amber-400 scale-110 z-10" : ""
       }`}
     >
@@ -77,7 +77,7 @@ export function GameTileOverlay({ game }: GameTileOverlayProps) {
   return (
     <div
       title={game.name}
-      className="relative h-16 w-16 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 shadow-lg ring-2 ring-blue-500 dark:border-zinc-700 dark:bg-zinc-800"
+      className="relative h-16 w-16 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 shadow-lg ring-2 ring-cyan-500 dark:border-white/10 dark:bg-white/5"
     >
       <TileImage game={game} />
     </div>

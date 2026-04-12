@@ -80,7 +80,7 @@ export function GameEditForm({ game, onClose, onSaved }: GameEditFormProps) {
   return (
     <div
       ref={formRef}
-      className="absolute top-0 left-0 z-50 w-full rounded-lg border border-zinc-200 bg-white p-3 shadow-xl dark:border-zinc-700 dark:bg-zinc-900"
+      className="absolute top-0 left-0 z-50 w-full rounded-lg border border-zinc-200 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-white/5"
     >
       <h4 className="mb-2 truncate text-xs font-semibold text-zinc-900 dark:text-zinc-50">
         Edit {game.name}
@@ -91,7 +91,7 @@ export function GameEditForm({ game, onClose, onSaved }: GameEditFormProps) {
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as "party" | "board")}
-            className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+            className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
           >
             <option value="board">Board Game</option>
             <option value="party">Party Game</option>
@@ -105,7 +105,7 @@ export function GameEditForm({ game, onClose, onSaved }: GameEditFormProps) {
               value={minPlayers}
               onChange={(e) => setMinPlayers(e.target.value)}
               onBlur={() => clampOnBlur(minPlayers, 1, 99, setMinPlayers)}
-              className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
             />
           </label>
           <label className="flex flex-col gap-0.5">
@@ -115,7 +115,7 @@ export function GameEditForm({ game, onClose, onSaved }: GameEditFormProps) {
               value={maxPlayers}
               onChange={(e) => setMaxPlayers(e.target.value)}
               onBlur={() => clampOnBlur(maxPlayers, 1, 99, setMaxPlayers)}
-              className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+              className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
             />
           </label>
         </div>
@@ -126,7 +126,7 @@ export function GameEditForm({ game, onClose, onSaved }: GameEditFormProps) {
             value={playingTime}
             onChange={(e) => setPlayingTime(e.target.value)}
             onBlur={() => clampOnBlur(playingTime, 1, 999, setPlayingTime)}
-            className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-zinc-600 dark:bg-zinc-800 dark:text-zinc-100"
+            className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
           />
         </label>
         {error && (
@@ -136,14 +136,14 @@ export function GameEditForm({ game, onClose, onSaved }: GameEditFormProps) {
           <button
             type="submit"
             disabled={saving}
-            className="flex-1 rounded bg-blue-600 px-2 py-1 text-xs font-medium text-white transition-colors hover:bg-blue-700 disabled:opacity-50"
+            className="flex-1 rounded bg-gradient-to-r from-cyan-500 to-cyan-600 px-2 py-1 text-xs font-medium text-white transition-colors shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save"}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-600 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className="flex-1 rounded border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-zinc-800"
           >
             Cancel
           </button>

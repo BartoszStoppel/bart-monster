@@ -37,9 +37,9 @@ export function CategoryToggle({ category, basePath }: CategoryToggleProps) {
   }
 
   return (
-    <div ref={containerRef} className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-zinc-800">
+    <div ref={containerRef} className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5">
       <div
-        className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-zinc-700"
+        className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10"
         style={{ left: pillStyle.left, width: pillStyle.width }}
       />
       <button
