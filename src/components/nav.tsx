@@ -101,21 +101,21 @@ function NavGroupButton({
   isOpen,
   onToggle,
   onClose,
-  onEnter,
-  onLeave,
+  onPointerEnter,
+  onPointerLeave,
 }: {
   group: NavGroup;
   pathname: string;
   isOpen: boolean;
   onToggle: () => void;
   onClose: () => void;
-  onEnter: () => void;
-  onLeave: () => void;
+  onPointerEnter: (e: React.PointerEvent) => void;
+  onPointerLeave: (e: React.PointerEvent) => void;
 }) {
   const isActive = group.links.some((l) => pathname === l.href);
 
   return (
-    <div className="relative" onMouseEnter={onEnter} onMouseLeave={onLeave}>
+    <div className="relative" onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
       <button
         onClick={onToggle}
         className={`flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium transition-all ${
@@ -148,8 +148,8 @@ function AvatarMenu({
   onToggle,
   onClose,
   onSignOut,
-  onEnter,
-  onLeave,
+  onPointerEnter,
+  onPointerLeave,
 }: {
   user: User;
   pathname: string;
@@ -157,13 +157,13 @@ function AvatarMenu({
   onToggle: () => void;
   onClose: () => void;
   onSignOut: () => void;
-  onEnter: () => void;
-  onLeave: () => void;
+  onPointerEnter: (e: React.PointerEvent) => void;
+  onPointerLeave: (e: React.PointerEvent) => void;
 }) {
   const avatarUrl = user.user_metadata.avatar_url as string | undefined;
 
   return (
-    <div className="relative shrink-0 pl-4" onMouseEnter={onEnter} onMouseLeave={onLeave}>
+    <div className="relative shrink-0 pl-4" onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave}>
       <button
         onClick={onToggle}
         className={`flex items-center gap-2 rounded-md px-2 py-1.5 transition-all ${
@@ -252,12 +252,14 @@ export function Nav() {
     setOpenGroup(null);
   }
 
-  function handleEnter(key: string) {
+  function handlePointerEnter(key: string, e: React.PointerEvent) {
+    if (e.pointerType === "touch") return;
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
     setOpenGroup(key);
   }
 
-  function handleLeave() {
+  function handlePointerLeave(e: React.PointerEvent) {
+    if (e.pointerType === "touch") return;
     hoverTimer.current = setTimeout(() => setOpenGroup(null), 150);
   }
 
@@ -276,8 +278,8 @@ export function Nav() {
               isOpen={openGroup === group.label}
               onToggle={() => toggle(group.label)}
               onClose={close}
-              onEnter={() => handleEnter(group.label)}
-              onLeave={handleLeave}
+              onPointerEnter={(e) => handlePointerEnter(group.label, e)}
+              onPointerLeave={handlePointerLeave}
             />
           ))}
         </div>
@@ -290,8 +292,8 @@ export function Nav() {
             onToggle={() => toggle("__profile")}
             onClose={close}
             onSignOut={handleSignOut}
-            onEnter={() => handleEnter("__profile")}
-            onLeave={handleLeave}
+            onPointerEnter={(e) => handlePointerEnter("__profile", e)}
+            onPointerLeave={handlePointerLeave}
           />
         )}
       </div>
