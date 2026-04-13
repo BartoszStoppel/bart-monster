@@ -11,7 +11,9 @@ interface RankBadgeProps {
 function rangeLabel(rank: Rank, index: number): string {
   const next = index > 0 ? RANKS[index - 1] : null;
   const max = next ? next.minGames - 1 : null;
-  return max !== null ? `${rank.minGames}–${max}` : `${rank.minGames}+`;
+  if (max === null) return `${rank.minGames}+`;
+  if (max === rank.minGames) return `${rank.minGames}`;
+  return `${rank.minGames}–${max}`;
 }
 
 function rankClasses(rank: Rank): string {
@@ -49,7 +51,7 @@ export function RankBadge({ gamesRanked }: RankBadgeProps) {
         type="button"
         onClick={() => setOpen((v) => !v)}
         className={`cursor-pointer text-xs transition-opacity hover:opacity-80 ${rankClasses(rank)}`}
-        title={`${gamesRanked} games ranked`}
+        title={`${gamesRanked} games played`}
       >
         {rank.name}
       </button>
@@ -61,7 +63,7 @@ export function RankBadge({ gamesRanked }: RankBadgeProps) {
               Rank
             </span>
             <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
-              Games Ranked
+              Games Played
             </span>
           </div>
 

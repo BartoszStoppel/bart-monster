@@ -39,10 +39,10 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       .limit(10000),
     supabase
       .from("profiles")
-      .select("id, display_name, avatar_url, is_admin"),
+      .select("id, display_name, avatar_url, is_admin, partner_id"),
     supabase
       .from("user_game_collection")
-      .select("user_id")
+      .select("user_id, bgg_id")
       .eq("owned", true),
   ]);
 
@@ -58,19 +58,33 @@ export default async function CommunityPage({ searchParams }: PageProps) {
 
   const profileMap = new Map<
     string,
-    { display_name: string; avatar_url: string | null; is_admin: boolean }
+    { display_name: string; avatar_url: string | null; is_admin: boolean; partner_id: string | null }
   >();
   for (const p of profiles ?? []) {
     profileMap.set(p.id, {
       display_name: p.display_name,
       avatar_url: p.avatar_url,
       is_admin: p.is_admin,
+      partner_id: p.partner_id,
     });
   }
 
-  const ownershipCounts = new Map<string, number>();
+  // Build household-aware ownership: partners share a deduplicated game set
+  const householdGames = new Map<string, Set<number>>();
   for (const c of collections ?? []) {
-    ownershipCounts.set(c.user_id, (ownershipCounts.get(c.user_id) ?? 0) + 1);
+    const profile = profileMap.get(c.user_id);
+    const partnerId = profile?.partner_id;
+    // Use the lower ID as the canonical household key
+    const hhId = partnerId && partnerId < c.user_id ? partnerId : c.user_id;
+    const games = householdGames.get(hhId) ?? new Set<number>();
+    games.add(c.bgg_id);
+    householdGames.set(hhId, games);
+  }
+  const ownershipCounts = new Map<string, number>();
+  for (const [userId, profile] of profileMap) {
+    const partnerId = profile.partner_id;
+    const hhId = partnerId && partnerId < userId ? partnerId : userId;
+    ownershipCounts.set(userId, householdGames.get(hhId)?.size ?? 0);
   }
 
   const totalPlacementCounts = new Map<string, number>();
@@ -85,6 +99,8 @@ export default async function CommunityPage({ searchParams }: PageProps) {
     displayName: profile.display_name,
     avatarUrl: profile.avatar_url,
     totalGamesRanked: totalPlacementCounts.get(id) ?? 0,
+    gamesOwned: ownershipCounts.get(id) ?? 0,
+    partnerId: profile.partner_id,
   }));
 
   const alignments: UserAlignment[] = (alignmentRows ?? []).map((row) => ({

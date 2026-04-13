@@ -8,8 +8,8 @@ import { ReadOnlyTierRow } from "../../community/read-only-tier-row";
 import { buildScoreMap } from "../../community/compute-shadow-ranks";
 import type { AlignmentEntry } from "../../community/compute-alignment";
 import { ProfileEditor } from "../../profile/profile-editor";
-import { RankBadge } from "@/components/rank-badge";
 import { RoleBadge } from "@/components/role-badge";
+import { TitleDisplay } from "@/components/title-display";
 
 export const dynamic = "force-dynamic";
 
@@ -139,11 +139,11 @@ export default async function UserProfilePage({ params }: PageProps) {
           </div>
         )}
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-              {profile.display_name}
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="text-2xl text-zinc-900 dark:text-zinc-50">
+              <span className="font-bold">{profile.display_name}</span>{" "}
+              <TitleDisplay gamesRanked={totalRanked} gamesOwned={ownedCount} />
             </h1>
-            <RankBadge gamesRanked={totalRanked} />
             <RoleBadge role={profile.is_admin ? "admin" : null} />
           </div>
           {isOwnProfile && currentUser.email && (

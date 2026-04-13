@@ -11,8 +11,8 @@ import {
   buildScoreMap,
   type ShadowPlacement,
 } from "./compute-shadow-ranks";
-import { RankBadge } from "@/components/rank-badge";
 import { RoleBadge } from "@/components/role-badge";
+import { TitleDisplay } from "@/components/title-display";
 
 const TIERS: Tier[] = ["S", "A", "B", "C", "D", "F"];
 
@@ -230,7 +230,7 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
         return (
           <section key={user.userId}>
             <div className="mb-2 flex items-center gap-2">
-              <Link href={`/users/${user.userId}`} className="flex items-center gap-2 transition-opacity hover:opacity-80">
+              <Link href={`/users/${user.userId}`} className="shrink-0 transition-opacity hover:opacity-80">
                 {user.avatarUrl ? (
                   <Image
                     src={user.avatarUrl}
@@ -244,15 +244,12 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
                     {user.displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
-                <h2 className="text-sm font-semibold text-zinc-900 hover:text-cyan-600 dark:text-zinc-50 dark:hover:text-cyan-400">
-                  {user.displayName}
-                </h2>
               </Link>
-              <RankBadge gamesRanked={user.totalGamesRanked} />
-              <RoleBadge role={user.isAdmin ? "admin" : null} />
-              <span className="text-xs text-zinc-400 dark:text-zinc-500">
-                {user.gamesOwned} {user.gamesOwned === 1 ? "game" : "games"} owned
+              <span className="text-sm">
+                <Link href={`/users/${user.userId}`} className="font-semibold text-zinc-900 hover:text-cyan-600 dark:text-zinc-50 dark:hover:text-cyan-400">{user.displayName}</Link>{" "}
+                <TitleDisplay gamesRanked={user.totalGamesRanked} gamesOwned={user.gamesOwned} />
               </span>
+              <RoleBadge role={user.isAdmin ? "admin" : null} />
               {tags.length > 0 && (
                 <div className="flex gap-1">
                   {tags.map((tag) => (
