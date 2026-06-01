@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "smoke": "node scripts/smoke-test.mjs",
-    "smoke:prod": "node scripts/smoke-test.mjs https://bart.monster"
+    "smoke:prod": "node scripts/smoke-test.mjs https://bart.monster",
+    "db:list": "supabase migration list",
+    "db:push": "supabase db push"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.79.0",

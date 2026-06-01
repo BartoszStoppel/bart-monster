@@ -49,6 +49,8 @@ const PROFILE_LINKS: NavLink[] = [
   { href: "/feedback", label: "Feedback" },
 ];
 
+const ADMIN_LINKS: NavLink[] = [{ href: "/admin", label: "Admin" }];
+
 function Chevron({ open }: { open: boolean }) {
   return (
     <svg
@@ -143,6 +145,7 @@ function NavGroupButton({
 
 function AvatarMenu({
   user,
+  links,
   pathname,
   isOpen,
   onToggle,
@@ -152,6 +155,7 @@ function AvatarMenu({
   onPointerLeave,
 }: {
   user: User;
+  links: NavLink[];
   pathname: string;
   isOpen: boolean;
   onToggle: () => void;
@@ -195,7 +199,7 @@ function AvatarMenu({
 
       {isOpen && (
         <DropdownPanel
-          links={PROFILE_LINKS}
+          links={links}
           pathname={pathname}
           onClose={onClose}
           footer={
@@ -218,14 +222,26 @@ function AvatarMenu({
 export function Nav() {
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout>>(null);
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+    supabase.auth.getUser().then(async ({ data }) => {
+      setUser(data.user);
+      if (!data.user) return;
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("id", data.user.id)
+        .single();
+      setIsAdmin(profile?.is_admin === true);
+    });
   }, []);
+
+  const profileLinks = isAdmin ? [...PROFILE_LINKS, ...ADMIN_LINKS] : PROFILE_LINKS;
 
   useEffect(() => {
     if (!openGroup) return;
@@ -287,6 +303,7 @@ export function Nav() {
         {user && (
           <AvatarMenu
             user={user}
+            links={profileLinks}
             pathname={pathname}
             isOpen={openGroup === "__profile"}
             onToggle={() => toggle("__profile")}

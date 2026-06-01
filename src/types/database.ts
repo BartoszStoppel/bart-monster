@@ -101,12 +101,72 @@ export interface FeedbackItemWithProfile extends FeedbackItem {
   profiles: Pick<Profile, "display_name" | "avatar_url">;
 }
 
+export type RulesModuleType = "base" | "expansion";
+
+/** Uploaded rulebook content for one module (base game or a single expansion). */
+export interface GameRulesModule {
+  id: string;
+  bgg_id: number;
+  module_name: string;
+  module_type: RulesModuleType;
+  content_md: string;
+  token_estimate: number | null;
+  source: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface RulesCitation {
+  /** "rulebook" | "bgg_forum" | "reddit" | "web" */
+  source_type: string;
+  /** Human-readable label, e.g. rulebook section heading or thread title. */
+  label: string;
+  /** URL for external sources; null for the loaded rulebook. */
+  url: string | null;
+}
+
+export interface RulesAnswerCacheRow {
+  id: string;
+  bgg_id: number;
+  modules_hash: string;
+  question_norm: string;
+  answer_md: string;
+  citations: RulesCitation[];
+  created_at: string;
+}
+
 export type Tier = "S" | "A" | "B" | "C" | "D" | "F";
 
 export interface TierPlacement {
   id: string;
   user_id: string;
   bgg_id: number;
+  tier: Tier;
+  position: number;
+  score: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** An expansion/DLC that admins have added to a game's rankable word bank. */
+export interface GameExpansion {
+  id: string;
+  game_bgg_id: number;
+  name: string;
+  /** BGG's expansion id when picked from the fetched list; null for custom entries. */
+  bgg_expansion_id: number | null;
+  /** BGG box-art thumbnail; null for custom entries (tiles fall back to the name). */
+  thumbnail_url: string | null;
+  created_at: string;
+}
+
+/** A user's tier placement for a single game expansion. */
+export interface ExpansionTierPlacement {
+  id: string;
+  user_id: string;
+  expansion_id: string;
+  game_bgg_id: number;
   tier: Tier;
   position: number;
   score: number | null;

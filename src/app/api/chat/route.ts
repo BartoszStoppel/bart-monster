@@ -33,14 +33,19 @@ export async function POST(request: NextRequest) {
 
   const client = new Anthropic();
 
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name")
-    .eq("id", user.id)
-    .single();
+  const [{ data: profile }, { data: games }] = await Promise.all([
+    supabase.from("profiles").select("display_name").eq("id", user.id).single(),
+    supabase.from("board_games").select("bgg_id, name").order("name"),
+  ]);
   const userName = profile?.display_name ?? "the user";
 
-  const systemPrompt = buildSystemPrompt(userName);
+  const systemPrompt: Anthropic.TextBlockParam[] = [
+    {
+      type: "text",
+      text: buildSystemPrompt(userName, games ?? []),
+      cache_control: { type: "ephemeral" },
+    },
+  ];
   const apiMessages: Anthropic.MessageParam[] = messages.map((m) => ({
     role: m.role,
     content: m.content,
@@ -52,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   for (let round = 0; round < MAX_TOOL_ROUNDS; round++) {
     const response = await client.messages.create({
-      model: "claude-opus-4-6",
+      model: "claude-opus-4-8",
       max_tokens: 2048,
       system: systemPrompt,
       tools: DATA_TOOLS,
@@ -96,7 +101,7 @@ export async function POST(request: NextRequest) {
 
   // Final streaming call — include tools so the model understands tool history in messages
   const stream = await client.messages.stream({
-    model: "claude-opus-4-6",
+    model: "claude-opus-4-8",
     max_tokens: 2048,
     system: systemPrompt,
     tools: DATA_TOOLS,

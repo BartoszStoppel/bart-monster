@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { isAdmin } from "@/lib/admin";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { UserRoleToggle } from "./user-role-toggle";
 
 export const dynamic = "force-dynamic";
@@ -22,9 +23,17 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto max-w-2xl">
-      <h1 className="mb-6 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        Admin — User Roles
-      </h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+          Admin — User Roles
+        </h1>
+        <Link
+          href="/admin/rules"
+          className="rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+        >
+          Manage Rulebooks
+        </Link>
+      </div>
 
       <div className="space-y-3">
         {profiles?.map((profile) => (

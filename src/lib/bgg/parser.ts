@@ -106,7 +106,9 @@ function asArray<T>(val: T | T[] | undefined): T[] {
 }
 
 function linksByType(links: BggXmlLink[], type: string): string[] {
-  return links.filter((l) => l["@_type"] === type).map((l) => l["@_value"]);
+  return links
+    .filter((l) => l["@_type"] === type)
+    .map((l) => decodeHtmlEntities(l["@_value"]));
 }
 
 function parseSuggestedPlayers(polls: BggXmlPoll[]): BggPlayerCountPoll[] {
@@ -231,7 +233,7 @@ export function parseGameDetails(
   );
   const expansions: BggExpansion[] = expansionLinks.map((l) => ({
     id: parseInt(l["@_id"]!, 10),
-    name: l["@_value"],
+    name: decodeHtmlEntities(l["@_value"]),
   }));
 
   return {

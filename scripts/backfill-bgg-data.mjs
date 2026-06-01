@@ -50,18 +50,18 @@ function getPrimaryName(name) {
   if (!name) return "Unknown";
   if (Array.isArray(name)) {
     const primary = name.find((n) => n["@_type"] === "primary");
-    return primary?.["@_value"] ?? name[0]?.["@_value"] ?? "Unknown";
+    return decodeHtml(primary?.["@_value"] ?? name[0]?.["@_value"] ?? "Unknown");
   }
-  return name["@_value"];
+  return decodeHtml(name["@_value"]);
 }
 
 function getAlternateNames(name) {
   if (!name || !Array.isArray(name)) return [];
-  return name.filter((n) => n["@_type"] === "alternate").map((n) => n["@_value"]);
+  return name.filter((n) => n["@_type"] === "alternate").map((n) => decodeHtml(n["@_value"]));
 }
 
 function linksByType(links, type) {
-  return links.filter((l) => l["@_type"] === type).map((l) => l["@_value"]);
+  return links.filter((l) => l["@_type"] === type).map((l) => decodeHtml(l["@_value"]));
 }
 
 function parseSuggestedPlayers(polls) {
@@ -121,7 +121,7 @@ function parseFullGame(parsed) {
 
   const expansions = links
     .filter((l) => l["@_type"] === "boardgameexpansion" && l["@_id"])
-    .map((l) => ({ id: parseInt(l["@_id"], 10), name: l["@_value"] }));
+    .map((l) => ({ id: parseInt(l["@_id"], 10), name: decodeHtml(l["@_value"]) }));
 
   return {
     name: getPrimaryName(item.name),

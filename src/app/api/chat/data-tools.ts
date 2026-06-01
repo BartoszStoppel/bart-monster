@@ -16,6 +16,9 @@ export interface ToolInput {
   direction?: "user_higher" | "user_lower" | "both";
   min_difference?: number;
   user_name?: string;
+  bgg_id?: number;
+  question?: string;
+  expansions?: string[];
 }
 
 /** Tool definitions given to the query-planning model. */
@@ -193,5 +196,34 @@ export const DATA_TOOLS: Anthropic.Tool[] = [
       },
       required: [],
     },
+  },
+  {
+    name: "ask_game_rules",
+    description:
+      "Delegate a HOW-TO-PLAY question to a specialist rules agent that has the game's rulebook loaded and can search BGG forums, official FAQs, and Reddit. Use this ONLY for questions about how a specific game is played: setup, turn structure, card/ability interactions, timing, scoring mechanics, edge cases, legal moves, or errata. Spawn one call per game the user is asking about. " +
+      "Do NOT use this for recommendations ('what should we play tonight', 'which game for 4 players'), taste/score questions, comparisons, or anything answerable from the collection data tools — handle those yourself. " +
+      "If you cannot confidently tell which owned game a rules question is about, ask the user which game before calling this.",
+    input_schema: {
+      type: "object" as const,
+      properties: {
+        bgg_id: {
+          type: "number",
+          description: "The BGG id of the game the rules question is about.",
+        },
+        question: {
+          type: "string",
+          description:
+            "A self-contained rules question for the agent, including any context (player count, cards involved, the specific situation). The agent does not see the chat history.",
+        },
+        expansions: {
+          type: "array",
+          items: { type: "string" },
+          description:
+            "Names of expansions the user said are in play. Omit for base-game-only questions.",
+        },
+      },
+      required: ["bgg_id", "question"],
+    },
+    cache_control: { type: "ephemeral" },
   },
 ];

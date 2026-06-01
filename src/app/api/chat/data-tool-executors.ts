@@ -1,4 +1,5 @@
 import type { SupabaseClient, ToolInput } from "./data-tools";
+import { runRulesAgent } from "./rules-agent/rules-agent";
 
 const MIN_RATINGS = 3;
 
@@ -52,9 +53,30 @@ export async function executeTool(
       return executeCompareScores(supabase, userId, input);
     case "get_unranked_games":
       return executeUnrankedGames(supabase, userId, input);
+    case "ask_game_rules":
+      return executeAskGameRules(supabase, userId, input);
     default:
       return `Unknown tool: ${toolName}`;
   }
+}
+
+/** Delegate a how-to-play question to the specialist rules agent. */
+async function executeAskGameRules(
+  supabase: SupabaseClient,
+  userId: string,
+  input: ToolInput,
+): Promise<string> {
+  if (typeof input.bgg_id !== "number" || !input.question) {
+    return "ask_game_rules requires bgg_id (number) and question (string).";
+  }
+  const { answer } = await runRulesAgent({
+    supabase,
+    userId,
+    bggId: input.bgg_id,
+    question: input.question,
+    expansions: input.expansions ?? [],
+  });
+  return answer;
 }
 
 async function executeUserRankings(

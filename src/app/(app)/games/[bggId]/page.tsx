@@ -6,8 +6,11 @@ import { EditGameButton } from "./edit-game-button";
 import { DeleteGameButton } from "./delete-game-button";
 import { CollectionToggles } from "./collection-toggles";
 import { BggDetails, SuggestedPlayersTable } from "./bgg-details";
+import { ExpansionSection } from "./expansion-section";
+import type { CommunityExpansion, CommunityExpansionVote } from "./expansion-community-modal";
 import { getHouseholdIds } from "@/lib/household";
 import { TIER_COLORS } from "@/lib/tier-colors";
+import type { ExpansionTierPlacement, Tier } from "@/types/database";
 
 export const dynamic = "force-dynamic";
 
@@ -89,6 +92,67 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     .filter((r) => r.displayName !== "Unknown");
 
   const currentUserWishlisted = wishlisterInfos.some((w) => householdSet.has(w.userId));
+
+  // Expansion tier list: admin-curated word bank, the user's own placements,
+  // and the community aggregate shown in the breakdown popup.
+  const { data: bank } = await supabase
+    .from("game_expansions")
+    .select("*")
+    .eq("game_bgg_id", bggId)
+    .order("created_at", { ascending: true });
+  const expansionBank = bank ?? [];
+
+  const { data: myPlacementsData } = user
+    ? await supabase
+        .from("expansion_tier_placements")
+        .select("*")
+        .eq("game_bgg_id", bggId)
+        .eq("user_id", user.id)
+    : { data: [] };
+  const myExpansionPlacements = (myPlacementsData ?? []) as ExpansionTierPlacement[];
+
+  const { data: allExpansionPlacements } = await supabase
+    .from("expansion_tier_placements")
+    .select("expansion_id, tier, score, user_id, profiles(display_name)")
+    .eq("game_bgg_id", bggId);
+
+  const communityMap = new Map<
+    string,
+    { votes: CommunityExpansionVote[]; total: number; scored: number }
+  >();
+  for (const p of allExpansionPlacements ?? []) {
+    const profile = Array.isArray(p.profiles) ? p.profiles[0] : p.profiles;
+    const displayName =
+      (profile as { display_name: string } | null)?.display_name ?? "Unknown";
+    if (displayName === "Unknown") continue;
+    const entry =
+      communityMap.get(p.expansion_id) ?? { votes: [], total: 0, scored: 0 };
+    const score = p.score != null ? Number(p.score) : null;
+    entry.votes.push({ displayName, tier: p.tier as Tier, score });
+    if (score != null) {
+      entry.total += score;
+      entry.scored += 1;
+    }
+    communityMap.set(p.expansion_id, entry);
+  }
+
+  const communityExpansions: CommunityExpansion[] = expansionBank
+    .map((b) => {
+      const entry = communityMap.get(b.id);
+      const avgScore =
+        entry && entry.scored > 0
+          ? Math.round((entry.total / entry.scored) * 10) / 10
+          : null;
+      return {
+        id: b.id,
+        name: b.name,
+        thumbnailUrl: b.thumbnail_url,
+        avgScore,
+        voteCount: entry?.votes.length ?? 0,
+        votes: entry?.votes ?? [],
+      };
+    })
+    .sort((a, b) => (b.avgScore ?? -1) - (a.avgScore ?? -1));
 
   const playerRange =
     game.min_players && game.max_players
@@ -215,6 +279,16 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
           </div>
         </div>
       )}
+
+      <ExpansionSection
+        gameBggId={bggId}
+        gameName={game.name}
+        isAdmin={admin}
+        bggExpansions={game.expansions ?? []}
+        bank={expansionBank}
+        myPlacements={myExpansionPlacements}
+        community={communityExpansions}
+      />
 
       {game.description && (
         <div className="mb-8">

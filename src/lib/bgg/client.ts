@@ -54,6 +54,36 @@ export async function getThingSummaries(ids: number[]): Promise<BggThingSummary[
 }
 
 /**
+ * Fetch thumbnails for arbitrary BGG things (e.g. expansions) by ID.
+ * Unlike {@link getThingSummaries}, this does not filter by type, so it works
+ * for boardgameexpansion entries.
+ * @param ids - BGG thing ids to fetch.
+ * @returns A map from BGG id to thumbnail URL (ids without a thumbnail are omitted).
+ */
+export async function getThumbnailsByIds(ids: number[]): Promise<Map<number, string>> {
+  if (ids.length === 0) return new Map();
+
+  const url = `${BGG_BASE_URL}/thing?id=${ids.join(",")}`;
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${process.env.BGG_API_TOKEN}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`BGG thumbnail fetch failed: ${response.status}`);
+  }
+
+  const xml = await response.text();
+  const parsed = parser.parse(xml);
+  return new Map(
+    parseThingSummaries(parsed)
+      .filter((s) => s.thumbnailUrl)
+      .map((s) => [s.id, s.thumbnailUrl])
+  );
+}
+
+/**
  * Fetch full game details from BoardGameGeek by ID.
  * Includes stats (ratings, weight).
  */
