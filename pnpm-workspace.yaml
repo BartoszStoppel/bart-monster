@@ -1,0 +1,6 @@
+# pnpm settings. Approve the native packages that ship build scripts:
+#   sharp         — next/image optimization
+#   unrs-resolver — eslint-config-next module resolver
+allowBuilds:
+  sharp: true
+  unrs-resolver: true
