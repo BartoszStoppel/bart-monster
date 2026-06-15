@@ -57,12 +57,12 @@ export function RankBadge({ gamesRanked }: RankBadgeProps) {
       </button>
 
       {open && (
-        <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+        <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-outline-variant bg-surface-container-high p-2 shadow-lg">
           <div className="mb-2 flex items-center justify-between px-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
               Rank
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
               Games Played
             </span>
           </div>
@@ -88,13 +88,13 @@ function RankRow({ rank, range, active }: { rank: Rank; range: string; active: b
   return (
     <div
       className={`flex items-center justify-between rounded px-2 py-1 ${
-        active ? "bg-zinc-100 dark:bg-zinc-700" : ""
+        active ? "bg-surface-container-highest" : ""
       }`}
     >
       <span className={`text-[11px] ${rankClasses(rank)}`}>
         {rank.name}
       </span>
-      <span className="text-[11px] tabular-nums text-zinc-400 dark:text-zinc-500">
+      <span className="text-[11px] tabular-nums text-on-surface-variant">
         {range}
       </span>
     </div>

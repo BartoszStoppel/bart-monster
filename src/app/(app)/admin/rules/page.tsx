@@ -21,10 +21,14 @@ export default async function AdminRulesPage() {
   ]);
 
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="mb-6 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        Admin — Rulebooks
-      </h1>
+    <div className="mx-auto flex max-w-3xl flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <h1 className="font-display text-display-lg text-primary">Tomes of Rules</h1>
+        <p className="max-w-2xl text-on-surface-variant">
+          Bind rulebook scrolls to each beast in the codex. Upload a PDF, review the
+          transcribed runes, and seal them for the oracle to consult.
+        </p>
+      </section>
       <RulebookManager
         games={games ?? []}
         existing={(rules ?? []) as Array<Omit<GameRulesModule, "content_md" | "created_by">>}

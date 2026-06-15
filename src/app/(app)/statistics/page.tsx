@@ -71,18 +71,24 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-          Statistics
-        </h1>
-        <CategoryToggle category={category} basePath="/statistics" />
-      </div>
+    <div className="flex flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="font-display text-display-lg text-primary">The Oracle&apos;s Ledger</h1>
+            <p className="mt-2 max-w-2xl text-on-surface-variant">
+              Divine the numbers behind the codex — score distributions, complexity
+              curves, and how the party&apos;s verdicts stack against the wider world.
+            </p>
+          </div>
+          <CategoryToggle category={category} basePath="/statistics" />
+        </div>
+      </section>
 
-      <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
-        <StatCard label="Total Games" value={totalGames.toString()} />
-        <StatCard label="Games Ranked" value={rankedGames.toString()} />
-        <StatCard label="Rankers" value={uniqueRankers.size.toString()} />
+      <div className="grid grid-cols-2 gap-gutter sm:grid-cols-3">
+        <StatCard label="Total Games" value={totalGames.toString()} icon="inventory_2" />
+        <StatCard label="Games Ranked" value={rankedGames.toString()} icon="military_tech" />
+        <StatCard label="Rankers" value={uniqueRankers.size.toString()} icon="group" />
       </div>
 
       {games && games.length > 0 ? (() => {
@@ -144,45 +150,45 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
         }));
         return (
         <>
-        <div className="mb-8 grid gap-6 lg:grid-cols-2 [&>section]:flex [&>section]:flex-col">
+        <div className="grid gap-gutter lg:grid-cols-2 [&>section]:flex [&>section]:flex-col">
           <ComplexityChart games={chartGames} />
           <DistributionChart games={distributionGames} currentUserId={user?.id ?? null} />
         </div>
-        <section>
-          <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        <section className="flex flex-col gap-stack-compact">
+          <h2 className="font-display text-headline-lg text-on-surface">
             Games
           </h2>
-          <div className="overflow-x-auto">
+          <div className="glass-card overflow-x-auto rounded-lg p-card-padding">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-zinc-200 text-left text-zinc-500 dark:border-white/[0.06] dark:text-zinc-400">
-                  <th className="pb-2 pr-4 font-medium">Game</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Yours</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Ours</th>
-                  <th className="pb-2 pr-4 text-right font-medium">BGG</th>
-                  <th className="pb-2 text-right font-medium">Weight</th>
+                <tr className="border-b border-outline-variant text-left">
+                  <th className="pb-2 pr-4 font-stat text-stat-label text-on-surface-variant">Game</th>
+                  <th className="pb-2 pr-4 text-right font-stat text-stat-label text-on-surface-variant">Yours</th>
+                  <th className="pb-2 pr-4 text-right font-stat text-stat-label text-on-surface-variant">Ours</th>
+                  <th className="pb-2 pr-4 text-right font-stat text-stat-label text-on-surface-variant">BGG</th>
+                  <th className="pb-2 text-right font-stat text-stat-label text-on-surface-variant">Weight</th>
                 </tr>
               </thead>
               <tbody>
                 {sorted.map((game) => (
                   <tr
                     key={game.bgg_id}
-                    className="border-b border-zinc-100 dark:border-white/[0.06]/50"
+                    className="border-b border-outline-variant last:border-b-0"
                   >
-                    <td className="py-2 pr-4 font-medium text-zinc-900 dark:text-zinc-100">
+                    <td className="py-2 pr-4 font-medium text-on-surface">
                       <a
                         href={`/games/${game.bgg_id}`}
-                        className="hover:text-cyan-600 dark:hover:text-cyan-400"
+                        className="transition-colors hover:text-primary"
                       >
                         {game.name}
                       </a>
                     </td>
-                    <td className="py-2 pr-4 text-right font-semibold text-green-600 dark:text-green-400">
+                    <td className="py-2 pr-4 text-right font-stat text-stat-label text-secondary">
                       {yourScoreMap.has(game.bgg_id)
                         ? yourScoreMap.get(game.bgg_id)!.toFixed(1)
                         : "-"}
                     </td>
-                    <td className="py-2 pr-4 text-right font-semibold text-cyan-600 dark:text-cyan-400">
+                    <td className="py-2 pr-4 text-right font-stat text-stat-label text-primary">
                       {avgScoreMap.has(game.bgg_id)
                         ? (
                             avgScoreMap.get(game.bgg_id)!.total /
@@ -190,12 +196,12 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
                           ).toFixed(1)
                         : "-"}
                     </td>
-                    <td className="py-2 pr-4 text-right text-amber-600 dark:text-amber-400">
+                    <td className="py-2 pr-4 text-right font-stat text-stat-label text-on-surface-variant">
                       {game.bgg_rating
                         ? Number(game.bgg_rating).toFixed(1)
                         : "-"}
                     </td>
-                    <td className="py-2 text-right text-zinc-500 dark:text-zinc-400">
+                    <td className="py-2 text-right font-stat text-stat-label text-on-surface-variant">
                       {game.bgg_weight
                         ? Number(game.bgg_weight).toFixed(1)
                         : "-"}
@@ -209,8 +215,9 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
         </>
         );
       })() : (
-        <div className="rounded-lg border border-dashed border-zinc-300 py-16 text-center dark:border-white/10">
-          <p className="text-zinc-500 dark:text-zinc-400">
+        <div className="monster-card flex flex-col items-center gap-3 rounded-lg py-stack-loose text-center">
+          <span className="material-symbols-outlined text-[40px] text-outline">query_stats</span>
+          <p className="text-on-surface-variant">
             No games yet. Add some games to see statistics here.
           </p>
         </div>
@@ -219,11 +226,14 @@ export default async function StatisticsPage({ searchParams }: PageProps) {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({ label, value, icon }: { label: string; value: string; icon: string }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
-      <div className="text-xs text-zinc-500 dark:text-zinc-400">{label}</div>
-      <div className="mt-1 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+    <div className="glass-card flex flex-col gap-1 rounded-lg p-card-padding">
+      <div className="flex items-center gap-1.5">
+        <span className="material-symbols-outlined stat-icon text-[18px]">{icon}</span>
+        <span className="font-stat text-stat-label text-on-surface-variant">{label}</span>
+      </div>
+      <div className="font-stat text-2xl text-on-surface">
         {value}
       </div>
     </div>

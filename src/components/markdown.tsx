@@ -205,7 +205,7 @@ function InlinePart({ part }: { part: InlinePart }) {
     case "italic":
       return <em>{part.text}</em>;
     case "code":
-      return <code className="rounded bg-black/10 px-1 py-0.5 text-[0.85em] dark:bg-white/10">{part.text}</code>;
+      return <code className="rounded bg-surface-container-highest px-1 py-0.5 text-[0.85em]">{part.text}</code>;
     case "text":
       return <>{part.text}</>;
   }

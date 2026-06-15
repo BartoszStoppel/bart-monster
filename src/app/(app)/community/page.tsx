@@ -112,13 +112,20 @@ export default async function CommunityPage({ searchParams }: PageProps) {
   }));
 
   return (
-    <div>
-      <div className="mb-4 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-          Community
-        </h1>
-        <CategoryToggle category={category} basePath="/community" />
-      </div>
+    <div className="flex flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="font-display text-display-lg text-primary">The Guild Hall</h1>
+            <p className="mt-2 max-w-2xl text-on-surface-variant">
+              See how every adventurer ranked their hoard, find your taste twins and
+              sworn enemies, and survey where each stands in the pecking order.
+            </p>
+          </div>
+          <CategoryToggle category={category} basePath="/community" />
+        </div>
+      </section>
+
       <CollapsibleSection
         title="Tier Lists"
         description="See how everyone ranked their games"
@@ -126,26 +133,22 @@ export default async function CommunityPage({ searchParams }: PageProps) {
       >
         <CommunityTierLists users={users} allGames={games ?? []} />
       </CollapsibleSection>
-      <div className="mt-6">
-        <SectionErrorBoundary name="Tier List Alignment">
-          <CollapsibleSection
-            title="Tier List Alignment"
-            description="Find your taste twins and sworn enemies"
-            preview={<AlignmentTable alignments={alignments} />}
-          >
-            <AlignmentTable alignments={alignments} />
-          </CollapsibleSection>
-        </SectionErrorBoundary>
-      </div>
-      <div className="mt-6">
+      <SectionErrorBoundary name="Tier List Alignment">
         <CollapsibleSection
-          title="Places in Society"
-          description="Where everyone stands in the ranking hierarchy"
-          preview={<RankLadder users={rankUsers} />}
+          title="Tier List Alignment"
+          description="Find your taste twins and sworn enemies"
+          preview={<AlignmentTable alignments={alignments} />}
         >
-          <RankLadder users={rankUsers} />
+          <AlignmentTable alignments={alignments} />
         </CollapsibleSection>
-      </div>
+      </SectionErrorBoundary>
+      <CollapsibleSection
+        title="Places in Society"
+        description="Where everyone stands in the ranking hierarchy"
+        preview={<RankLadder users={rankUsers} />}
+      >
+        <RankLadder users={rankUsers} />
+      </CollapsibleSection>
     </div>
   );
 }

@@ -2,10 +2,14 @@
 
 import { useRef, useEffect, useCallback, useState } from "react";
 
+// Rotating dungeon palette for wheel segments (visual variety, on-theme)
 const SEGMENT_COLORS = [
-  "#ef4444", "#f97316", "#eab308", "#22c55e",
-  "#06b6d4", "#3b82f6", "#8b5cf6", "#ec4899",
-  "#14b8a6", "#f43f5e",
+  "#ffb347", // torch amber
+  "#75fd00", // slime green
+  "#a30113", // blood ruby
+  "#38bdf8", // arcane sky
+  "#a78bfa", // arcane violet
+  "#9f8e7c", // weathered stone
 ];
 
 export interface WheelSegment {
@@ -82,11 +86,11 @@ export function SpinnerWheel({
       ctx.clearRect(0, 0, size, size);
 
       if (segments.length === 0) {
-        ctx.fillStyle = "#27272a";
+        ctx.fillStyle = "#2a2a2a";
         ctx.beginPath();
         ctx.arc(cx, cy, radius, 0, Math.PI * 2);
         ctx.fill();
-        ctx.fillStyle = "#71717a";
+        ctx.fillStyle = "#9f8e7c";
         ctx.font = `${size * 0.04}px system-ui, sans-serif`;
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
@@ -171,9 +175,9 @@ export function SpinnerWheel({
       // Center circle
       ctx.beginPath();
       ctx.arc(cx, cy, radius * 0.08, 0, Math.PI * 2);
-      ctx.fillStyle = "#18181b";
+      ctx.fillStyle = "#0e0e0e";
       ctx.fill();
-      ctx.strokeStyle = "#3f3f46";
+      ctx.strokeStyle = "#524535";
       ctx.lineWidth = 2;
       ctx.stroke();
     },
@@ -273,7 +277,7 @@ export function SpinnerWheel({
       {/* Pointer */}
       <div className="absolute top-0 left-1/2 z-10 -translate-x-1/2 -translate-y-1">
         <svg width="24" height="28" viewBox="0 0 24 28" fill="none">
-          <path d="M12 28L2 4L12 10L22 4L12 28Z" fill="#18181b" stroke="#3f3f46" strokeWidth="1" />
+          <path d="M12 28L2 4L12 10L22 4L12 28Z" fill="#ffb347" stroke="#524535" strokeWidth="1" />
         </svg>
       </div>
       <div ref={containerRef} className="aspect-square w-full">

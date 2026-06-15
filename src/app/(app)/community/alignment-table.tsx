@@ -43,7 +43,7 @@ function Avatar({
   }
   return (
     <div
-      className="flex items-center justify-center rounded-full bg-zinc-200 text-[10px] font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300"
+      className="flex items-center justify-center rounded-full bg-surface-container-highest text-[10px] font-medium text-on-surface-variant"
       style={{ width: size, height: size }}
     >
       {name.charAt(0).toUpperCase()}
@@ -51,18 +51,18 @@ function Avatar({
   );
 }
 
-const DIVIDER = "border-l-2 border-zinc-300 dark:border-white/10";
+const DIVIDER = "border-l-2 border-outline-variant";
 
 const GREEN_BG = [
-  "bg-emerald-100/70 dark:bg-emerald-900/30",
-  "bg-emerald-50/50 dark:bg-emerald-900/15",
-  "bg-emerald-50/25 dark:bg-emerald-900/5",
+  "bg-secondary-container/30",
+  "bg-secondary-container/15",
+  "bg-secondary-container/[0.05]",
 ];
 
 const RED_BG = [
-  "bg-red-100/70 dark:bg-red-900/30",
-  "bg-red-50/50 dark:bg-red-900/15",
-  "bg-red-50/25 dark:bg-red-900/5",
+  "bg-error-container/30",
+  "bg-error-container/15",
+  "bg-error-container/[0.05]",
 ];
 
 function AlignmentCell({
@@ -82,7 +82,7 @@ function AlignmentCell({
 
   if (!entry) {
     return (
-      <td className={`${classes} text-center text-xs text-zinc-400 dark:text-zinc-500`}>
+      <td className={`${classes} text-center text-xs text-on-surface-variant`}>
         —
       </td>
     );
@@ -91,7 +91,7 @@ function AlignmentCell({
     <td className={classes}>
       <Link href={`/users/${entry.userId}`} className="flex flex-col items-center gap-1 transition-opacity hover:opacity-80">
         <Avatar name={entry.displayName} url={entry.avatarUrl} />
-        <SplitName name={entry.displayName} className="text-center text-xs leading-tight text-zinc-800 dark:text-zinc-200" />
+        <SplitName name={entry.displayName} className="text-center text-xs leading-tight text-on-surface" />
       </Link>
     </td>
   );
@@ -100,30 +100,33 @@ function AlignmentCell({
 export function AlignmentTable({ alignments }: AlignmentTableProps) {
   if (alignments.length === 0) {
     return (
-      <p className="py-8 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        Not enough shared games to compute alignment yet.
-      </p>
+      <div className="monster-card flex flex-col items-center gap-3 rounded-lg py-stack-loose text-center">
+        <span className="material-symbols-outlined text-[40px] text-outline">handshake</span>
+        <p className="text-on-surface-variant">
+          Not enough shared games to compute alignment yet.
+        </p>
+      </div>
     );
   }
 
   return (
     <div>
-      <div className="overflow-x-auto rounded-lg border border-zinc-200 dark:border-white/10">
+      <div className="glass-card overflow-x-auto rounded-lg">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-zinc-200 dark:border-white/10">
-              <th className="px-3 py-2 text-center text-xs font-medium text-zinc-500 dark:text-zinc-400">
+            <tr className="border-b border-outline-variant">
+              <th className="px-3 py-2 text-center font-stat text-stat-label text-on-surface-variant">
                 User
               </th>
-              <th className={`${DIVIDER} px-3 py-2 text-center text-xs font-medium text-emerald-600 dark:text-emerald-400`} colSpan={3}>
+              <th className={`${DIVIDER} px-3 py-2 text-center font-stat text-stat-label text-secondary`} colSpan={3}>
                 Taste Twins
               </th>
-              <th className={`${DIVIDER} px-3 py-2 text-center text-xs font-medium text-red-500 dark:text-red-400`} colSpan={3}>
+              <th className={`${DIVIDER} px-3 py-2 text-center font-stat text-stat-label text-error`} colSpan={3}>
                 Sworn Enemies
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-100 dark:divide-zinc-800">
+          <tbody className="divide-y divide-outline-variant">
             {[...alignments].sort((a, b) => a.displayName.localeCompare(b.displayName)).map((row) => (
               <tr key={row.userId}>
                 <td className="min-w-[7.5rem] px-3 py-2">
@@ -133,7 +136,7 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
                       url={row.avatarUrl}
                       size={24}
                     />
-                    <SplitName name={row.displayName} className="text-center text-sm font-medium leading-tight text-zinc-900 dark:text-zinc-50" />
+                    <SplitName name={row.displayName} className="text-center text-sm font-medium leading-tight text-on-surface" />
                   </Link>
                 </td>
                 <AlignmentCell entry={row.allies[0]} divider bg={GREEN_BG[0]} />
@@ -147,7 +150,7 @@ export function AlignmentTable({ alignments }: AlignmentTableProps) {
           </tbody>
         </table>
       </div>
-      <p className="mt-2 text-[11px] text-zinc-400 dark:text-zinc-500">
+      <p className="mt-2 text-[11px] text-on-surface-variant">
         Based on average score difference across shared games (min 3 shared).
         Lower avg diff = more similar taste.
       </p>

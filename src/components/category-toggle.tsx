@@ -37,9 +37,9 @@ export function CategoryToggle({ category, basePath }: CategoryToggleProps) {
   }
 
   return (
-    <div ref={containerRef} className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5">
+    <div ref={containerRef} className="relative flex gap-1 rounded-lg bg-surface-container-low p-1">
       <div
-        className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10"
+        className="absolute top-1 bottom-1 rounded-md bg-primary-container shadow-sm transition-all duration-200 ease-in-out"
         style={{ left: pillStyle.left, width: pillStyle.width }}
       />
       <button
@@ -47,8 +47,8 @@ export function CategoryToggle({ category, basePath }: CategoryToggleProps) {
         onClick={() => handleToggle("party")}
         className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
           category === "party"
-            ? "text-zinc-900 dark:text-zinc-50"
-            : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+            ? "text-on-primary-container"
+            : "text-on-surface-variant hover:text-on-surface"
         }`}
       >
         Party Games
@@ -58,8 +58,8 @@ export function CategoryToggle({ category, basePath }: CategoryToggleProps) {
         onClick={() => handleToggle("board")}
         className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
           category === "board"
-            ? "text-zinc-900 dark:text-zinc-50"
-            : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+            ? "text-on-primary-container"
+            : "text-on-surface-variant hover:text-on-surface"
         }`}
       >
         Board Games

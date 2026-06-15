@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useRef, useMemo, useEffect, useId } from "react";
+import { useState, useCallback, useRef, useMemo, useId } from "react";
 import {
   DndContext,
   DragOverlay,
@@ -122,11 +122,12 @@ function UnplayedRow({
 
   return (
     <div
-      className={`mt-4 rounded-lg border border-dashed border-zinc-300 dark:border-white/10 ${
-        isOver ? "bg-zinc-100 dark:bg-white/10" : ""
-      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-white/5" : ""}`}
+      className={`mt-gutter rounded-lg border border-dashed border-outline-variant ${
+        isOver ? "bg-surface-container-highest" : ""
+      } ${selectedBggId !== null ? "bg-surface-container-high" : ""}`}
     >
-      <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <div className="flex items-center gap-2 px-card-padding py-2 font-stat text-caption uppercase tracking-wide text-on-surface-variant">
+        <span className="material-symbols-outlined text-[16px]">inventory_2</span>
         Unplayed — tap to select, then tap to place
       </div>
       <SortableContext
@@ -150,7 +151,7 @@ function UnplayedRow({
             />
           ))}
           {games.length === 0 && (
-            <span className="text-xs text-zinc-400 dark:text-zinc-500">
+            <span className="text-xs text-on-surface-variant">
               All games have been ranked!
             </span>
           )}
@@ -181,25 +182,6 @@ export function TierListBoard({
     () => filterPlacements(allPlacements, games),
     [allPlacements, games]
   );
-
-  const toggleContainerRef = useRef<HTMLDivElement>(null);
-  const partyBtnRef = useRef<HTMLButtonElement>(null);
-  const boardBtnRef = useRef<HTMLButtonElement>(null);
-  const [pillStyle, setPillStyle] = useState<{ left: number; width: number }>({ left: 0, width: 0 });
-
-  useEffect(() => {
-    const activeRef = category === "party" ? partyBtnRef : boardBtnRef;
-    const el = activeRef.current;
-    const container = toggleContainerRef.current;
-    if (el && container) {
-      const containerRect = container.getBoundingClientRect();
-      const elRect = el.getBoundingClientRect();
-      setPillStyle({
-        left: elRect.left - containerRect.left,
-        width: elRect.width,
-      });
-    }
-  }, [category]);
 
   const savedBuckets = useRef<TierBuckets | null>(null);
   const [buckets, setBuckets] = useState<TierBuckets>(() =>
@@ -419,65 +401,57 @@ export function TierListBoard({
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-gutter">
       {saveError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+        <div className="rounded-lg border border-error bg-error-container/15 p-card-padding text-sm text-error">
           {saveError}
         </div>
       )}
-      <div className="mb-4 flex items-center justify-between">
-        <div ref={toggleContainerRef} className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5">
-          <div
-            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10"
-            style={{ left: pillStyle.left, width: pillStyle.width }}
-          />
-          <button
-            ref={partyBtnRef}
-            onClick={() => handleCategoryToggle("party")}
-            className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              category === "party"
-                ? "text-zinc-900 dark:text-zinc-50"
-                : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            Party Games
-          </button>
-          <button
-            ref={boardBtnRef}
-            onClick={() => handleCategoryToggle("board")}
-            className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              category === "board"
-                ? "text-zinc-900 dark:text-zinc-50"
-                : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            Board Games
-          </button>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          {(["party", "board"] as const).map((cat) => (
+            <button
+              key={cat}
+              onClick={() => handleCategoryToggle(cat)}
+              className={`rune-chip flex items-center gap-2 rounded-full px-4 py-1.5 font-stat text-stat-label ${
+                category === cat ? "active" : "text-on-surface-variant"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">
+                {cat === "party" ? "celebration" : "castle"}
+              </span>
+              {cat === "party" ? "Party" : "Board"}
+            </button>
+          ))}
         </div>
         {dirty && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button
               onClick={handleDiscard}
               disabled={saving}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              className="rune-chip flex items-center gap-2 rounded-full px-4 py-1.5 font-stat text-stat-label text-on-surface-variant disabled:opacity-50"
             >
+              <span className="material-symbols-outlined text-[16px]">undo</span>
               Discard
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="rounded-md bg-gradient-to-r from-cyan-500 to-cyan-600 px-3 py-1.5 text-sm font-medium text-white transition-colors shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
+              className="stone-button flex items-center gap-2 rounded-md px-5 py-2.5 font-stat text-stat-label disabled:opacity-50"
             >
+              <span className="material-symbols-outlined text-[18px]">save</span>
               {saving ? "Saving..." : "Save"}
             </button>
           </div>
         )}
       </div>
 
-      <div className="mb-2 flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
-        <span className="font-medium">Best</span>
-        <div className="h-1 w-16 rounded-full bg-gradient-to-r from-emerald-500 to-rose-500" />
-        <span className="font-medium">Worst</span>
+      <div className="flex items-center gap-2 font-stat text-caption text-on-surface-variant">
+        <span className="material-symbols-outlined stat-icon text-[16px]">trophy</span>
+        <span>Best</span>
+        <div className="h-1 w-16 rounded-full bg-gradient-to-r from-secondary-container to-error-container" />
+        <span>Worst</span>
+        <span className="material-symbols-outlined text-[16px] text-error">skull</span>
       </div>
 
       <DndContext
@@ -488,7 +462,7 @@ export function TierListBoard({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
+        <div className="monster-card overflow-hidden rounded-lg">
           {TIERS.map((tier) => (
             <TierRow
               key={tier}

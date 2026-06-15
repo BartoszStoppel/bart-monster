@@ -22,20 +22,26 @@ export default async function AdminPage() {
     .order("display_name");
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-          Admin — User Roles
-        </h1>
-        <Link
-          href="/admin/rules"
-          className="rounded-md border border-blue-200 px-3 py-1.5 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
-        >
-          Manage Rulebooks
-        </Link>
-      </div>
+    <div className="mx-auto flex max-w-2xl flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="font-display text-display-lg text-primary">The Keeper&apos;s Seal</h1>
+            <p className="mt-2 max-w-2xl text-on-surface-variant">
+              Grant or revoke guild-master rank. Only the sealed may shape the codex.
+            </p>
+          </div>
+          <Link
+            href="/admin/rules"
+            className="stone-button flex items-center gap-2 rounded-md px-5 py-2.5 font-stat text-stat-label"
+          >
+            <span className="material-symbols-outlined text-[18px]">menu_book</span>
+            Manage Rulebooks
+          </Link>
+        </div>
+      </section>
 
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         {profiles?.map((profile) => (
           <UserRoleToggle
             key={profile.id}

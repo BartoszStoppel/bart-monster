@@ -16,19 +16,19 @@ const STATUS_OPTIONS: { value: FeedbackStatus; label: string }[] = [
 ];
 
 const STATUS_COLORS: Record<FeedbackStatus, string> = {
-  new: "bg-zinc-100 text-zinc-700 dark:bg-white/10 dark:text-zinc-300",
-  planned: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300",
+  new: "bg-surface-container-highest text-on-surface-variant",
+  planned: "bg-tertiary-container/15 text-tertiary",
   "in-progress":
-    "bg-amber-100 text-amber-700 dark:bg-amber-900 dark:text-amber-300",
-  done: "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-  declined: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+    "bg-primary-container/15 text-primary",
+  done: "bg-secondary-container/15 text-secondary",
+  declined: "bg-error-container/15 text-error",
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
-  feature: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900 dark:text-cyan-300",
-  bug: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
+  feature: "bg-primary-container/15 text-primary",
+  bug: "bg-error-container/15 text-error",
   improvement:
-    "bg-purple-100 text-purple-700 dark:bg-purple-900 dark:text-purple-300",
+    "bg-secondary-container/15 text-secondary",
 };
 
 function FeedbackCard({
@@ -66,36 +66,36 @@ function FeedbackCard({
   });
 
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
+    <div className="monster-card rounded-lg p-card-padding">
       <div className="mb-2 flex flex-wrap items-start justify-between gap-2">
-        <h3 className="text-base font-semibold text-zinc-900 dark:text-zinc-50">
+        <h3 className="font-display text-headline-lg-mobile text-on-surface">
           {item.title}
         </h3>
         <div className="flex items-center gap-2">
           <span
-            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${CATEGORY_COLORS[item.category] ?? ""}`}
+            className={`inline-block rounded-full border border-outline-variant px-2 py-0.5 font-stat text-[11px] uppercase tracking-wide ${CATEGORY_COLORS[item.category] ?? ""}`}
           >
             {item.category}
           </span>
           <span
-            className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ${STATUS_COLORS[item.status]}`}
+            className={`inline-block rounded-full border border-outline-variant px-2 py-0.5 font-stat text-[11px] uppercase tracking-wide ${STATUS_COLORS[item.status]}`}
           >
             {item.status}
           </span>
         </div>
       </div>
 
-      <p className="mb-3 whitespace-pre-wrap text-sm text-zinc-600 dark:text-zinc-400">
+      <p className="mb-3 whitespace-pre-wrap text-sm text-on-surface-variant">
         {item.description}
       </p>
 
       {item.admin_note && !editingStatus && (
-        <p className="mb-3 rounded border border-cyan-200 bg-cyan-50 px-3 py-2 text-sm text-cyan-800 dark:border-cyan-800 dark:bg-cyan-950 dark:text-cyan-300">
+        <p className="mb-3 rounded border border-primary bg-primary-container/10 px-3 py-2 text-sm text-primary">
           <span className="font-medium">Admin note:</span> {item.admin_note}
         </p>
       )}
 
-      <div className="flex items-center justify-between text-xs text-zinc-500 dark:text-zinc-400">
+      <div className="flex items-center justify-between text-xs text-on-surface-variant">
         <span>
           {item.profiles.display_name} &middot; {date}
         </span>
@@ -104,7 +104,7 @@ function FeedbackCard({
           {isAdmin && (
             <button
               onClick={() => setEditingStatus(!editingStatus)}
-              className="text-cyan-600 hover:underline dark:text-cyan-400"
+              className="text-primary hover:underline"
             >
               {editingStatus ? "Cancel" : "Edit status"}
             </button>
@@ -113,7 +113,7 @@ function FeedbackCard({
             <button
               onClick={handleDelete}
               disabled={isPending}
-              className="text-red-600 hover:underline disabled:opacity-50 dark:text-red-400"
+              className="text-error hover:underline disabled:opacity-50"
             >
               Delete
             </button>
@@ -122,11 +122,11 @@ function FeedbackCard({
       </div>
 
       {editingStatus && (
-        <div className="mt-3 space-y-3 border-t border-zinc-200 pt-3 dark:border-white/10">
+        <div className="mt-3 space-y-3 border-t border-outline-variant pt-3">
           <div className="flex items-center gap-3">
             <label
               htmlFor={`status-${item.id}`}
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-sm font-medium text-on-surface-variant"
             >
               Status
             </label>
@@ -136,7 +136,7 @@ function FeedbackCard({
               onChange={(e) =>
                 setNewStatus(e.target.value as FeedbackStatus)
               }
-              className="rounded-lg border border-zinc-300 bg-white px-2 py-1 text-sm text-zinc-900 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
+              className="carved-input rounded-lg px-2 py-1 text-sm"
             >
               {STATUS_OPTIONS.map((s) => (
                 <option key={s.value} value={s.value}>
@@ -148,7 +148,7 @@ function FeedbackCard({
           <div>
             <label
               htmlFor={`note-${item.id}`}
-              className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="mb-1 block text-sm font-medium text-on-surface-variant"
             >
               Admin note (optional)
             </label>
@@ -159,13 +159,13 @@ function FeedbackCard({
               value={adminNote}
               onChange={(e) => setAdminNote(e.target.value)}
               placeholder="Add a note..."
-              className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
+              className="carved-input w-full rounded-lg px-3 py-1.5 text-sm"
             />
           </div>
           <button
             onClick={handleStatusSave}
             disabled={isPending}
-            className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-3 py-1.5 text-sm font-medium text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
+            className="stone-button rounded-lg px-3 py-1.5 text-sm font-medium disabled:opacity-50"
           >
             {isPending ? "Saving..." : "Save"}
           </button>
@@ -186,14 +186,15 @@ export function FeedbackList({
 }) {
   if (items.length === 0) {
     return (
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
-        No feedback yet. Be the first to submit!
-      </p>
+      <div className="monster-card flex flex-col items-center gap-3 rounded-lg py-stack-loose text-center">
+        <span className="material-symbols-outlined text-[40px] text-outline">forum</span>
+        <p className="text-on-surface-variant">No feedback yet. Be the first to submit!</p>
+      </div>
     );
   }
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-gutter">
       {items.map((item) => (
         <FeedbackCard
           key={item.id}

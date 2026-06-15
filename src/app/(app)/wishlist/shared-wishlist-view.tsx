@@ -8,10 +8,10 @@ import type { ProfileInfo } from "./wishlist-types";
 
 type SharedSort = "popular" | "bgg-rating" | "name";
 
-const SORT_OPTIONS: { value: SharedSort; label: string }[] = [
-  { value: "popular", label: "Most Wanted" },
-  { value: "bgg-rating", label: "BGG Rating" },
-  { value: "name", label: "Name" },
+const SORT_OPTIONS: { value: SharedSort; label: string; icon: string }[] = [
+  { value: "popular", label: "Most Wanted", icon: "local_fire_department" },
+  { value: "bgg-rating", label: "BGG Rating", icon: "public" },
+  { value: "name", label: "Name", icon: "sort_by_alpha" },
 ];
 
 interface SharedItem {
@@ -26,7 +26,7 @@ interface SharedWishlistViewProps {
 
 function AvatarRow({
   people,
-  borderColor = "border-white dark:border-zinc-800",
+  borderColor = "border-outline-variant",
 }: {
   people: ProfileInfo[];
   borderColor?: string;
@@ -37,7 +37,7 @@ function AvatarRow({
         <div
           key={p.userId}
           title={p.displayName}
-          className={`relative h-6 w-6 overflow-hidden rounded-full border ${borderColor} bg-zinc-200 dark:bg-zinc-700`}
+          className={`relative h-6 w-6 overflow-hidden rounded-full border ${borderColor} bg-surface-container-highest`}
         >
           {p.avatarUrl ? (
             <Image
@@ -48,14 +48,14 @@ function AvatarRow({
               sizes="24px"
             />
           ) : (
-            <span className="flex h-full w-full items-center justify-center text-[9px] font-bold text-zinc-500 dark:text-zinc-400">
+            <span className="flex h-full w-full items-center justify-center text-[9px] font-bold text-on-surface-variant">
               {p.displayName.charAt(0).toUpperCase()}
             </span>
           )}
         </div>
       ))}
       {people.length > 6 && (
-        <div className={`flex h-6 w-6 items-center justify-center rounded-full border ${borderColor} bg-zinc-300 text-[9px] font-bold text-zinc-600 dark:bg-zinc-600 dark:text-zinc-300`}>
+        <div className={`flex h-6 w-6 items-center justify-center rounded-full border ${borderColor} bg-surface-container-highest text-[9px] font-bold text-on-surface-variant`}>
           +{people.length - 6}
         </div>
       )}
@@ -89,47 +89,48 @@ export function SharedWishlistView({ items }: SharedWishlistViewProps) {
   }, [items, sort]);
 
   return (
-    <div>
+    <div className="flex flex-col gap-stack-loose">
       {/* Sort controls */}
-      <div className="mb-4 flex items-center gap-3">
-        <span className="text-xs text-zinc-400 dark:text-zinc-500">Sort</span>
-        <div className="flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5">
+      <div className="flex flex-wrap items-center gap-3">
+        <span className="font-stat text-stat-label text-on-surface-variant">
+          {items.length} game{items.length !== 1 ? "s" : ""}
+        </span>
+        <div className="ml-auto flex items-center gap-1.5">
+          <span className="material-symbols-outlined text-[18px] text-on-surface-variant">sort</span>
           {SORT_OPTIONS.map((opt) => (
             <button
               key={opt.value}
               onClick={() => setSort(opt.value)}
-              className={`rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                sort === opt.value
-                  ? "bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-zinc-50"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+              title={`Sort by ${opt.label}`}
+              className={`rune-chip flex items-center gap-1.5 rounded-full px-3 py-1.5 font-stat text-stat-label ${
+                sort === opt.value ? "active" : "text-on-surface-variant"
               }`}
             >
-              {opt.label}
+              <span className="material-symbols-outlined text-[16px]">{opt.icon}</span>
+              <span className="hidden lg:inline">{opt.label}</span>
             </button>
           ))}
         </div>
-        <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-500">
-          {items.length} game{items.length !== 1 ? "s" : ""}
-        </span>
       </div>
 
       {items.length === 0 ? (
-        <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center dark:border-white/[0.06] dark:bg-white/5">
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No one has wishlisted any games yet.
+        <div className="monster-card flex flex-col items-center gap-3 rounded-lg py-stack-loose text-center">
+          <span className="material-symbols-outlined text-[40px] text-outline">redeem</span>
+          <p className="text-on-surface-variant">
+            No one has coveted any treasures yet.
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-gutter">
           {sorted.map((item) => (
             <div
               key={item.game.bgg_id}
-              className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-3 dark:border-white/[0.06] dark:bg-white/5"
+              className="monster-card flex items-center gap-gutter rounded-lg p-card-padding"
             >
               {/* Thumbnail */}
               <Link
                 href={`/games/${item.game.bgg_id}`}
-                className="relative h-14 w-12 shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-white/5"
+                className="relative h-16 w-14 shrink-0 overflow-hidden rounded bg-surface-container-lowest"
               >
                 {item.game.thumbnail_url ? (
                   <Image
@@ -137,37 +138,38 @@ export function SharedWishlistView({ items }: SharedWishlistViewProps) {
                     alt={item.game.name}
                     fill
                     className="object-contain"
-                    sizes="48px"
+                    sizes="56px"
                   />
                 ) : (
-                  <div className="flex h-full w-full items-center justify-center text-xs text-zinc-400">
+                  <div className="flex h-full w-full items-center justify-center text-xs text-on-surface-variant">
                     ?
                   </div>
                 )}
               </Link>
 
               {/* Info */}
-              <div className="flex min-w-0 flex-1 flex-col gap-1">
+              <div className="flex min-w-0 flex-1 flex-col gap-1.5">
                 <div className="flex items-center gap-2">
                   <Link
                     href={`/games/${item.game.bgg_id}`}
-                    className="truncate text-sm font-semibold text-zinc-900 hover:text-cyan-600 dark:text-zinc-50 dark:hover:text-cyan-400"
+                    className="truncate font-display text-headline-lg-mobile text-on-surface hover:text-primary"
                   >
                     {item.game.name}
                   </Link>
                   {item.game.category && (
                     <span
-                      className={`shrink-0 rounded-full px-1.5 py-0.5 text-[10px] font-medium ${
+                      className={`shrink-0 rounded-full px-2 py-0.5 font-stat text-[10px] ${
                         item.game.category === "party"
-                          ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                          : "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
+                          ? "bg-secondary-container text-on-secondary-container"
+                          : "bg-primary-container text-on-primary-container"
                       }`}
                     >
                       {item.game.category === "party" ? "Party" : "Board"}
                     </span>
                   )}
                   {item.game.bgg_rating && (
-                    <span className="shrink-0 text-[11px] font-semibold text-amber-600 dark:text-amber-400">
+                    <span className="flex shrink-0 items-center gap-1 font-stat text-stat-label text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[16px] text-outline">public</span>
                       {Number(item.game.bgg_rating).toFixed(1)}
                     </span>
                   )}
@@ -177,7 +179,7 @@ export function SharedWishlistView({ items }: SharedWishlistViewProps) {
                   {/* Wishlisters */}
                   <div className="flex items-center gap-1.5">
                     <AvatarRow people={item.wishlisters} />
-                    <span className="text-[10px] text-zinc-400 dark:text-zinc-500">
+                    <span className="font-stat text-[10px] text-on-surface-variant">
                       {item.wishlisters.length} want{item.wishlisters.length === 1 ? "s" : ""}
                     </span>
                   </div>
@@ -187,9 +189,9 @@ export function SharedWishlistView({ items }: SharedWishlistViewProps) {
                     <div className="flex items-center gap-1.5">
                       <AvatarRow
                         people={item.owners}
-                        borderColor="border-green-200 dark:border-green-900"
+                        borderColor="border-secondary-container"
                       />
-                      <span className="text-[10px] text-green-600 dark:text-green-400">
+                      <span className="font-stat text-[10px] text-secondary">
                         {item.owners.length} own{item.owners.length === 1 ? "s" : ""}
                       </span>
                     </div>

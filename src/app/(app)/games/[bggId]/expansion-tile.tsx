@@ -11,7 +11,7 @@ const animateLayoutChanges: AnimateLayoutChanges = (args) =>
   defaultAnimateLayoutChanges({ ...args, wasDragging: true });
 
 const TILE_CLASS =
-  "relative h-16 w-16 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5";
+  "relative h-16 w-16 shrink-0 overflow-hidden rounded border border-outline-variant bg-surface-container-high";
 
 function TileImage({ expansion }: { expansion: GameExpansion }) {
   if (expansion.thumbnail_url) {
@@ -28,7 +28,7 @@ function TileImage({ expansion }: { expansion: GameExpansion }) {
   }
 
   return (
-    <span className="flex h-full w-full items-center justify-center p-1 text-center text-[8px] leading-tight text-zinc-600 dark:text-zinc-300">
+    <span className="flex h-full w-full items-center justify-center p-1 text-center text-[8px] leading-tight text-on-surface-variant">
       {expansion.name}
     </span>
   );
@@ -83,7 +83,7 @@ export function ExpansionTile({ expansion, isSelected, onTileTap }: ExpansionTil
       title={expansion.name}
       className={`${TILE_CLASS} cursor-grab active:cursor-grabbing ${
         isDragging ? "opacity-30" : ""
-      } ${isSelected ? "z-10 scale-110 ring-2 ring-amber-400" : ""}`}
+      } ${isSelected ? "z-10 scale-110 ring-2 ring-primary" : ""}`}
     >
       <TileImage expansion={expansion} />
     </div>
@@ -92,7 +92,7 @@ export function ExpansionTile({ expansion, isSelected, onTileTap }: ExpansionTil
 
 export function ExpansionTileOverlay({ expansion }: { expansion: GameExpansion }) {
   return (
-    <div title={expansion.name} className={`${TILE_CLASS} shadow-lg ring-2 ring-cyan-500`}>
+    <div title={expansion.name} className={`${TILE_CLASS} shadow-lg ring-2 ring-primary`}>
       <TileImage expansion={expansion} />
     </div>
   );

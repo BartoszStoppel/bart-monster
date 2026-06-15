@@ -88,10 +88,14 @@ export default async function PickerPage() {
   }
 
   return (
-    <div>
-      <h1 className="mb-4 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        Game Picker
-      </h1>
+    <div className="flex flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <h1 className="font-display text-display-lg text-primary">The Summoning Wheel</h1>
+        <p className="max-w-2xl text-on-surface-variant">
+          Let fate choose tonight&apos;s quest. Set the table, weight the odds,
+          and spin to summon a game from the collection.
+        </p>
+      </section>
       <GamePicker
         profiles={profiles ?? []}
         games={games ?? []}

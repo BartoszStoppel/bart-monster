@@ -182,9 +182,12 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
 
   if (users.length === 0) {
     return (
-      <p className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
-        No one has created tier lists for this category yet.
-      </p>
+      <div className="monster-card flex flex-col items-center gap-3 rounded-lg py-stack-loose text-center">
+        <span className="material-symbols-outlined text-[40px] text-outline">format_list_numbered</span>
+        <p className="text-on-surface-variant">
+          No one has created tier lists for this category yet.
+        </p>
+      </div>
     );
   }
 
@@ -195,28 +198,26 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
           <button
             type="button"
             onClick={() => setShowPredictions((v) => !v)}
-            className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-              showPredictions
-                ? "bg-purple-600 text-white hover:bg-purple-700"
-                : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+            className={`rune-chip flex items-center gap-1.5 rounded-full px-4 py-1.5 font-stat text-stat-label ${
+              showPredictions ? "active" : "text-on-surface-variant"
             }`}
           >
+            <span className="material-symbols-outlined text-[16px]">auto_awesome</span>
             {showPredictions ? "Hide predictions" : "Show predictions"}
           </button>
         )}
         <button
           type="button"
           onClick={() => setShowHotTakes((v) => !v)}
-          className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
-            showHotTakes
-              ? "bg-red-600 text-white hover:bg-red-700"
-              : "bg-zinc-100 text-zinc-600 hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+          className={`rune-chip flex items-center gap-1.5 rounded-full px-4 py-1.5 font-stat text-stat-label ${
+            showHotTakes ? "active" : "text-on-surface-variant"
           }`}
         >
-          {showHotTakes ? "Hide hot takes 🔥" : "Show hot takes 🔥"}
+          <span className="material-symbols-outlined text-[16px]">local_fire_department</span>
+          {showHotTakes ? "Hide hot takes" : "Show hot takes"}
         </button>
         {showPredictions && (
-          <span className="text-xs text-zinc-400 dark:text-zinc-500">
+          <span className="text-xs text-on-surface-variant">
             Ghost tiles show predicted placements for unranked games
           </span>
         )}
@@ -228,8 +229,8 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
         const tags = topTags(user.buckets, 3);
         const hotTakeId = hotTakes?.get(user.userId) ?? null;
         return (
-          <section key={user.userId}>
-            <div className="mb-2 flex items-center gap-2">
+          <section key={user.userId} className="monster-card flex flex-col gap-2 rounded-lg p-card-padding">
+            <div className="flex flex-wrap items-center gap-2">
               <Link href={`/users/${user.userId}`} className="shrink-0 transition-opacity hover:opacity-80">
                 {user.avatarUrl ? (
                   <Image
@@ -240,13 +241,13 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
                     className="rounded-full"
                   />
                 ) : (
-                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-zinc-200 text-xs font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-surface-container-highest text-xs font-medium text-on-surface-variant">
                     {user.displayName.charAt(0).toUpperCase()}
                   </div>
                 )}
               </Link>
               <span className="text-sm">
-                <Link href={`/users/${user.userId}`} className="font-semibold text-zinc-900 hover:text-cyan-600 dark:text-zinc-50 dark:hover:text-cyan-400">{user.displayName}</Link>{" "}
+                <Link href={`/users/${user.userId}`} className="font-semibold text-on-surface hover:text-primary">{user.displayName}</Link>{" "}
                 <TitleDisplay gamesRanked={user.totalGamesRanked} gamesOwned={user.gamesOwned} />
               </span>
               <RoleBadge role={user.isAdmin ? "admin" : null} />
@@ -255,7 +256,7 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
                   {tags.map((tag) => (
                     <span
                       key={tag}
-                      className="rounded-full bg-zinc-100 px-2 py-0.5 text-[10px] font-medium text-zinc-500 dark:bg-white/5 dark:text-zinc-400"
+                      className="rune-chip rounded-full px-2 py-0.5 text-[10px] font-medium text-on-surface-variant"
                     >
                       {tag}
                     </span>
@@ -263,7 +264,7 @@ export function CommunityTierLists({ users, allGames }: CommunityTierListsProps)
                 </div>
               )}
             </div>
-            <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
+            <div className="overflow-hidden rounded-lg border border-outline-variant">
               {TIERS.map((tier) => {
                 const shadows = userShadows?.get(tier) ?? [];
                 const entries =

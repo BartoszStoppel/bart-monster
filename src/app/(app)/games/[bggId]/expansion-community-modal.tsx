@@ -45,19 +45,19 @@ export function ExpansionCommunityModal({
       onClick={onClose}
     >
       <div
-        className="max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl border border-zinc-200 bg-white p-5 shadow-2xl dark:border-white/10 dark:bg-zinc-900"
+        className="glass-card max-h-[80vh] w-full max-w-lg overflow-y-auto rounded-xl p-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div>
-            <h3 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+            <h3 className="text-lg font-semibold text-on-surface">
               Community Expansion Scores
             </h3>
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">{gameName}</p>
+            <p className="text-sm text-on-surface-variant">{gameName}</p>
           </div>
           <button
             onClick={onClose}
-            className="rounded-md p-1 text-zinc-400 transition-colors hover:bg-zinc-100 hover:text-zinc-600 dark:hover:bg-white/10 dark:hover:text-zinc-200"
+            className="rounded-md p-1 text-on-surface-variant transition-colors hover:bg-surface-container-highest hover:text-on-surface"
             aria-label="Close"
           >
             ✕
@@ -65,7 +65,7 @@ export function ExpansionCommunityModal({
         </div>
 
         {expansions.length === 0 ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-on-surface-variant">
             No one has ranked these expansions yet.
           </p>
         ) : (
@@ -73,12 +73,12 @@ export function ExpansionCommunityModal({
             {expansions.map((exp) => (
               <li
                 key={exp.id}
-                className="rounded-lg border border-zinc-200 p-3 dark:border-white/10"
+                className="rounded-lg border border-outline-variant p-3"
               >
                 <div className="flex items-center justify-between gap-3">
-                  <span className="flex min-w-0 items-center gap-2 font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="flex min-w-0 items-center gap-2 font-medium text-on-surface">
                     {exp.thumbnailUrl && (
-                      <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded border border-zinc-200 dark:border-white/10">
+                      <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded border border-outline-variant">
                         <Image
                           src={exp.thumbnailUrl}
                           alt={exp.name}
@@ -92,13 +92,13 @@ export function ExpansionCommunityModal({
                   </span>
                   <span className="shrink-0 text-sm">
                     {exp.avgScore != null ? (
-                      <span className="font-bold text-amber-600 dark:text-amber-400">
+                      <span className="font-stat font-bold text-primary">
                         {exp.avgScore.toFixed(1)}
                       </span>
                     ) : (
-                      <span className="text-zinc-400">—</span>
+                      <span className="text-on-surface-variant">—</span>
                     )}
-                    <span className="ml-1 text-xs text-zinc-400">
+                    <span className="ml-1 text-xs text-on-surface-variant">
                       ({exp.voteCount} {exp.voteCount === 1 ? "vote" : "votes"})
                     </span>
                   </span>
@@ -108,17 +108,17 @@ export function ExpansionCommunityModal({
                     {exp.votes.map((v) => (
                       <span
                         key={v.displayName}
-                        className="inline-flex items-center gap-1 rounded border border-zinc-200 bg-white px-1.5 py-0.5 text-xs dark:border-white/10 dark:bg-white/5"
+                        className="inline-flex items-center gap-1 rounded border border-outline-variant bg-surface-container-high px-1.5 py-0.5 text-xs"
                         title={v.score != null ? `${v.score.toFixed(1)}` : undefined}
                       >
                         <span
                           className={`inline-flex h-4 w-4 items-center justify-center rounded text-[10px] font-bold text-white ${
-                            TIER_COLORS[v.tier] ?? "bg-zinc-400"
+                            TIER_COLORS[v.tier] ?? "bg-surface-container-highest"
                           }`}
                         >
                           {v.tier}
                         </span>
-                        <span className="text-zinc-600 dark:text-zinc-300">
+                        <span className="text-on-surface-variant">
                           {v.displayName}
                         </span>
                       </span>

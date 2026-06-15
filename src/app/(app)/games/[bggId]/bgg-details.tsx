@@ -13,14 +13,14 @@ function TagList({ label, items }: { label: string; items: string[] }) {
   if (items.length === 0) return null;
   return (
     <div>
-      <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+      <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
         {label}
       </h3>
       <div className="flex flex-wrap gap-1">
         {[...new Set(items)].map((item) => (
           <span
             key={item}
-            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-white/5 dark:text-zinc-400"
+            className="rune-chip rounded-full px-2 py-0.5 text-xs text-on-surface-variant"
           >
             {item}
           </span>
@@ -32,11 +32,11 @@ function TagList({ label, items }: { label: string; items: string[] }) {
 
 function StatItem({ label, value }: { label: string; value: string | number }) {
   return (
-    <div className="flex flex-col items-center rounded-lg bg-zinc-50 px-3 py-2 dark:bg-white/5">
-      <span className="text-lg font-bold text-zinc-900 dark:text-zinc-100">
+    <div className="glass-card flex flex-col items-center rounded-lg px-3 py-2">
+      <span className="font-stat text-lg font-bold text-on-surface">
         {typeof value === "number" ? value.toLocaleString() : value}
       </span>
-      <span className="text-[10px] text-zinc-500 dark:text-zinc-400">
+      <span className="text-[10px] text-on-surface-variant">
         {label}
       </span>
     </div>
@@ -53,7 +53,7 @@ export function SuggestedPlayersTable({ data }: { data: SuggestedPlayerCount[] }
 
   return (
     <div>
-      <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+      <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
         Suggested Player Count
       </h3>
       <div className="flex flex-wrap gap-1.5">
@@ -68,22 +68,22 @@ export function SuggestedPlayersTable({ data }: { data: SuggestedPlayerCount[] }
               key={d.numPlayers}
               className={`flex flex-col items-center rounded-lg border px-2.5 py-1.5 text-xs ${
                 isBest
-                  ? "border-green-300 bg-green-50 dark:border-green-700 dark:bg-green-900/20"
+                  ? "border-secondary-container bg-secondary-container/15"
                   : isRec
-                    ? "border-cyan-200 bg-cyan-50 dark:border-cyan-800 dark:bg-cyan-900/20"
-                    : "border-zinc-200 bg-zinc-50 dark:border-white/10 dark:bg-white/5"
+                    ? "border-primary bg-primary-container/15"
+                    : "border-outline-variant bg-surface-container-high"
               }`}
             >
-              <span className="font-bold text-zinc-900 dark:text-zinc-100">
+              <span className="font-stat font-bold text-on-surface">
                 {d.numPlayers}
               </span>
               <span
                 className={`text-[10px] font-medium ${
                   isBest
-                    ? "text-green-700 dark:text-green-400"
+                    ? "text-secondary"
                     : isRec
-                      ? "text-cyan-600 dark:text-cyan-400"
-                      : "text-zinc-400 dark:text-zinc-500"
+                      ? "text-primary"
+                      : "text-on-surface-variant"
                 }`}
               >
                 {isBest ? "Best" : isRec ? "Good" : "Meh"}
@@ -101,7 +101,7 @@ function ExpansionList({ expansions }: { expansions: BggExpansionRef[] }) {
 
   return (
     <div>
-      <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+      <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
         Expansions ({expansions.length})
       </h3>
       <div className="flex flex-wrap gap-1">
@@ -111,7 +111,7 @@ function ExpansionList({ expansions }: { expansions: BggExpansionRef[] }) {
             href={`https://boardgamegeek.com/boardgameexpansion/${exp.id}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 transition-colors hover:bg-zinc-200 dark:bg-white/5 dark:text-zinc-400 dark:hover:bg-white/10"
+            className="rune-chip rounded-full px-2 py-0.5 text-xs text-on-surface-variant transition-colors"
           >
             {exp.name}
           </Link>
@@ -145,29 +145,29 @@ export function BggDetails({ game }: BggDetailsProps) {
   return (
     <div className="space-y-5">
       {hasDesigners && (
-        <div className="text-sm text-zinc-600 dark:text-zinc-400">
-          <span className="text-zinc-400 dark:text-zinc-500">Designed by </span>
+        <div className="text-sm text-on-surface-variant">
+          <span className="text-on-surface-variant/70">Designed by </span>
           {game.designers.join(", ")}
         </div>
       )}
 
       {hasArtists && (
-        <div className="text-sm text-zinc-600 dark:text-zinc-400">
-          <span className="text-zinc-400 dark:text-zinc-500">Art by </span>
+        <div className="text-sm text-on-surface-variant">
+          <span className="text-on-surface-variant/70">Art by </span>
           {game.artists.join(", ")}
         </div>
       )}
 
       {hasPublishers && (
-        <div className="text-sm text-zinc-600 dark:text-zinc-400">
-          <span className="text-zinc-400 dark:text-zinc-500">Published by </span>
+        <div className="text-sm text-on-surface-variant">
+          <span className="text-on-surface-variant/70">Published by </span>
           {game.publishers.join(", ")}
         </div>
       )}
 
       {hasStats && (
         <div>
-          <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+          <h3 className="mb-1.5 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
             BGG Community
           </h3>
           <div className="flex flex-wrap gap-2">
@@ -194,16 +194,16 @@ export function BggDetails({ game }: BggDetailsProps) {
       )}
 
       {(game.suggested_age || game.language_dependence) && (
-        <div className="flex flex-wrap gap-4 text-sm text-zinc-600 dark:text-zinc-400">
+        <div className="flex flex-wrap gap-4 text-sm text-on-surface-variant">
           {game.suggested_age && (
             <span>
-              <span className="text-zinc-400 dark:text-zinc-500">Community age: </span>
+              <span className="text-on-surface-variant/70">Community age: </span>
               {game.suggested_age}+
             </span>
           )}
           {game.language_dependence && (
             <span>
-              <span className="text-zinc-400 dark:text-zinc-500">Language: </span>
+              <span className="text-on-surface-variant/70">Language: </span>
               {game.language_dependence}
             </span>
           )}

@@ -122,37 +122,39 @@ export default async function UserProfilePage({ params }: PageProps) {
   const totalRanked = boardRanked + partyRanked;
 
   return (
-    <div className="mx-auto max-w-4xl">
-      {/* Header */}
-      <div className="mb-8 flex items-center gap-4">
+    <div className="mx-auto flex max-w-4xl flex-col gap-stack-loose">
+      {/* Header band — adventurer hero */}
+      <section className="monster-card flex flex-wrap items-center gap-gutter rounded-lg p-6">
         {profile.avatar_url ? (
           <Image
             src={profile.avatar_url}
             alt={profile.display_name}
-            width={72}
-            height={72}
-            className="h-18 w-18 rounded-full"
+            width={80}
+            height={80}
+            className="h-20 w-20 rounded-full border border-outline-variant"
           />
         ) : (
-          <div className="flex h-18 w-18 items-center justify-center rounded-full bg-zinc-200 text-2xl font-bold text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+          <div className="flex h-20 w-20 items-center justify-center rounded-full border border-outline-variant bg-surface-container-highest font-display text-3xl font-bold text-on-surface-variant">
             {profile.display_name.charAt(0).toUpperCase()}
           </div>
         )}
-        <div>
+        <div className="flex flex-col gap-stack-compact">
           <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-2xl text-zinc-900 dark:text-zinc-50">
-              <span className="font-bold">{profile.display_name}</span>{" "}
-              <TitleDisplay gamesRanked={totalRanked} gamesOwned={ownedCount} />
+            <h1 className="font-display text-display-lg text-primary">
+              {profile.display_name}
             </h1>
             <RoleBadge role={profile.is_admin ? "admin" : null} />
           </div>
+          <p className="text-on-surface-variant">
+            <TitleDisplay gamesRanked={totalRanked} gamesOwned={ownedCount} />
+          </p>
           {isOwnProfile && currentUser.email && (
-            <div className="text-sm text-zinc-500 dark:text-zinc-400">
+            <div className="font-stat text-stat-label text-on-surface-variant">
               {currentUser.email}
             </div>
           )}
           {partner && (
-            <div className="mt-1 flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5">
               {partner.avatar_url && (
                 <Image
                   src={partner.avatar_url}
@@ -162,31 +164,32 @@ export default async function UserProfilePage({ params }: PageProps) {
                   className="h-4 w-4 rounded-full"
                 />
               )}
-              <span className="text-sm text-zinc-400 dark:text-zinc-500">
-                Married to {partner.display_name}
+              <span className="flex items-center gap-1 font-stat text-stat-label text-on-surface-variant">
+                <span className="material-symbols-outlined stat-icon text-[16px]">favorite</span>
+                Bound to {partner.display_name}
               </span>
             </div>
           )}
         </div>
-      </div>
+      </section>
 
       {isOwnProfile && (
-        <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
+        <div className="glass-card rounded-lg p-card-padding">
           <ProfileEditor currentName={profile.display_name} userId={userId} />
         </div>
       )}
 
       {/* Stats row */}
-      <div className="mb-8 grid grid-cols-3 gap-4">
-        <StatCard label="Games Owned" value={ownedCount} />
-        <StatCard label="Board Ranked" value={boardRanked} />
-        <StatCard label="Party Ranked" value={partyRanked} />
+      <div className="grid grid-cols-3 gap-gutter">
+        <StatCard label="Games Owned" value={ownedCount} icon="inventory_2" />
+        <StatCard label="Board Ranked" value={boardRanked} icon="castle" />
+        <StatCard label="Party Ranked" value={partyRanked} icon="celebration" />
       </div>
 
       {/* Owned games */}
       {ownedGames.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-3 text-lg font-bold text-zinc-900 dark:text-zinc-50">
+        <section className="flex flex-col gap-stack-compact">
+          <h2 className="font-display text-headline-lg text-on-surface">
             Collection
           </h2>
           <div className="flex flex-wrap gap-1.5">
@@ -197,7 +200,7 @@ export default async function UserProfilePage({ params }: PageProps) {
                   key={game.bgg_id}
                   href={`/games/${game.bgg_id}`}
                   title={game.name}
-                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 transition-opacity hover:opacity-80 dark:border-white/10 dark:bg-white/5"
+                  className="relative h-10 w-10 shrink-0 overflow-hidden rounded border border-outline-variant bg-surface-container-high transition-opacity hover:opacity-80"
                 >
                   {img ? (
                     <Image
@@ -208,7 +211,7 @@ export default async function UserProfilePage({ params }: PageProps) {
                       sizes="40px"
                     />
                   ) : (
-                    <span className="flex h-full w-full items-center justify-center text-[7px] leading-tight text-zinc-400">
+                    <span className="flex h-full w-full items-center justify-center text-[7px] leading-tight text-on-surface-variant">
                       {game.name.slice(0, 4)}
                     </span>
                   )}
@@ -216,12 +219,12 @@ export default async function UserProfilePage({ params }: PageProps) {
               );
             })}
           </div>
-        </div>
+        </section>
       )}
 
       {/* Favorites + Tags */}
       {(favoriteBoard || favoriteParty) && (
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-gutter sm:grid-cols-2">
           {favoriteBoard && (
             <FavoriteCard game={favoriteBoard} label="Favorite Board Game" />
           )}
@@ -232,18 +235,19 @@ export default async function UserProfilePage({ params }: PageProps) {
       )}
 
       {/* Wishlist */}
-      <section className="mb-8">
-        <h2 className="mb-4 text-lg font-bold text-zinc-900 dark:text-zinc-50">
-          🎁 Wishlist
+      <section className="flex flex-col gap-stack-compact">
+        <h2 className="flex items-center gap-2 font-display text-headline-lg text-on-surface">
+          <span className="material-symbols-outlined stat-icon text-[24px]">redeem</span>
+          Wishlist
         </h2>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
+        <div className="glass-card rounded-lg p-card-padding">
           {wishlist.length > 0 ? (
             <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
               {wishlist.map((item) => (
                 <Link
                   key={item.bggId}
                   href={`/games/${item.bggId}`}
-                  className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800"
+                  className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-surface-container-high"
                 >
                   {item.thumbnailUrl ? (
                     <Image
@@ -251,21 +255,21 @@ export default async function UserProfilePage({ params }: PageProps) {
                       alt={item.name}
                       width={40}
                       height={40}
-                      className="h-10 w-10 rounded border border-zinc-200 object-contain dark:border-white/10"
+                      className="h-10 w-10 rounded border border-outline-variant object-contain"
                     />
                   ) : (
-                    <div className="flex h-10 w-10 items-center justify-center rounded border border-zinc-200 bg-zinc-100 text-[8px] text-zinc-400 dark:border-white/10 dark:bg-white/5">
+                    <div className="flex h-10 w-10 items-center justify-center rounded border border-outline-variant bg-surface-container-high text-[8px] text-on-surface-variant">
                       ?
                     </div>
                   )}
-                  <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="text-sm font-medium text-on-surface">
                     {item.name}
                   </span>
                 </Link>
               ))}
             </div>
           ) : (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
+            <p className="text-sm text-on-surface-variant">
               {isOwnProfile
                 ? "No games on your wishlist yet."
                 : "No games on their wishlist yet."}
@@ -275,7 +279,7 @@ export default async function UserProfilePage({ params }: PageProps) {
       </section>
 
       {(boardTags.length > 0 || partyTags.length > 0) && (
-        <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-gutter sm:grid-cols-2">
           {boardTags.length > 0 && <TagsCard tags={boardTags} label="Top Board Game Categories" />}
           {partyTags.length > 0 && <TagsCard tags={partyTags} label="Top Party Game Categories" />}
         </div>
@@ -283,11 +287,12 @@ export default async function UserProfilePage({ params }: PageProps) {
 
       {/* Alignment */}
       {(boardAlignment || partyAlignment) && (
-        <section className="mb-8">
-          <h2 className="mb-4 text-lg font-bold text-zinc-900 dark:text-zinc-50">
-            Taste Twins & Sworn Enemies
+        <section className="flex flex-col gap-stack-compact">
+          <h2 className="flex items-center gap-2 font-display text-headline-lg text-on-surface">
+            <span className="material-symbols-outlined stat-icon text-[24px]">groups</span>
+            Taste Twins &amp; Sworn Enemies
           </h2>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-gutter sm:grid-cols-2">
             {boardAlignment && (
               <AlignmentCard
                 category="Board Games"
@@ -323,13 +328,14 @@ export default async function UserProfilePage({ params }: PageProps) {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: number }) {
+function StatCard({ label, value, icon }: { label: string; value: number; icon: string }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 text-center dark:border-white/[0.06] dark:bg-white/5">
-      <div className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
+    <div className="monster-card flex flex-col items-center gap-1 rounded-lg p-card-padding text-center">
+      <span className="material-symbols-outlined stat-icon text-[22px]">{icon}</span>
+      <div className="font-stat text-2xl font-bold text-on-surface">
         {value}
       </div>
-      <div className="text-xs text-zinc-500">{label}</div>
+      <div className="font-stat text-stat-label text-on-surface-variant">{label}</div>
     </div>
   );
 }
@@ -339,7 +345,7 @@ function FavoriteCard({ game, label }: { game: BoardGame; label: string }) {
   return (
     <Link
       href={`/games/${game.bgg_id}`}
-      className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-white p-4 transition-colors hover:border-zinc-300 dark:border-white/[0.06] dark:bg-white/5 dark:hover:border-zinc-700"
+      className="monster-card flex items-center gap-3 rounded-lg p-card-padding transition-colors hover:border-outline"
     >
       {imageUrl ? (
         <Image
@@ -347,16 +353,19 @@ function FavoriteCard({ game, label }: { game: BoardGame; label: string }) {
           alt={game.name}
           width={48}
           height={48}
-          className="h-12 w-12 rounded border border-zinc-200 object-contain dark:border-white/10"
+          className="h-12 w-12 rounded border border-outline-variant object-contain"
         />
       ) : (
-        <div className="flex h-12 w-12 items-center justify-center rounded border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5">
+        <div className="flex h-12 w-12 items-center justify-center rounded border border-outline-variant bg-surface-container-high">
           ?
         </div>
       )}
       <div>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">{label}</p>
-        <p className="font-semibold text-zinc-900 dark:text-zinc-50">{game.name}</p>
+        <p className="flex items-center gap-1 font-stat text-stat-label text-on-surface-variant">
+          <span className="material-symbols-outlined stat-icon text-[16px]">star</span>
+          {label}
+        </p>
+        <p className="font-display text-headline-lg-mobile text-on-surface">{game.name}</p>
       </div>
     </Link>
   );
@@ -364,13 +373,13 @@ function FavoriteCard({ game, label }: { game: BoardGame; label: string }) {
 
 function TagsCard({ tags, label }: { tags: string[]; label: string }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
-      <p className="mb-2 text-xs font-medium text-zinc-500 dark:text-zinc-400">{label}</p>
+    <div className="glass-card rounded-lg p-card-padding">
+      <p className="mb-2 font-stat text-stat-label text-on-surface-variant">{label}</p>
       <div className="flex flex-wrap gap-1.5">
         {tags.map((tag) => (
           <span
             key={tag}
-            className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-600 dark:bg-white/5 dark:text-zinc-400"
+            className="rune-chip rounded-full px-2.5 py-1 text-xs font-medium text-on-surface-variant"
           >
             {tag}
           </span>
@@ -390,14 +399,15 @@ function AlignmentCard({
   rivals: AlignmentEntry[];
 }) {
   return (
-    <div className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
-      <p className="mb-3 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+    <div className="glass-card rounded-lg p-card-padding">
+      <p className="mb-3 font-stat text-stat-label text-on-surface-variant">
         {category}
       </p>
       <div className="space-y-3">
         {allies.length > 0 && (
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-green-600 dark:text-green-400">
+            <p className="mb-1.5 flex items-center gap-1 font-stat text-stat-label text-secondary">
+              <span className="material-symbols-outlined text-[16px]">handshake</span>
               Taste Twins
             </p>
             <div className="space-y-1">
@@ -409,7 +419,8 @@ function AlignmentCard({
         )}
         {rivals.length > 0 && (
           <div>
-            <p className="mb-1.5 text-xs font-semibold text-red-600 dark:text-red-400">
+            <p className="mb-1.5 flex items-center gap-1 font-stat text-stat-label text-error">
+              <span className="material-symbols-outlined text-[16px]">swords</span>
               Sworn Enemies
             </p>
             <div className="space-y-1">
@@ -428,7 +439,7 @@ function AlignmentPerson({ entry }: { entry: AlignmentEntry }) {
   return (
     <Link
       href={`/users/${entry.userId}`}
-      className="flex items-center gap-2 rounded p-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800"
+      className="flex items-center gap-2 rounded p-1 transition-colors hover:bg-surface-container-high"
     >
       {entry.avatarUrl ? (
         <Image
@@ -439,11 +450,11 @@ function AlignmentPerson({ entry }: { entry: AlignmentEntry }) {
           className="h-5 w-5 rounded-full"
         />
       ) : (
-        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-zinc-200 text-[9px] font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+        <div className="flex h-5 w-5 items-center justify-center rounded-full bg-surface-container-highest text-[9px] font-medium text-on-surface-variant">
           {entry.displayName.charAt(0)}
         </div>
       )}
-      <span className="text-sm text-zinc-900 dark:text-zinc-100">
+      <span className="text-sm text-on-surface">
         {entry.displayName}
       </span>
     </Link>
@@ -461,11 +472,11 @@ function TierListSection({
   if (total === 0) return null;
 
   return (
-    <section className="mb-8">
-      <h2 className="mb-4 text-lg font-bold text-zinc-900 dark:text-zinc-50">
+    <section className="flex flex-col gap-stack-compact">
+      <h2 className="font-display text-headline-lg text-on-surface">
         {title}
       </h2>
-      <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
+      <div className="overflow-hidden rounded-lg border border-outline-variant">
         {TIERS.map((tier) => (
           <ReadOnlyTierRow
             key={tier}

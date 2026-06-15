@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Gloomhaven - Legendary Encounter</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@600;700&amp;family=Hanken+Grotesk:wght@400;500;600&amp;family=Geist:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#9f8e7c",
+                        "on-secondary-container": "#307000",
+                        "outline-variant": "#524535",
+                        "inverse-surface": "#e5e2e1",
+                        "secondary-fixed": "#80ff2c",
+                        "surface-dim": "#131313",
+                        "secondary-container": "#75fd00",
+                        "error-container": "#93000a",
+                        "tertiary-fixed": "#ffdad6",
+                        "surface-container-low": "#1c1b1b",
+                        "secondary-fixed-dim": "#67e100",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-container": "#704700",
+                        "on-tertiary-fixed-variant": "#930010",
+                        "tertiary-container": "#ffada5",
+                        "surface": "#131313",
+                        "inverse-primary": "#845400",
+                        "on-primary-fixed-variant": "#643f00",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed": "#410003",
+                        "on-secondary-fixed-variant": "#215100",
+                        "on-error": "#690005",
+                        "surface-tint": "#ffb95a",
+                        "primary-fixed-dim": "#ffb95a",
+                        "on-surface-variant": "#d6c3b0",
+                        "surface-container": "#20201f",
+                        "primary-fixed": "#ffddb6",
+                        "background": "#131313",
+                        "tertiary-fixed-dim": "#ffb3ac",
+                        "on-primary": "#462a00",
+                        "tertiary": "#ffd4d0",
+                        "on-secondary": "#153800",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-bright": "#393939",
+                        "on-tertiary": "#680008",
+                        "on-secondary-fixed": "#092100",
+                        "inverse-on-surface": "#313030",
+                        "primary-container": "#ffb347",
+                        "on-primary-fixed": "#2a1800",
+                        "on-tertiary-container": "#a30113",
+                        "on-surface": "#e5e2e1",
+                        "surface-variant": "#353535",
+                        "surface-container-highest": "#353535",
+                        "on-background": "#e5e2e1",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#f8ffec",
+                        "primary": "#ffd7a9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "stack-loose": "48px",
+                        "margin": "32px",
+                        "card-padding": "16px",
+                        "stack-compact": "8px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "stat-label": ["Geist", "sans-serif"],
+                        "headline-lg": ["EB Garamond", "serif"],
+                        "display-lg": ["EB Garamond", "serif"],
+                        "body-md": ["Hanken Grotesk", "sans-serif"],
+                        "headline-lg-mobile": ["EB Garamond", "serif"],
+                        "caption": ["Hanken Grotesk", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "stat-label": ["14px", { "lineHeight": "1", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "1.4", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .torch-glow {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(255, 179, 71, 0.15) 0%, rgba(19, 19, 19, 0) 70%);
+            border-radius: 50%;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            transition: transform 0.1s ease-out;
+            z-index: 10;
+        }
+
+        .stone-texture {
+            background-color: #131313;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)' opacity='0.05'/%3E%3C/svg%3E");
+        }
+
+        .monster-card {
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.8), 0 10px 30px rgba(0,0,0,0.5);
+            border: 1px solid var(--color-outline-variant);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .monster-card::before {
+            content: '';
+            position: absolute;
+            top: 8px; left: 8px; right: 8px; bottom: 8px;
+            border: 1px solid rgba(159, 142, 124, 0.3);
+            pointer-events: none;
+            z-index: 5;
+        }
+
+        .bevel-border {
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            border-left: 1px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.8);
+            border-right: 1px solid rgba(0, 0, 0, 0.8);
+        }
+
+        .btn-stone {
+            background: linear-gradient(180deg, #353535 0%, #20201f 100%);
+            transition: all 0.2s ease;
+        }
+
+        .btn-stone:hover {
+            box-shadow: inset 0 0 15px rgba(255, 179, 71, 0.2);
+        }
+
+        .btn-primary-stone {
+            background: linear-gradient(180deg, #845400 0%, #462a00 100%);
+            border: 1px solid #ffb347;
+            box-shadow: 0 4px 10px rgba(255, 179, 71, 0.2);
+        }
+
+        .btn-primary-stone:hover {
+            box-shadow: inset 0 0 20px rgba(255, 215, 169, 0.4), 0 4px 15px rgba(255, 179, 71, 0.4);
+        }
+
+        .stat-bar-container {
+            background: #0e0e0e;
+            border-radius: 2px;
+            overflow: hidden;
+            border: 1px solid #353535;
+        }
+
+        .stat-bar-fill {
+            background: linear-gradient(90deg, #462a00 0%, #ffb347 100%);
+            height: 100%;
+            position: relative;
+        }
+
+        .stat-bar-fill::after {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(0,0,0,0.5) 10px, rgba(0,0,0,0.5) 12px);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface stone-texture min-h-screen flex flex-col relative overflow-x-hidden">
+<div class="torch-glow hidden md:block" id="torch"></div>
+<!-- TopNavBar -->
+<nav class="bg-surface dark:bg-surface border-b border-outline-variant shadow-md flex justify-between items-center w-full px-margin py-4 max-w-[1280px] mx-auto z-50 sticky top-0">
+<div class="font-display-lg text-display-lg font-bold text-primary dark:text-primary tracking-tighter">TABLE MONSTERS</div>
+<div class="hidden md:flex space-x-margin">
+<a class="text-on-surface-variant font-medium hover:text-primary-container transition-colors duration-300" href="#">Library</a>
+<a class="text-on-surface-variant font-medium hover:text-primary-container transition-colors duration-300" href="#">Trade</a>
+<a class="text-primary font-bold border-b-2 border-primary pb-1" href="#">Quests</a>
+<a class="text-on-surface-variant font-medium hover:text-primary-container transition-colors duration-300" href="#">Vault</a>
+</div>
+<div class="flex items-center">
+<button class="text-primary dark:text-primary hover:text-primary-container active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[24px]">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- Main Content -->
+<main class="flex-grow w-full max-w-[1280px] mx-auto px-margin py-stack-loose grid grid-cols-1 md:grid-cols-12 gap-gutter z-20">
+<!-- Left Column: Monster Card (Boardgame) -->
+<div class="md:col-span-5 flex flex-col space-y-stack-compact">
+<div class="monster-card bg-surface-container-low rounded-lg flex flex-col h-[600px]">
+<!-- Rarity Header -->
+<div class="bg-surface-container-high py-2 px-4 flex justify-between items-center border-b border-outline-variant">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary text-[18px]" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="font-stat-label text-stat-label text-primary uppercase tracking-widest">Legendary Encounter</span>
+</div>
+<span class="font-stat-label text-stat-label text-on-surface-variant">LVL 9</span>
+</div>
+<!-- Artwork Area -->
+<div class="h-[60%] relative overflow-hidden bg-black">
+<img alt="..." class="w-full h-full object-cover opacity-80 mix-blend-luminosity hover:mix-blend-normal transition-all duration-700" src="..."/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+</div>
+<!-- Stat Area -->
+<div class="h-[40%] p-card-padding flex flex-col justify-between">
+<div>
+<h1 class="font-display-lg text-display-lg text-primary mb-2 leading-none">Gloomhaven</h1>
+<p class="font-caption text-caption text-on-surface-variant uppercase tracking-wider mb-4">Tactical Combat Campaign</p>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-1">
+<div class="flex justify-between items-end">
+<span class="font-stat-label text-stat-label text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">swords</span> Complexity
+                                </span>
+<span class="font-stat-label text-stat-label text-primary">3.89/5</span>
+</div>
+<div class="stat-bar-container h-3 w-full">
+<div class="stat-bar-fill w-[78%]"></div>
+</div>
+</div>
+<div class="space-y-1">
+<div class="flex justify-between items-end">
+<span class="font-stat-label text-stat-label text-on-surface-variant flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">hourglass_empty</span> Time
+                                </span>
+<span class="font-stat-label text-stat-label text-secondary-container">60-120m</span>
+</div>
+<div class="stat-bar-container h-3 w-full">
+<div class="stat-bar-fill w-[60%]" style="background: linear-gradient(90deg, #153800 0%, #75fd00 100%);"></div>
+</div>
+</div>
+</div>
+<div class="flex flex-wrap gap-2 mt-4">
+<span class="bg-surface-dim border border-outline-variant text-primary px-2 py-1 rounded font-stat-label text-[10px] uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">groups</span> 1-4 Players
+                        </span>
+<span class="bg-surface-dim border border-outline-variant text-tertiary px-2 py-1 rounded font-stat-label text-[10px] uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">calendar_today</span> Age 14+
+                        </span>
+<span class="bg-surface-dim border border-outline-variant text-secondary-fixed px-2 py-1 rounded font-stat-label text-[10px] uppercase flex items-center gap-1">
+<span class="material-symbols-outlined text-[12px]">star</span> Top 100
+                        </span>
+</div>
+</div>
+</div>
+<div class="flex gap-4">
+<button class="btn-stone bevel-border flex-1 py-3 px-4 rounded text-center font-stat-label text-stat-label text-on-surface hover:text-primary transition-colors">
+<span class="material-symbols-outlined align-middle mr-2">favorite</span> Add to Vault
+                </button>
+<button class="btn-primary-stone flex-1 py-3 px-4 rounded text-center font-stat-label text-stat-label text-primary font-bold">
+                    Acquire Artifact
+                </button>
+</div>
+</div>
+<!-- Right Column: Description & Mechanics -->
+<div class="md:col-span-7 flex flex-col space-y-margin">
+<!-- Ancient Scrolls (Description) -->
+<div class="bg-surface-container-highest p-card-padding rounded-lg bevel-border relative overflow-hidden">
+<div class="absolute -top-10 -right-10 w-32 h-32 bg-primary-container opacity-5 blur-3xl rounded-full"></div>
+<h2 class="font-headline-lg text-headline-lg text-primary border-b border-outline-variant pb-2 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined">menu_book</span> Ancient Scrolls
+                </h2>
+<div class="font-body-md text-body-md text-on-surface-variant space-y-4">
+<p>Gloomhaven is a game of Euro-inspired tactical combat ...</p>
+<p>Players must work together out of necessity to clear out menacing dungeons ...</p>
+</div>
+</div>
+<!-- Battle Plan (Rules Summary) -->
+<div class="bg-surface-container p-card-padding rounded-lg bevel-border">
+<h2 class="font-headline-lg text-headline-lg text-secondary-container border-b border-outline-variant pb-2 mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined">strategy</span> Battle Plan
+                </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="bg-surface-dim p-4 rounded border border-outline-variant">
+<h3 class="font-stat-label text-stat-label text-primary mb-2 uppercase">Card-Driven Combat</h3>
+<p class="font-caption text-caption text-on-surface-variant">Every turn, play two cards from your hand ...</p>
+</div>
+<div class="bg-surface-dim p-4 rounded border border-outline-variant">
+<h3 class="font-stat-label text-stat-label text-primary mb-2 uppercase">Persistent World</h3>
+<p class="font-caption text-caption text-on-surface-variant">Your actions leave permanent marks ...</p>
+</div>
+<div class="bg-surface-dim p-4 rounded border border-outline-variant">
+<h3 class="font-stat-label text-stat-label text-primary mb-2 uppercase">Exhaustion Mechanic</h3>
+<p class="font-caption text-caption text-on-surface-variant">Your hand of cards is your stamina ...</p>
+</div>
+<div class="bg-surface-dim p-4 rounded border border-outline-variant">
+<h3 class="font-stat-label text-stat-label text-primary mb-2 uppercase">No Dice</h3>
+<p class="font-caption text-caption text-on-surface-variant">Combat variance is handled by an attack modifier deck ...</p>
+</div>
+</div>
+</div>
+<!-- Components/Loot -->
+<div class="bg-surface p-card-padding rounded-lg border border-outline-variant shadow-inner">
+<h3 class="font-stat-label text-stat-label text-outline mb-4 uppercase tracking-widest flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">inventory_2</span> Box Contents
+                </h3>
+<div class="flex flex-wrap gap-2">
+<span class="bg-surface-container-high px-3 py-1 rounded-full font-caption text-caption text-on-surface border border-outline-variant">17 Playable Classes</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-full font-caption text-caption text-on-surface border border-outline-variant">47 Monster Types</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-full font-caption text-caption text-on-surface border border-outline-variant">95 Scenarios</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-full font-caption text-caption text-on-surface border border-outline-variant">1700+ Cards</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-full font-caption text-caption text-on-surface border border-outline-variant">Map Board</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest border-t border-outline-variant w-full mt-auto">
+<div class="flex flex-col md:flex-row justify-between items-center px-margin py-stack-loose w-full max-w-[1280px] mx-auto opacity-80 hover:opacity-100 transition-opacity">
+<div class="font-headline-lg text-headline-lg text-outline mb-4 md:mb-0">© 2024 TABLE MONSTERS - FORGED IN THE DUNGEON</div>
+<div class="flex space-x-6">
+<a class="font-caption text-caption text-on-surface-variant hover:text-secondary-container transition-colors" href="#">Tome of Rules</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-secondary-container transition-colors" href="#">Privacy Rune</a>
+<a class="font-caption text-caption text-on-surface-variant hover:text-secondary-container transition-colors" href="#">Merchant Terms</a>
+</div>
+</div>
+</footer>
+<script>
+        document.addEventListener('mousemove', function(e) {
+            const torch = document.getElementById('torch');
+            if(torch) { torch.style.transform = `translate(${e.clientX - 150}px, ${e.clientY - 150}px)`; }
+        });
+    </script>
+</body></html>

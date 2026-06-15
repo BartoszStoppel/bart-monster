@@ -90,11 +90,11 @@ function UnrankedRow({
 
   return (
     <div
-      className={`mt-4 rounded-lg border border-dashed border-zinc-300 dark:border-white/10 ${
-        isOver ? "bg-zinc-100 dark:bg-white/10" : ""
-      } ${selectedId !== null ? "bg-zinc-50 dark:bg-white/5" : ""}`}
+      className={`mt-4 rounded-lg border border-dashed border-outline-variant ${
+        isOver ? "bg-surface-container-highest" : ""
+      } ${selectedId !== null ? "bg-surface-container-high" : ""}`}
     >
-      <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+      <div className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-on-surface-variant">
         Unranked — tap to select, then tap a tier to place
       </div>
       <SortableContext
@@ -118,7 +118,7 @@ function UnrankedRow({
             />
           ))}
           {expansions.length === 0 && (
-            <span className="text-xs text-zinc-400 dark:text-zinc-500">
+            <span className="text-xs text-on-surface-variant">
               All expansions ranked!
             </span>
           )}
@@ -315,15 +315,15 @@ export function ExpansionTierBoard({
   return (
     <div>
       {saveError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+        <div className="mb-4 rounded-lg border border-error bg-error-container/15 p-3 text-sm text-error">
           {saveError}
         </div>
       )}
 
       <div className="mb-2 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
+        <div className="flex items-center gap-2 text-xs text-on-surface-variant">
           <span className="font-medium">Best</span>
-          <div className="h-1 w-16 rounded-full bg-gradient-to-r from-emerald-500 to-rose-500" />
+          <div className="h-1 w-16 rounded-full bg-gradient-to-r from-secondary-container to-error-container" />
           <span className="font-medium">Worst</span>
         </div>
         {dirty && (
@@ -331,14 +331,14 @@ export function ExpansionTierBoard({
             <button
               onClick={handleDiscard}
               disabled={saving}
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-white/10 dark:text-zinc-400 dark:hover:bg-zinc-800"
+              className="stone-button rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-50"
             >
               Discard
             </button>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="rounded-md bg-gradient-to-r from-cyan-500 to-cyan-600 px-3 py-1.5 text-sm font-medium text-white shadow-lg shadow-cyan-500/25 transition-colors hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
+              className="stone-button rounded-md px-3 py-1.5 text-sm font-medium disabled:opacity-50"
             >
               {saving ? "Saving..." : "Save"}
             </button>
@@ -354,7 +354,7 @@ export function ExpansionTierBoard({
         onDragOver={handleDragOver}
         onDragEnd={handleDragEnd}
       >
-        <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
+        <div className="overflow-hidden rounded-lg border border-outline-variant">
           {TIERS.map((tier) => (
             <ExpansionTierRow
               key={tier}

@@ -14,25 +14,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-zinc-50 dark:bg-[#080b12]">
-      {/* Ambient gradient orbs */}
-      <div className="pointer-events-none absolute -top-40 -left-40 h-[500px] w-[500px] rounded-full bg-cyan-500/20 blur-[120px]" />
-      <div className="pointer-events-none absolute -bottom-40 -right-40 h-[400px] w-[400px] rounded-full bg-violet-500/15 blur-[120px]" />
-      <div className="pointer-events-none absolute top-1/2 left-1/2 h-[300px] w-[300px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-cyan-400/10 blur-[80px]" />
-
-      <div className="glass-card relative w-full max-w-sm rounded-2xl p-8 shadow-2xl shadow-cyan-500/5">
-        <div className="mb-8 text-center">
-          <h1 className="bg-gradient-to-r from-cyan-400 to-violet-400 bg-clip-text text-3xl font-bold text-transparent dark:from-cyan-300 dark:to-violet-400">
-            Board Game Hub
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden px-margin py-stack-loose">
+      <div className="monster-card monster-card-frame relative z-10 flex w-full max-w-md flex-col items-center gap-stack-loose rounded-lg p-card-padding sm:p-10 text-center">
+        <header className="flex flex-col items-center gap-stack-compact">
+          <span className="material-symbols-outlined stat-icon text-[40px]">door_open</span>
+          <h1 className="font-display text-display-lg leading-none text-primary">
+            TABLE MONSTERS
           </h1>
-          <p className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-            Rate and discover board games with your group
+          <p className="max-w-sm text-on-surface-variant">
+            The dungeon gate is barred. Speak the password to enter the codex,
+            rate the beasts, and claim your place in the guild.
           </p>
-        </div>
+        </header>
 
         <button
           onClick={signInWithGoogle}
-          className="glass-card flex w-full items-center justify-center gap-3 rounded-xl px-4 py-3.5 text-sm font-medium text-zinc-700 transition-all hover:shadow-lg dark:text-zinc-200 dark:hover:border-white/10 dark:hover:bg-white/10"
+          className="stone-button flex w-full items-center justify-center gap-3 rounded-md px-6 py-3.5 font-stat text-stat-label"
         >
           <svg className="h-5 w-5" viewBox="0 0 24 24">
             <path
@@ -54,6 +51,10 @@ export default function LoginPage() {
           </svg>
           Sign in with Google
         </button>
+
+        <p className="font-caption text-caption text-outline">
+          Forged in the dungeon — invite only.
+        </p>
       </div>
     </div>
   );

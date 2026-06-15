@@ -236,7 +236,7 @@ function isSignoff(text: string): boolean {
 function StoryParagraph({ text }: { text: string }) {
   if (isSignoff(text)) {
     return (
-      <p className="mt-6 text-right font-serif text-base italic text-zinc-900 dark:text-zinc-100">
+      <p className="mt-6 text-right font-display text-base italic text-on-surface">
         {text}
       </p>
     );
@@ -244,14 +244,14 @@ function StoryParagraph({ text }: { text: string }) {
 
   if (isSoundEffect(text)) {
     return (
-      <p className="my-3 text-center font-mono text-xs tracking-widest text-amber-700/60 dark:text-amber-400/50">
+      <p className="my-3 text-center font-stat text-xs tracking-widest text-primary/60">
         {text}
       </p>
     );
   }
 
   return (
-    <p className="text-[15px] leading-relaxed text-zinc-700 dark:text-zinc-300">
+    <p className="text-[15px] leading-relaxed text-on-surface-variant">
       {text}
     </p>
   );
@@ -261,38 +261,47 @@ function EpisodeCard({ story }: { story: FurtchStory }) {
   return (
     <article className="group relative">
       {/* Timeline connector */}
-      <div className="absolute left-6 top-0 hidden h-full w-px bg-gradient-to-b from-amber-300 to-amber-100 dark:from-amber-700 dark:to-amber-900/0 md:block" />
+      <div className="absolute left-6 top-0 hidden h-full w-px bg-gradient-to-b from-primary-container to-primary-container/0 md:block" />
 
       <div className="relative flex gap-6">
-        {/* Episode marker */}
+        {/* Episode marker — a struck coin minted from torchlight */}
         <div className="hidden shrink-0 md:block">
-          <div className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full border-2 border-amber-400 bg-amber-50 font-mono text-sm font-bold text-amber-800 shadow-sm dark:border-amber-600 dark:bg-amber-950 dark:text-amber-300">
+          <span
+            title={`Episode ${story.episode}`}
+            className="relative z-10 flex h-12 w-12 items-center justify-center rounded-full font-stat text-sm font-bold text-black/75"
+            style={{
+              background: "radial-gradient(circle at 36% 28%, #ffeec2 0%, #f3bd4e 46%, #9c6614 100%)",
+              border: "1px solid #facc6b",
+              boxShadow:
+                "inset 0 1px 1.5px rgba(255,255,255,0.65), inset 0 -1px 1.5px rgba(0,0,0,0.35), 0 1px 2px rgba(0,0,0,0.6)",
+            }}
+          >
             {story.episode}
-          </div>
+          </span>
         </div>
 
         {/* Story card */}
-        <div className="flex-1 overflow-hidden rounded-xl border border-zinc-200/80 bg-gradient-to-br from-white to-amber-50/30 shadow-sm transition-shadow hover:shadow-md dark:border-white/[0.06] dark:from-zinc-900 dark:to-amber-950/10">
+        <div className="monster-card flex-1 overflow-hidden rounded-lg transition-shadow">
           {/* Header */}
-          <div className="border-b border-zinc-100 bg-white/60 px-6 py-4 dark:border-white/[0.06] dark:bg-white/5">
+          <div className="border-b border-outline-variant bg-surface-container-low px-6 py-4">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <div className="mb-1 flex items-center gap-2 md:hidden">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-100 font-mono text-xs font-bold text-amber-800 dark:bg-amber-950 dark:text-amber-300">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-primary-container/20 font-stat text-xs font-bold text-primary">
                     {story.episode}
                   </span>
-                  <span className="text-xs font-medium uppercase tracking-wider text-amber-700/60 dark:text-amber-400/50">
+                  <span className="font-stat text-xs uppercase tracking-wider text-primary/60">
                     Episode {story.episode}
                   </span>
                 </div>
-                <span className="hidden text-xs font-medium uppercase tracking-wider text-amber-700/60 dark:text-amber-400/50 md:block">
+                <span className="hidden font-stat text-xs uppercase tracking-wider text-primary/60 md:block">
                   Episode {story.episode}
                 </span>
-                <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+                <h2 className="font-display text-headline-lg-mobile text-on-surface">
                   {story.title}
                 </h2>
               </div>
-              <time className="shrink-0 rounded-full bg-zinc-100 px-3 py-1 text-xs font-medium text-zinc-500 dark:bg-white/5 dark:text-zinc-400">
+              <time className="rune-chip shrink-0 rounded-full px-3 py-1 font-stat text-xs text-on-surface-variant">
                 {story.date}
               </time>
             </div>
@@ -303,7 +312,7 @@ function EpisodeCard({ story }: { story: FurtchStory }) {
             {story.paragraphs.map((p, i) => (
               <StoryParagraph key={i} text={p} />
             ))}
-            <p className="mt-6 text-right font-serif text-base italic text-zinc-900 dark:text-zinc-100">
+            <p className="mt-6 text-right font-display text-base italic text-on-surface">
               — Furtch
             </p>
           </div>
@@ -339,20 +348,18 @@ export default async function FurtchPage() {
   const stories = personalizeStories(displayName);
 
   return (
-    <div className="mx-auto max-w-2xl">
-      {/* Header */}
-      <div className="mb-10 text-center">
-        <div className="mb-3 text-4xl">🪲</div>
-        <h1 className="mb-2 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-50">
-          The Furtch Chronicles
-        </h1>
-        <p className="text-sm text-zinc-500 dark:text-zinc-400">
+    <div className="mx-auto flex max-w-2xl flex-col gap-stack-loose">
+      {/* Header band */}
+      <section className="flex flex-col items-center gap-stack-compact text-center">
+        <div className="text-4xl">🪲</div>
+        <h1 className="font-display text-display-lg text-primary">The Furtch Chronicles</h1>
+        <p className="max-w-2xl text-on-surface-variant">
           Dispatches from the roof. Read at your own risk.
         </p>
-        <p className="mt-1 font-mono text-xs tracking-widest text-amber-700/40 dark:text-amber-400/30">
+        <p className="font-stat text-xs tracking-widest text-primary/40">
           smk smk smk
         </p>
-      </div>
+      </section>
 
       {/* Stories timeline */}
       <div className="space-y-8">
@@ -362,12 +369,12 @@ export default async function FurtchPage() {
       </div>
 
       {/* Footer teaser */}
-      <div className="mt-12 mb-4 text-center">
-        <div className="inline-block rounded-full border border-dashed border-zinc-300 px-5 py-2.5 dark:border-white/10">
-          <p className="text-sm italic text-zinc-400 dark:text-zinc-500">
+      <div className="mb-4 text-center">
+        <div className="inline-block rounded-full border border-dashed border-outline-variant px-5 py-2.5">
+          <p className="text-sm italic text-on-surface-variant">
             Furtch will return.
           </p>
-          <p className="font-mono text-xs tracking-widest text-amber-700/40 dark:text-amber-400/30">
+          <p className="font-stat text-xs tracking-widest text-primary/40">
             schklp.
           </p>
         </div>

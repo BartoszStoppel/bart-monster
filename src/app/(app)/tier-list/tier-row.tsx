@@ -23,12 +23,12 @@ export function TierRow({ tier, games, selectedBggId, onTileTap, onTierTap }: Ti
 
   return (
     <div
-      className={`flex min-h-[4.5rem] items-stretch border-b border-zinc-200 dark:border-white/10 ${
-        isOver ? "bg-zinc-100 dark:bg-white/10" : ""
-      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-white/5" : ""}`}
+      className={`flex min-h-[4.5rem] items-stretch border-b border-outline-variant ${
+        isOver ? "bg-surface-container-highest" : ""
+      } ${selectedBggId !== null ? "bg-surface-container-high" : ""}`}
     >
       <div
-        className={`flex w-12 shrink-0 cursor-pointer items-center justify-center text-lg font-bold text-white ${TIER_COLORS[tier]}`}
+        className={`flex w-12 shrink-0 cursor-pointer items-center justify-center font-stat text-lg font-bold text-white shadow-[inset_-1px_0_0_rgba(0,0,0,0.3),inset_1px_0_0_rgba(255,255,255,0.1)] ${TIER_COLORS[tier]}`}
         onClick={() => onTierTap(tier as Tier)}
       >
         {tier}

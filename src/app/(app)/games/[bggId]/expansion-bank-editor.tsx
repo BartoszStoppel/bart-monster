@@ -79,23 +79,23 @@ export function ExpansionBankEditor({
   }
 
   return (
-    <div className="rounded-lg border border-amber-300 bg-amber-50/50 p-4 dark:border-amber-500/30 dark:bg-amber-500/5">
-      <h3 className="mb-3 text-sm font-semibold text-amber-800 dark:text-amber-300">
+    <div className="rounded-lg border border-primary/40 bg-primary-container/5 p-4">
+      <h3 className="mb-3 text-sm font-semibold text-primary">
         Manage expansion word bank (admin)
       </h3>
 
-      {error && <p className="mb-3 text-xs text-red-500">{error}</p>}
+      {error && <p className="mb-3 text-xs text-error">{error}</p>}
 
       {bank.length > 0 && (
         <div className="mb-4">
-          <p className="mb-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <p className="mb-1.5 text-xs font-medium text-on-surface-variant">
             In the word bank
           </p>
           <div className="flex flex-wrap gap-1.5">
             {bank.map((b) => (
               <span
                 key={b.id}
-                className="inline-flex items-center gap-1.5 rounded-md border border-zinc-200 bg-white px-2 py-1 text-xs text-zinc-700 dark:border-white/10 dark:bg-white/5 dark:text-zinc-200"
+                className="inline-flex items-center gap-1.5 rounded-md border border-outline-variant bg-surface-container-high px-2 py-1 text-xs text-on-surface"
               >
                 {b.name}
                 <button
@@ -103,7 +103,7 @@ export function ExpansionBankEditor({
                     run(() => removeExpansionFromBank({ expansionId: b.id, gameBggId }))
                   }
                   disabled={busy}
-                  className="text-zinc-400 transition-colors hover:text-red-500 disabled:opacity-50"
+                  className="text-on-surface-variant transition-colors hover:text-error disabled:opacity-50"
                   aria-label={`Remove ${b.name}`}
                 >
                   ✕
@@ -116,14 +116,14 @@ export function ExpansionBankEditor({
 
       {availableBgg.length > 0 && (
         <div className="mb-4">
-          <p className="mb-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <p className="mb-1.5 text-xs font-medium text-on-surface-variant">
             Add from BGG
           </p>
-          <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded border border-zinc-200 p-2 dark:border-white/10">
+          <div className="flex max-h-40 flex-col gap-1 overflow-y-auto rounded border border-outline-variant p-2">
             {availableBgg.map((e) => (
               <label
                 key={e.id}
-                className="flex cursor-pointer items-center gap-2 text-xs text-zinc-700 dark:text-zinc-200"
+                className="flex cursor-pointer items-center gap-2 text-xs text-on-surface"
               >
                 <input
                   type="checkbox"
@@ -138,7 +138,7 @@ export function ExpansionBankEditor({
           <button
             onClick={handleAddSelected}
             disabled={busy || selectedBgg.size === 0}
-            className="mt-2 rounded-md bg-gradient-to-r from-cyan-500 to-cyan-600 px-3 py-1.5 text-xs font-medium text-white shadow-lg shadow-cyan-500/25 transition-colors hover:brightness-110 disabled:opacity-50"
+            className="stone-button mt-2 rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50"
           >
             Add selected ({selectedBgg.size})
           </button>
@@ -146,7 +146,7 @@ export function ExpansionBankEditor({
       )}
 
       <div>
-        <p className="mb-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        <p className="mb-1.5 text-xs font-medium text-on-surface-variant">
           Add a custom expansion
         </p>
         <div className="flex gap-2">
@@ -161,12 +161,12 @@ export function ExpansionBankEditor({
               }
             }}
             placeholder="e.g. Cities & Knights"
-            className="flex-1 rounded border border-zinc-300 bg-white px-2 py-1.5 text-xs text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
+            className="carved-input flex-1 rounded px-2 py-1.5 text-xs"
           />
           <button
             onClick={handleAddCustom}
             disabled={busy || customName.trim().length === 0}
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-100 disabled:opacity-50 dark:border-white/10 dark:text-zinc-200 dark:hover:bg-zinc-800"
+            className="stone-button rounded-md px-3 py-1.5 text-xs font-medium disabled:opacity-50"
           >
             Add
           </button>

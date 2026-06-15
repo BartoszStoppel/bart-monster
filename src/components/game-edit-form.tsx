@@ -80,18 +80,18 @@ export function GameEditForm({ game, onClose, onSaved }: GameEditFormProps) {
   return (
     <div
       ref={formRef}
-      className="absolute top-0 left-0 z-50 w-full rounded-lg border border-zinc-200 bg-white p-3 shadow-xl dark:border-white/10 dark:bg-white/5"
+      className="glass-card absolute top-0 left-0 z-50 w-full rounded-lg p-3 shadow-xl"
     >
-      <h4 className="mb-2 truncate text-xs font-semibold text-zinc-900 dark:text-zinc-50">
+      <h4 className="mb-2 truncate text-xs font-semibold text-on-surface">
         Edit {game.name}
       </h4>
       <form onSubmit={handleSubmit} className="flex flex-col gap-2">
         <label className="flex flex-col gap-0.5">
-          <span className="text-[10px] text-zinc-500 dark:text-zinc-400">Category</span>
+          <span className="text-[10px] text-on-surface-variant">Category</span>
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value as "party" | "board")}
-            className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
+            className="carved-input rounded px-2 py-1 text-xs"
           >
             <option value="board">Board Game</option>
             <option value="party">Party Game</option>
@@ -99,51 +99,51 @@ export function GameEditForm({ game, onClose, onSaved }: GameEditFormProps) {
         </label>
         <div className="grid grid-cols-2 gap-2">
           <label className="flex flex-col gap-0.5">
-            <span className="text-[10px] text-zinc-500 dark:text-zinc-400">Min Players</span>
+            <span className="text-[10px] text-on-surface-variant">Min Players</span>
             <input
               type="number"
               value={minPlayers}
               onChange={(e) => setMinPlayers(e.target.value)}
               onBlur={() => clampOnBlur(minPlayers, 1, 99, setMinPlayers)}
-              className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
+              className="carved-input rounded px-2 py-1 text-xs"
             />
           </label>
           <label className="flex flex-col gap-0.5">
-            <span className="text-[10px] text-zinc-500 dark:text-zinc-400">Max Players</span>
+            <span className="text-[10px] text-on-surface-variant">Max Players</span>
             <input
               type="number"
               value={maxPlayers}
               onChange={(e) => setMaxPlayers(e.target.value)}
               onBlur={() => clampOnBlur(maxPlayers, 1, 99, setMaxPlayers)}
-              className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
+              className="carved-input rounded px-2 py-1 text-xs"
             />
           </label>
         </div>
         <label className="flex flex-col gap-0.5">
-          <span className="text-[10px] text-zinc-500 dark:text-zinc-400">Play Time (min)</span>
+          <span className="text-[10px] text-on-surface-variant">Play Time (min)</span>
           <input
             type="number"
             value={playingTime}
             onChange={(e) => setPlayingTime(e.target.value)}
             onBlur={() => clampOnBlur(playingTime, 1, 999, setPlayingTime)}
-            className="rounded border border-zinc-300 bg-white px-2 py-1 text-xs text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
+            className="carved-input rounded px-2 py-1 text-xs"
           />
         </label>
         {error && (
-          <p className="text-[10px] text-red-500">{error}</p>
+          <p className="text-[10px] text-error">{error}</p>
         )}
         <div className="flex gap-2">
           <button
             type="submit"
             disabled={saving}
-            className="flex-1 rounded bg-gradient-to-r from-cyan-500 to-cyan-600 px-2 py-1 text-xs font-medium text-white transition-colors shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
+            className="stone-button flex-1 rounded px-2 py-1 text-xs font-medium transition-colors disabled:opacity-50"
           >
             {saving ? "Saving..." : "Save"}
           </button>
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded border border-zinc-300 px-2 py-1 text-xs font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className="flex-1 rounded border border-outline-variant px-2 py-1 text-xs font-medium text-on-surface-variant transition-colors hover:bg-surface-container-high"
           >
             Cancel
           </button>

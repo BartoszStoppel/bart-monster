@@ -4,35 +4,80 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { GameEditForm } from "./game-edit-form";
-import { useDominantColor } from "@/lib/use-dominant-color";
+import { getRarity, RARITY_BADGE } from "@/lib/rarity";
 import type { BoardGame } from "@/types/database";
 import type { GameBadges, CategoryBadges } from "@/app/(app)/sortable-game-grid";
+
+// Placement medals — Material Symbols `military_tech` tinted gold/silver/bronze
+// for top-3, and a `skull` for last place. Same icon pack as the rest of the
+// card, just recolored; the medal color carries the rank, tooltip the detail.
+const MEDAL: Record<"gold" | "silver" | "bronze", string> = {
+  gold: "#f3bd4e",
+  silver: "#c5cad0",
+  bronze: "#c47b3a",
+};
+
+function Coin({
+  metal,
+  count,
+  title,
+}: {
+  metal: keyof typeof MEDAL;
+  count: number;
+  title: string;
+}) {
+  if (count === 0) return null;
+  return (
+    <span title={title} className="flex items-center gap-0.5">
+      <span
+        className="material-symbols-outlined text-[18px] drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]"
+        style={{ color: MEDAL[metal] }}
+      >
+        military_tech
+      </span>
+      {count > 1 && (
+        <span className="font-stat text-[10px] font-bold text-on-surface drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+          ×{count}
+        </span>
+      )}
+    </span>
+  );
+}
+
+function CullCoin({ count, title }: { count: number; title: string }) {
+  if (count === 0) return null;
+  return (
+    <span title={title} className="flex items-center gap-0.5">
+      <span className="material-symbols-outlined text-[18px] text-on-surface-variant drop-shadow-[0_1px_2px_rgba(0,0,0,0.7)]">
+        skull
+      </span>
+      {count > 1 && (
+        <span className="font-stat text-[10px] font-bold text-on-surface drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+          ×{count}
+        </span>
+      )}
+    </span>
+  );
+}
 
 function BadgeRow({ cat, label }: { cat: CategoryBadges; label: string }) {
   const hasBadges = cat.gold.length > 0 || cat.silver.length > 0 || cat.bronze.length > 0 || cat.trash.length > 0;
   if (!hasBadges) return null;
   return (
-    <div className="flex gap-0.5">
-      {cat.gold.length > 0 && (
-        <span className="flex items-center rounded-md bg-black/60 px-1 py-0.5 text-[10px] leading-none shadow-lg backdrop-blur-sm" title={`#1 ${label} game for ${cat.gold.join(", ")}`}>
-          <span>🥇</span>{cat.gold.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.gold.length}</span>}
-        </span>
-      )}
-      {cat.silver.length > 0 && (
-        <span className="flex items-center rounded-md bg-black/60 px-1 py-0.5 text-[10px] leading-none shadow-lg backdrop-blur-sm" title={`#2 ${label} game for ${cat.silver.join(", ")}`}>
-          <span>🥈</span>{cat.silver.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.silver.length}</span>}
-        </span>
-      )}
-      {cat.bronze.length > 0 && (
-        <span className="flex items-center rounded-md bg-black/60 px-1 py-0.5 text-[10px] leading-none shadow-lg backdrop-blur-sm" title={`#3 ${label} game for ${cat.bronze.join(", ")}`}>
-          <span>🥉</span>{cat.bronze.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.bronze.length}</span>}
-        </span>
-      )}
-      {cat.trash.length > 0 && (
-        <span className="flex items-center rounded-md bg-black/60 px-1 py-0.5 text-[10px] leading-none shadow-lg backdrop-blur-sm" title={`Last place ${label} game for ${cat.trash.join(", ")}`}>
-          <span>🗑️</span>{cat.trash.length > 1 && <span className="ml-0.5 font-bold text-white">{cat.trash.length}</span>}
-        </span>
-      )}
+    <div className="flex items-center gap-1">
+      <Coin metal="gold" count={cat.gold.length} title={`#1 ${label} game for ${cat.gold.join(", ")}`} />
+      <Coin metal="silver" count={cat.silver.length} title={`#2 ${label} game for ${cat.silver.join(", ")}`} />
+      <Coin metal="bronze" count={cat.bronze.length} title={`#3 ${label} game for ${cat.bronze.join(", ")}`} />
+      <CullCoin count={cat.trash.length} title={`Last place ${label} game for ${cat.trash.join(", ")}`} />
+    </div>
+  );
+}
+
+function Stat({ icon, value }: { icon: string; value: string }) {
+  return (
+    <div className="flex flex-col items-center gap-1">
+      <span className="material-symbols-outlined stat-icon text-[20px]">{icon}</span>
+      <span className="font-stat text-stat-label text-on-surface">{value}</span>
     </div>
   );
 }
@@ -56,29 +101,19 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
       ? game.min_players === game.max_players
         ? `${game.min_players}`
         : `${game.min_players}-${game.max_players}`
-      : null;
+      : "—";
 
   const imageUrl = game.image_url || game.thumbnail_url;
-  const dominantColor = useDominantColor(imageUrl);
+  const rarity = getRarity(avgScore, game.bgg_rating);
+  const genre =
+    game.categories && game.categories.length > 0
+      ? game.categories.slice(0, 2).join(" · ")
+      : game.category === "party"
+        ? "Party Game"
+        : "Board Game";
 
   return (
-    <div
-      className={`glass-card group relative flex flex-col overflow-hidden rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/5 ${
-        dominantColor ? "" : ""
-      }`}
-      style={{
-        borderColor: dominantColor
-          ? `rgba(${dominantColor}, 0.25)`
-          : undefined,
-      }}
-    >
-      {/* Dominant color tint overlay */}
-      {dominantColor && (
-        <div
-          className="pointer-events-none absolute inset-0 z-0 opacity-15 dark:opacity-20"
-          style={{ backgroundColor: `rgb(${dominantColor})` }}
-        />
-      )}
+    <article className="monster-card group relative flex h-[400px] cursor-pointer flex-col rounded-lg">
       {editing && (
         <GameEditForm
           game={game}
@@ -86,120 +121,115 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
           onSaved={(updates) => onGameUpdated?.(game.bgg_id, updates)}
         />
       )}
-      <Link
-        href={`/games/${game.bgg_id}`}
-        className="relative z-[1] flex flex-col"
-      >
-        {/* Image */}
-        <div className="relative aspect-square w-full overflow-hidden bg-zinc-100 dark:bg-white/5">
-          {/* Owned + Wishlist stacked indicators */}
-          <div className="absolute right-1.5 top-1.5 z-10 flex flex-col gap-1">
-            {onOwnershipToggle && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onOwnershipToggle(game.bgg_id);
-                }}
-                className={`flex h-4.5 w-4.5 items-center justify-center rounded transition-all ${
-                  owned
-                    ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
-                    : "bg-white/90 text-zinc-500 opacity-0 group-hover:opacity-100 dark:bg-white/10 dark:text-zinc-300"
-                }`}
-                title={owned ? "You own this" : "Not owned"}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-                  {owned ? (
-                    <path fillRule="evenodd" d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z" clipRule="evenodd" />
-                  ) : (
-                    <path d="M3.5 2A1.5 1.5 0 0 0 2 3.5v9A1.5 1.5 0 0 0 3.5 14h9a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 12.5 2h-9ZM3 3.5a.5.5 0 0 1 .5-.5h9a.5.5 0 0 1 .5.5v9a.5.5 0 0 1-.5.5h-9a.5.5 0 0 1-.5-.5v-9Z" />
-                  )}
-                </svg>
-              </button>
-            )}
-            {onWishlistToggle && !owned && (
-              <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  onWishlistToggle(game.bgg_id);
-                }}
-                className={`flex h-4.5 w-4.5 items-center justify-center rounded transition-all ${
-                  wishlisted
-                    ? "bg-violet-500 text-white shadow-sm shadow-violet-500/30"
-                    : "bg-white/90 text-zinc-500 opacity-0 group-hover:opacity-100 dark:bg-white/10 dark:text-zinc-300"
-                }`}
-                title={wishlisted ? "On your wishlist" : "Add to wishlist"}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-3 w-3">
-                  <path d="M7.5 5.6 10 7 8.6 4.5 10 2 7.5 3.4 5 2l1.4 2.5L5 7zm12 9.8L17 14l1.4 2.5L17 19l2.5-1.4L22 19l-1.4-2.5L22 14zM22 2l-2.5 1.4L17 2l1.4 2.5L17 7l2.5-1.4L22 7l-1.4-2.5zm-7.63 5.29a.996.996 0 0 0-1.41 0L1.29 18.96a.996.996 0 0 0 0 1.41l2.34 2.34c.39.39 1.02.39 1.41 0L16.71 11.04a.996.996 0 0 0 0-1.41z" />
-                </svg>
-              </button>
-            )}
-          </div>
+      <Link href={`/games/${game.bgg_id}`} className="flex h-full flex-col">
+        {/* Art (top 60%) */}
+        <div className="relative h-[60%] w-full overflow-hidden">
           {imageUrl ? (
             <Image
               src={imageUrl}
               alt={game.name}
               fill
-              className="object-contain transition-transform duration-300 group-hover:scale-105"
-              sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, (max-width: 1024px) 20vw, 16vw"
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+              style={{ viewTransitionName: `game-art-${game.bgg_id}` }}
             />
           ) : (
-            <div className="flex h-full items-center justify-center text-zinc-400 dark:text-zinc-600">
+            <div className="flex h-full items-center justify-center bg-surface-container-lowest text-outline-variant">
               No image
             </div>
           )}
+          {/* Art-to-stone fade — blends the art down into the stat block (Stitch: inset-0) */}
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent" />
 
-          {/* Score overlays on image */}
-          <div className="absolute bottom-1.5 left-1.5 flex flex-col gap-0.5">
-            {avgScore != null && (
-              <div className="flex items-center gap-1 rounded-md bg-cyan-600/90 px-1.5 py-0.5 shadow-lg shadow-cyan-500/20 backdrop-blur-sm">
-                <span className="text-[9px] font-medium text-cyan-200">Ours</span>
-                <span className="text-xs font-bold text-white">{avgScore.toFixed(1)}</span>
-              </div>
+          {/* Rarity header */}
+          {rarity && (
+            <div className={`absolute left-3 top-3 z-20 rounded border bg-surface-container-highest px-2 py-1 font-stat text-stat-label shadow-sm ${RARITY_BADGE[rarity]}`}>
+              {rarity}
+            </div>
+          )}
+
+          {/* Owned + wishlist toggles */}
+          <div className="absolute right-3 top-3 z-20 flex flex-col gap-1">
+            {onOwnershipToggle && (
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onOwnershipToggle(game.bgg_id); }}
+                className={`flex h-6 w-6 items-center justify-center rounded transition-all ${
+                  owned
+                    ? "bg-secondary-container text-on-secondary-container shadow-sm shadow-secondary-container/40"
+                    : "bg-surface-container-high/80 text-on-surface-variant opacity-0 backdrop-blur-sm group-hover:opacity-100"
+                }`}
+                title={owned ? "You own this" : "Not owned"}
+              >
+                <span className="material-symbols-outlined text-[16px]">{owned ? "check_circle" : "add_circle"}</span>
+              </button>
             )}
-            {game.bgg_rating ? (
-              <div className="flex items-center gap-1 rounded-md bg-orange-500/90 px-1.5 py-0.5 shadow-lg shadow-orange-500/20 backdrop-blur-sm">
-                <span className="text-[9px] font-medium text-orange-200">BGG</span>
-                <span className="text-xs font-bold text-white">{game.bgg_rating.toFixed(1)}</span>
-              </div>
-            ) : null}
+            {onWishlistToggle && !owned && (
+              <button
+                onClick={(e) => { e.preventDefault(); e.stopPropagation(); onWishlistToggle(game.bgg_id); }}
+                className={`flex h-6 w-6 items-center justify-center rounded transition-all ${
+                  wishlisted
+                    ? "bg-primary-container text-on-primary-container shadow-sm shadow-primary-container/40"
+                    : "bg-surface-container-high/80 text-on-surface-variant opacity-0 backdrop-blur-sm group-hover:opacity-100"
+                }`}
+                title={wishlisted ? "On your wishlist" : "Add to wishlist"}
+              >
+                <span className="material-symbols-outlined text-[16px]">{wishlisted ? "star" : "star_outline"}</span>
+              </button>
+            )}
           </div>
 
-          {/* Medal and trash badges */}
+          {/* Medal / trash badges */}
           {(badges?.board || badges?.party) && (
-            <div className="absolute top-1.5 left-1.5 z-10 flex flex-col gap-0.5">
+            <div className="absolute bottom-2 right-2 z-20 flex flex-col items-end gap-0.5">
               {badges?.board && <BadgeRow cat={badges.board} label="board" />}
               {badges?.party && <BadgeRow cat={badges.party} label="party" />}
             </div>
           )}
+
+          {/* Score chips */}
+          <div className="absolute bottom-2 left-3 z-20 flex items-center gap-1.5">
+            {avgScore != null && (
+              <div className="flex items-center gap-1 rounded bg-primary-container/90 px-1.5 py-0.5 shadow-lg shadow-primary-container/25 backdrop-blur-sm">
+                <span className="font-stat text-[9px] font-medium text-on-primary-container/80">Ours</span>
+                <span className="font-stat text-xs font-bold text-on-primary-container">{avgScore.toFixed(1)}</span>
+              </div>
+            )}
+            {game.bgg_rating ? (
+              <div className="flex items-center gap-1 rounded border border-outline-variant bg-surface-container-highest/90 px-1.5 py-0.5 shadow-lg backdrop-blur-sm">
+                <Image src="/bgg-icon.png" alt="BGG" width={12} height={12} className="rounded-sm" />
+                <span className="font-stat text-xs font-bold text-on-surface">{game.bgg_rating.toFixed(1)}</span>
+              </div>
+            ) : null}
+          </div>
         </div>
 
-        {/* Info */}
-        <div className="p-2">
-          <h3 className="truncate text-xs font-semibold text-zinc-900 dark:text-zinc-100">
-            {game.name}
-          </h3>
-          <div className="mt-0.5 flex items-center justify-between text-[10px] text-zinc-400 dark:text-zinc-500">
-            {game.year_published ? <span>♦ {game.year_published}</span> : null}
-            {playerRange ? <span>♟ {playerRange}</span> : null}
-            {game.playing_time ? <span>⏱ {game.playing_time}m</span> : null}
-            {game.bgg_weight ? <span>⚖ {game.bgg_weight.toFixed(1)}</span> : null}
+        {/* Stat block (bottom 40%) */}
+        <div className="relative z-20 flex flex-grow flex-col justify-between bg-surface-container-low p-card-padding">
+          <div>
+            <h3 className="mb-1 truncate font-display text-headline-lg-mobile text-on-surface">
+              {game.name}
+            </h3>
+            <p className="truncate font-body text-caption text-on-surface-variant">{genre}</p>
+          </div>
+          <div className="mt-4 grid grid-cols-3 gap-2 border-t border-surface-variant pt-4">
+            <Stat icon="group" value={playerRange} />
+            <div className="border-l border-r border-surface-variant">
+              <Stat icon="hourglass_empty" value={game.playing_time ? `${game.playing_time}m` : "—"} />
+            </div>
+            <Stat icon="fitness_center" value={game.bgg_weight ? game.bgg_weight.toFixed(1) : "—"} />
           </div>
         </div>
       </Link>
+
       {admin && !editing && (
         <button
           onClick={() => setEditing(true)}
-          className="absolute right-1.5 bottom-1.5 z-[11] flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 shadow-lg backdrop-blur-sm transition-opacity group-hover:opacity-100"
+          className="absolute right-2 bottom-2 z-30 flex h-7 w-7 items-center justify-center rounded-full bg-black/50 text-white opacity-0 shadow-lg backdrop-blur-sm transition-opacity group-hover:opacity-100"
+          title="Edit game"
         >
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-3 w-3">
-            <path d="M13.488 2.513a1.75 1.75 0 0 0-2.475 0L6.75 6.774a2.75 2.75 0 0 0-.596.892l-.848 2.047a.75.75 0 0 0 .98.98l2.047-.848a2.75 2.75 0 0 0 .892-.596l4.261-4.262a1.75 1.75 0 0 0 0-2.474Z" />
-            <path d="M4.75 3.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h6.5c.69 0 1.25-.56 1.25-1.25V9A.75.75 0 0 1 14 9v2.25A2.75 2.75 0 0 1 11.25 14h-6.5A2.75 2.75 0 0 1 2 11.25v-6.5A2.75 2.75 0 0 1 4.75 2H7a.75.75 0 0 1 0 1.5H4.75Z" />
-          </svg>
+          <span className="material-symbols-outlined text-[16px]">edit</span>
         </button>
       )}
-    </div>
+    </article>
   );
 }

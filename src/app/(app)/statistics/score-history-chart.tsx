@@ -21,9 +21,10 @@ const PLOT_H = H - PAD.top - PAD.bottom;
 const Y_MIN = 1;
 const Y_MAX = 10;
 
-const YOU_COLOR = { light: "#22c55e", dark: "#4ade80" };
-const AVG_COLOR = { light: "#06b6d4", dark: "#22d3ee" };
-const BGG_COLOR = { light: "#f97316", dark: "#fb923c" };
+// Dungeon chart hues (see design/THEME-MAPPING.md): You = slime, Avg = amber, BGG = stone.
+const YOU_COLOR = { light: "#75fd00", dark: "#75fd00" };
+const AVG_COLOR = { light: "#ffb347", dark: "#ffb347" };
+const BGG_COLOR = { light: "#9f8e7c", dark: "#9f8e7c" };
 
 function toY(score: number): number {
   return PAD.top + PLOT_H - ((score - Y_MIN) / (Y_MAX - Y_MIN)) * PLOT_H;
@@ -65,7 +66,7 @@ export function ScoreHistoryChart({ snapshots, bggRating, currentUserId }: Score
 
   if (avgPoints.length === 0 && yourPoints.length === 0) {
     return (
-      <p className="py-4 text-center text-xs text-zinc-400 dark:text-zinc-500">
+      <p className="py-4 text-center text-xs text-on-surface-variant">
         No score history yet. History is recorded each time a tier list is saved.
       </p>
     );
@@ -115,7 +116,7 @@ export function ScoreHistoryChart({ snapshots, bggRating, currentUserId }: Score
               x2={W - PAD.right}
               y1={toY(v)}
               y2={toY(v)}
-              className="stroke-zinc-100 dark:stroke-zinc-800"
+              className="stroke-outline-variant/30"
               strokeWidth={0.5}
             />
             <text
@@ -123,7 +124,7 @@ export function ScoreHistoryChart({ snapshots, bggRating, currentUserId }: Score
               y={toY(v) + 1}
               textAnchor="end"
               dominantBaseline="middle"
-              className="fill-zinc-400 text-[8px]"
+              className="fill-on-surface-variant text-[8px]"
             >
               {v}
             </text>
@@ -137,7 +138,7 @@ export function ScoreHistoryChart({ snapshots, bggRating, currentUserId }: Score
             x={toX(t)}
             y={H - PAD.bottom + 14}
             textAnchor="middle"
-            className="fill-zinc-400 text-[7px]"
+            className="fill-on-surface-variant text-[7px]"
           >
             {formatDate(new Date(t).toISOString())}
           </text>
@@ -201,7 +202,7 @@ export function ScoreHistoryChart({ snapshots, bggRating, currentUserId }: Score
           <div key={i} className="flex items-center gap-1">
             <span className="inline-block h-2 w-2 rounded-full dark:hidden" style={{ backgroundColor: s.color.light }} />
             <span className="hidden h-2 w-2 rounded-full dark:inline-block" style={{ backgroundColor: s.color.dark }} />
-            <span className="text-zinc-500 dark:text-zinc-400">{s.label}</span>
+            <span className="text-on-surface-variant">{s.label}</span>
           </div>
         ))}
         {bggRating != null && (
@@ -212,7 +213,7 @@ export function ScoreHistoryChart({ snapshots, bggRating, currentUserId }: Score
             <svg width="12" height="8" className="hidden dark:block">
               <line x1="0" y1="4" x2="12" y2="4" stroke={BGG_COLOR.dark} strokeWidth={1.5} strokeDasharray="3 2" />
             </svg>
-            <span className="text-zinc-500 dark:text-zinc-400">BGG {bggRating.toFixed(1)}</span>
+            <span className="text-on-surface-variant">BGG {bggRating.toFixed(1)}</span>
           </div>
         )}
       </div>

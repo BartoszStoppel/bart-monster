@@ -189,23 +189,34 @@ export default async function WishlistPage({ searchParams }: WishlistPageProps) 
 
   const viewingProfile = viewingOther ? profileMap.get(selectedUserId) : null;
 
+  const title = isShared
+    ? "Everyone\u2019s Wishlist"
+    : viewingProfile
+      ? `${viewingProfile.displayName}\u2019s Wishlist`
+      : "Wishlist";
+
   return (
-    <div className="mx-auto max-w-4xl">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-          {isShared
-            ? "Everyone\u2019s Wishlist"
-            : viewingProfile
-              ? `${viewingProfile.displayName}\u2019s Wishlist`
-              : "Wishlist"}
-        </h1>
-        <ViewToggle
-          currentUserId={user.id}
-          selectedUserId={selectedUserId ?? null}
-          isShared={isShared}
-          usersWithWishlists={usersWithWishlists}
-        />
-      </div>
+    <div className="mx-auto flex max-w-4xl flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div className="flex flex-col gap-stack-compact">
+            <h1 className="font-display text-display-lg text-primary">{title}</h1>
+            <p className="max-w-2xl text-on-surface-variant">
+              {isShared
+                ? "The party\u2019s shared hoard of coveted treasures \u2014 vote with your gold."
+                : viewingProfile
+                  ? "Loot this adventurer covets but has yet to claim."
+                  : "Treasures you covet but have yet to claim. Mark their priority for the next raid."}
+            </p>
+          </div>
+          <ViewToggle
+            currentUserId={user.id}
+            selectedUserId={selectedUserId ?? null}
+            isShared={isShared}
+            usersWithWishlists={usersWithWishlists}
+          />
+        </div>
+      </section>
 
       {isShared ? (
         <SharedWishlistView items={sharedItems} />

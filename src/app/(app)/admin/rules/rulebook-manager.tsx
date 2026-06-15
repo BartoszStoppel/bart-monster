@@ -18,7 +18,7 @@ interface RulebookManagerProps {
 }
 
 const inputClass =
-  "w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/10 dark:bg-white/5 dark:text-zinc-50";
+  "carved-input w-full rounded-md px-3 py-2 text-sm";
 
 export function RulebookManager({ games, existing }: RulebookManagerProps) {
   const [bggId, setBggId] = useState<number | "">("");
@@ -91,15 +91,16 @@ export function RulebookManager({ games, existing }: RulebookManagerProps) {
   const gameName = (id: number) => games.find((g) => g.bgg_id === id)?.name ?? `#${id}`;
 
   return (
-    <div className="space-y-8">
-      <section className="space-y-4 rounded-lg border border-zinc-200 bg-white p-5 dark:border-white/[0.06] dark:bg-white/5">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+    <div className="flex flex-col gap-stack-loose">
+      <section className="glass-card flex flex-col gap-gutter rounded-lg p-card-padding sm:p-6">
+        <h2 className="flex items-center gap-2 font-display text-headline-lg-mobile text-on-surface">
+          <span className="material-symbols-outlined stat-icon text-[22px]">post_add</span>
           Add / update a rulebook module
         </h2>
 
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-gutter sm:grid-cols-2">
           <label className="text-sm">
-            <span className="mb-1 block text-zinc-600 dark:text-zinc-400">Game</span>
+            <span className="mb-1 block font-stat text-stat-label text-on-surface-variant">Game</span>
             <select
               className={inputClass}
               value={bggId}
@@ -115,7 +116,7 @@ export function RulebookManager({ games, existing }: RulebookManagerProps) {
           </label>
 
           <label className="text-sm">
-            <span className="mb-1 block text-zinc-600 dark:text-zinc-400">Module type</span>
+            <span className="mb-1 block font-stat text-stat-label text-on-surface-variant">Module type</span>
             <select
               className={inputClass}
               value={moduleType}
@@ -131,7 +132,7 @@ export function RulebookManager({ games, existing }: RulebookManagerProps) {
           </label>
 
           <label className="text-sm">
-            <span className="mb-1 block text-zinc-600 dark:text-zinc-400">Module name</span>
+            <span className="mb-1 block font-stat text-stat-label text-on-surface-variant">Module name</span>
             <input
               className={inputClass}
               value={moduleName}
@@ -141,7 +142,7 @@ export function RulebookManager({ games, existing }: RulebookManagerProps) {
           </label>
 
           <label className="text-sm">
-            <span className="mb-1 block text-zinc-600 dark:text-zinc-400">
+            <span className="mb-1 block font-stat text-stat-label text-on-surface-variant">
               Rulebook PDF (auto-converts to Markdown)
             </span>
             <input
@@ -158,15 +159,18 @@ export function RulebookManager({ games, existing }: RulebookManagerProps) {
         </div>
 
         {converting && (
-          <p className="text-sm text-blue-600 dark:text-blue-400">
+          <p className="flex items-center gap-2 font-stat text-stat-label text-primary">
+            <span className="material-symbols-outlined text-[16px] animate-pulse">hourglass_top</span>
             Converting PDF to Markdown… this can take a minute for long rulebooks.
           </p>
         )}
 
         <label className="block text-sm">
-          <span className="mb-1 flex items-center justify-between text-zinc-600 dark:text-zinc-400">
+          <span className="mb-1 flex items-center justify-between font-stat text-stat-label text-on-surface-variant">
             <span>Markdown (review and edit before saving)</span>
-            {tokenEstimate !== null && <span>~{tokenEstimate.toLocaleString()} tokens</span>}
+            {tokenEstimate !== null && (
+              <span className="font-stat text-on-surface">~{tokenEstimate.toLocaleString()} tokens</span>
+            )}
           </span>
           <textarea
             className={`${inputClass} h-72 font-mono`}
@@ -176,24 +180,39 @@ export function RulebookManager({ games, existing }: RulebookManagerProps) {
           />
         </label>
 
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
-        {notice && <p className="text-sm text-green-600 dark:text-green-400">{notice}</p>}
+        {error && (
+          <p className="flex items-center gap-2 font-stat text-stat-label text-error">
+            <span className="material-symbols-outlined text-[16px]">error</span>
+            {error}
+          </p>
+        )}
+        {notice && (
+          <p className="flex items-center gap-2 font-stat text-stat-label text-secondary">
+            <span className="material-symbols-outlined text-[16px]">check_circle</span>
+            {notice}
+          </p>
+        )}
 
         <button
           onClick={handleSave}
           disabled={saving || converting}
-          className="rounded-md border border-blue-200 px-4 py-2 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 disabled:opacity-50 dark:border-blue-800 dark:text-blue-400 dark:hover:bg-blue-900/20"
+          className="stone-button flex items-center gap-2 self-start rounded-md px-5 py-2.5 font-stat text-stat-label disabled:opacity-50"
         >
+          <span className="material-symbols-outlined text-[18px]">save</span>
           {saving ? "Saving…" : "Save module"}
         </button>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+      <section className="flex flex-col gap-gutter">
+        <h2 className="flex items-center gap-2 font-display text-headline-lg-mobile text-on-surface">
+          <span className="material-symbols-outlined stat-icon text-[22px]">library_books</span>
           Loaded rulebooks
         </h2>
         {existing.length === 0 ? (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">No rulebooks loaded yet.</p>
+          <div className="monster-card flex flex-col items-center gap-3 rounded-lg py-stack-loose text-center">
+            <span className="material-symbols-outlined text-[40px] text-outline">menu_book</span>
+            <p className="text-on-surface-variant">No rulebooks loaded yet.</p>
+          </div>
         ) : (
           existing.map((m) => (
             <ExistingRow key={m.id} module={m} gameName={gameName(m.bgg_id)} />
@@ -214,20 +233,20 @@ function ExistingRow({
   const [deleting, setDeleting] = useState(false);
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
-      <div>
-        <div className="flex items-center gap-2">
-          <span className="font-medium text-zinc-900 dark:text-zinc-50">{gameName}</span>
-          <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+    <div className="glass-card flex items-center justify-between gap-4 rounded-lg p-card-padding">
+      <div className="flex min-w-0 flex-col gap-1">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="truncate font-display text-headline-lg-mobile text-on-surface">{gameName}</span>
+          <span className="rune-chip shrink-0 rounded-full px-2 py-0.5 font-stat text-caption text-on-surface-variant">
             {module.module_name}
           </span>
           {module.module_type === "expansion" && (
-            <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700 dark:bg-purple-900/30 dark:text-purple-300">
+            <span className="rune-chip active shrink-0 rounded-full px-2 py-0.5 font-stat text-caption">
               expansion
             </span>
           )}
         </div>
-        <span className="text-sm text-zinc-500 dark:text-zinc-400">
+        <span className="truncate font-stat text-stat-label text-on-surface-variant">
           {module.token_estimate ? `~${module.token_estimate.toLocaleString()} tokens` : "size n/a"}
           {module.source ? ` · ${module.source}` : ""}
         </span>
@@ -239,8 +258,9 @@ function ExistingRow({
           setDeleting(false);
         }}
         disabled={deleting}
-        className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+        className="flex shrink-0 items-center gap-2 rounded-md border border-error px-4 py-2 font-stat text-stat-label text-error transition-colors hover:bg-error-container/15 disabled:opacity-50"
       >
+        <span className="material-symbols-outlined text-[16px]">delete</span>
         {deleting ? "…" : "Delete"}
       </button>
     </div>

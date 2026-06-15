@@ -100,23 +100,25 @@ export default async function CollectionPage() {
   }
 
   return (
-    <div>
-      <div className="mb-6 flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-            Collection
-          </h1>
-          <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-            {games?.length ?? 0} games in the group collection
-          </p>
+    <div className="flex flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <h1 className="font-display text-display-lg text-primary">The Great Library</h1>
+            <p className="mt-2 max-w-2xl text-on-surface-variant">
+              Browse the codex of {games?.length ?? 0} tabletop adventures. Filter by
+              species and rating to find your next encounter.
+            </p>
+          </div>
+          <Link
+            href="/search"
+            className="stone-button flex items-center gap-2 rounded-md px-5 py-2.5 font-stat text-stat-label"
+          >
+            <span className="material-symbols-outlined text-[18px]">add</span>
+            Add Game
+          </Link>
         </div>
-        <Link
-          href="/search"
-          className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 hover:brightness-110"
-        >
-          Add Game
-        </Link>
-      </div>
+      </section>
 
       {games && games.length > 0 ? (
         <SortableGameGrid
@@ -128,13 +130,12 @@ export default async function CollectionPage() {
           badgeMap={badgeMap}
         />
       ) : (
-        <div className="glass-card rounded-xl border-dashed py-16 text-center">
-          <p className="text-zinc-500 dark:text-zinc-400">
-            No games in the collection yet.
-          </p>
+        <div className="monster-card flex flex-col items-center gap-3 rounded-lg py-stack-loose text-center">
+          <span className="material-symbols-outlined text-[40px] text-outline">inventory_2</span>
+          <p className="text-on-surface-variant">No monsters in the codex yet.</p>
           <Link
             href="/search"
-            className="mt-2 inline-block text-sm font-medium text-cyan-600 hover:text-cyan-700 dark:text-cyan-400"
+            className="font-stat text-stat-label text-primary transition-colors hover:text-primary-container"
           >
             Search and add your first game
           </Link>

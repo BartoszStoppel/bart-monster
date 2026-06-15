@@ -23,13 +23,17 @@ export default async function FeedbackPage() {
   const feedbackItems = (items ?? []) as FeedbackItemWithProfile[];
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="mb-6 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        Feedback
-      </h1>
+    <div className="mx-auto flex max-w-2xl flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <h1 className="font-display text-display-lg text-primary">The Suggestion Box</h1>
+        <p className="max-w-2xl text-on-surface-variant">
+          Found a bug lurking in the dungeon, or have a feature to conjure? Scribe
+          it here and track its fate.
+        </p>
+      </section>
 
-      <div className="mb-8 rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-        <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+      <div className="glass-card rounded-lg p-6">
+        <h2 className="mb-4 font-display text-headline-lg text-on-surface">
           Submit feedback
         </h2>
         <SubmitFeedbackForm />

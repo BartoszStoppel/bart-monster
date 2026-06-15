@@ -106,14 +106,14 @@ export function TitleDisplay({ gamesRanked, gamesOwned }: TitleDisplayProps) {
 
   return (
     <span className="font-normal">
-      <span className="text-zinc-900 dark:text-zinc-50">the</span>{" "}
+      <span className="text-on-surface">the</span>{" "}
       <Popover open={adjOpen} onOpen={openAdj} onClose={closeAdj} label={adj.name} className={textOnly(adj.color, adj.darkColor)}>
-        <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+        <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-outline-variant bg-surface-container-high p-2 shadow-lg">
           <div className="mb-2 flex items-center justify-between px-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
               Holdings
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
               Games Owned
             </span>
           </div>
@@ -123,13 +123,13 @@ export function TitleDisplay({ gamesRanked, gamesOwned }: TitleDisplayProps) {
               <div
                 key={a.name}
                 className={`flex items-center justify-between rounded px-2 py-1 ${
-                  adj.name === a.name ? "bg-zinc-100 dark:bg-zinc-700" : ""
+                  adj.name === a.name ? "bg-surface-container-highest" : ""
                 }`}
               >
                 <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${a.color} ${a.darkColor}`}>
                   {a.name}
                 </span>
-                <span className="text-[11px] tabular-nums text-zinc-400 dark:text-zinc-500">
+                <span className="text-[11px] tabular-nums text-on-surface-variant">
                   {adjRangeLabel(a, idx)}
                 </span>
               </div>
@@ -138,12 +138,12 @@ export function TitleDisplay({ gamesRanked, gamesOwned }: TitleDisplayProps) {
         </div>
       </Popover>{" "}
       <Popover open={rankOpen} onOpen={openRank} onClose={closeRank} label={rank.name} className={textOnly(rank.color, rank.darkColor)}>
-        <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-zinc-200 bg-white p-2 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+        <div className="absolute left-0 top-full z-50 mt-1.5 w-56 rounded-lg border border-outline-variant bg-surface-container-high p-2 shadow-lg">
           <div className="mb-2 flex items-center justify-between px-2">
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
               Renown
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-400 dark:text-zinc-500">
+            <span className="text-[10px] font-semibold uppercase tracking-wider text-on-surface-variant">
               Games Played
             </span>
           </div>
@@ -153,13 +153,13 @@ export function TitleDisplay({ gamesRanked, gamesOwned }: TitleDisplayProps) {
               <div
                 key={r.name}
                 className={`flex items-center justify-between rounded px-2 py-1 ${
-                  rank.name === r.name ? "bg-zinc-100 dark:bg-zinc-700" : ""
+                  rank.name === r.name ? "bg-surface-container-highest" : ""
                 }`}
               >
                 <span className={`text-[11px] ${rankClasses(r)}`}>
                   {r.name}
                 </span>
-                <span className="text-[11px] tabular-nums text-zinc-400 dark:text-zinc-500">
+                <span className="text-[11px] tabular-nums text-on-surface-variant">
                   {rankRangeLabel(r, idx)}
                 </span>
               </div>

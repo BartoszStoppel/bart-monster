@@ -1,177 +1,407 @@
 @import "tailwindcss";
+/* NOTE: the Material Symbols icon font is loaded via <link> in layout.tsx, not
+   here — Turbopack/Lightning CSS strips remote @import url() rules out of this
+   file, which silently broke every icon. Keep font links in the <head>. */
 
-:root {
-  --background: #f0f2f5;
-  --foreground: #171717;
-}
+/* ──────────────────────────────────────────────────────────────────────────
+   TABLE MONSTERS — "Dungeon Crawler" theme
+   Grim-dark, tactile/skeuomorphic. Source of truth: design/DESIGN.md
+   This file is the theme layer: retune the @theme tokens below and the whole
+   site follows. Components reference these via Tailwind utilities
+   (bg-surface, text-primary, border-outline, font-display, …).
+   ────────────────────────────────────────────────────────────────────────── */
+
+/* Dark-first: drive `dark:` variants off the .dark class (set on <html>),
+   not the OS preference — the dungeon is always lit by torchlight. */
+@custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-accent: #06b6d4;
-  --color-accent-hover: #0891b2;
-  --color-accent-light: #a5f3fc;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  /* Surfaces — obsidian & weathered stone (Level 0 backgrounds) */
+  --color-surface: #131313;
+  --color-surface-dim: #131313;
+  --color-surface-bright: #393939;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-surface-container-low: #1c1b1b;
+  --color-surface-container: #20201f;
+  --color-surface-container-high: #2a2a2a;
+  --color-surface-container-highest: #353535;
+  --color-surface-variant: #353535;
+
+  /* Text & lines */
+  --color-on-surface: #e5e2e1;
+  --color-on-surface-variant: #d6c3b0;
+  --color-outline: #9f8e7c;
+  --color-outline-variant: #524535;
+
+  /* Primary — Torch-light Amber (CTAs, gold rarity, highlights) */
+  --color-primary: #ffd7a9;
+  --color-on-primary: #462a00;
+  --color-primary-container: #ffb347;
+  --color-on-primary-container: #704700;
+  --color-surface-tint: #ffb95a;
+  --color-inverse-primary: #845400;
+
+  /* Secondary — Slime Green (active states, buffs, common tiers) */
+  --color-secondary: #f8ffec;
+  --color-on-secondary: #153800;
+  --color-secondary-container: #75fd00;
+  --color-on-secondary-container: #307000;
+
+  /* Tertiary — Blood Ruby (destructive, boss threats, low health) */
+  --color-tertiary: #ffd4d0;
+  --color-on-tertiary: #680008;
+  --color-tertiary-container: #ffada5;
+  --color-on-tertiary-container: #a30113;
+
+  /* Error */
+  --color-error: #ffb4ab;
+  --color-on-error: #690005;
+  --color-error-container: #93000a;
+  --color-on-error-container: #ffdad6;
+
+  /* Background aliases */
+  --color-background: #131313;
+  --color-on-background: #e5e2e1;
+
+  /* Legacy accent aliases (kept so any old accent-based styling flips amber) */
+  --color-accent: #ffb347;
+  --color-accent-hover: #ffd7a9;
+  --color-accent-light: #ffddb6;
+
+  /* Typography (next/font CSS vars wired in layout.tsx) */
+  --font-display: var(--font-display), "EB Garamond", serif;
+  --font-body: var(--font-body), "Hanken Grotesk", sans-serif;
+  --font-stat: var(--font-stat), "Geist", ui-monospace, monospace;
+  --font-sans: var(--font-body), "Hanken Grotesk", sans-serif;
+  --font-mono: var(--font-stat), "Geist", ui-monospace, monospace;
+
+  /* Stitch font-family aliases (so the design's class names resolve directly) */
+  --font-display-lg: var(--font-display), "EB Garamond", serif;
+  --font-headline-lg: var(--font-display), "EB Garamond", serif;
+  --font-headline-lg-mobile: var(--font-display), "EB Garamond", serif;
+  --font-body-md: var(--font-body), "Hanken Grotesk", sans-serif;
+  --font-stat-label: var(--font-stat), "Geist", ui-monospace, monospace;
+  --font-caption: var(--font-body), "Hanken Grotesk", sans-serif;
+
+  /* Named type scale (size + line-height + weight bundles) — matches design/DESIGN.md */
+  --text-display-lg: 48px;
+  --text-display-lg--line-height: 1.1;
+  --text-display-lg--letter-spacing: -0.02em;
+  --text-display-lg--font-weight: 700;
+  --text-headline-lg: 32px;
+  --text-headline-lg--line-height: 1.2;
+  --text-headline-lg--font-weight: 600;
+  --text-headline-lg-mobile: 24px;
+  --text-headline-lg-mobile--line-height: 1.2;
+  --text-headline-lg-mobile--font-weight: 600;
+  --text-stat-label: 14px;
+  --text-stat-label--line-height: 1;
+  --text-stat-label--font-weight: 600;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.4;
+  --text-caption--font-weight: 500;
+  --text-body-md: 16px;
+  --text-body-md--line-height: 1.6;
+  --text-body-md--font-weight: 400;
+
+  /* Named spacing (matches Stitch fixed-grid rhythm) */
+  --spacing-gutter: 24px;
+  --spacing-margin: 32px;
+  --spacing-stack-loose: 48px;
+  --spacing-stack-compact: 8px;
+  --spacing-card-padding: 16px;
+
+  /* Motion */
   --animate-fade-in: fade-in 0.3s ease-out;
   --animate-pop-in: pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
   --animate-glow-pulse: glow-pulse 2s ease-in-out infinite;
 }
 
 @keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes pop-in {
-  from {
-    opacity: 0;
-    transform: scale(0.6);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.6); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @keyframes dotPulse {
-  0%, 80%, 100% {
-    opacity: 0;
-  }
-  40% {
+  0%, 80%, 100% { opacity: 0; }
+  40% { opacity: 1; }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+
+/* "Open the monster card" — entrance when a game detail page mounts */
+@keyframes game-open {
+  from { opacity: 0; transform: scale(0.95) translateY(16px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes hero-reveal {
+  from { opacity: 0; transform: scale(1.08); filter: brightness(1.6); }
+  to { opacity: 1; transform: scale(1); filter: brightness(1); }
+}
+.game-open-anim {
+  animation: game-open 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.game-open-anim .hero-reveal {
+  animation: hero-reveal 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.game-open-anim .stagger > * {
+  opacity: 0;
+  animation: fade-in 0.5s ease-out forwards;
+}
+.game-open-anim .stagger > *:nth-child(1) { animation-delay: 0.08s; }
+.game-open-anim .stagger > *:nth-child(2) { animation-delay: 0.16s; }
+.game-open-anim .stagger > *:nth-child(3) { animation-delay: 0.24s; }
+.game-open-anim .stagger > *:nth-child(4) { animation-delay: 0.32s; }
+.game-open-anim .stagger > *:nth-child(5) { animation-delay: 0.40s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .game-open-anim,
+  .game-open-anim .hero-reveal,
+  .game-open-anim .stagger > * {
+    animation: none;
     opacity: 1;
   }
 }
 
-@keyframes glow-pulse {
-  0%, 100% {
-    opacity: 0.4;
-  }
-  50% {
-    opacity: 0.8;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #080b12;
-    --foreground: #e8eaed;
-  }
-}
-
+/* ── Base surface: obsidian floor with a torch glow up top + stone noise ── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-on-surface);
+  font-family: var(--font-body), "Hanken Grotesk", sans-serif;
+  background-image:
+    radial-gradient(circle at 50% 0%, rgba(255, 179, 71, 0.06) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg width='100' height='100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100' height='100' filter='url(%23noise)' opacity='0.05'/%3E%3C/svg%3E");
+  background-attachment: fixed;
 }
 
-/* Dark mode gradient backdrop */
-@media (prefers-color-scheme: dark) {
-  body {
-    background:
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.08), transparent),
-      radial-gradient(ellipse 60% 40% at 80% 60%, rgba(139, 92, 246, 0.05), transparent),
-      #080b12;
-  }
+/* Serif display headings by default */
+h1, h2, h3 {
+  font-family: var(--font-display), "EB Garamond", serif;
 }
 
-/* Glass panel utility */
+/* Material Symbols (icon font; the <link> that loads it lives in layout.tsx) */
+.material-symbols-outlined {
+  font-family: "Material Symbols Outlined";
+  font-weight: normal;
+  font-style: normal;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: "liga";
+  -webkit-font-smoothing: antialiased;
+  font-variation-settings: "FILL" 0, "wght" 400, "GRAD" 0, "opsz" 24;
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Primitives. `.glass-card` is restyled into the dungeon "monster card" so
+   every component already using it inherits the forged look immediately.
+   `.monster-card` is an explicit alias for new markup.
+   ────────────────────────────────────────────────────────────────────────── */
 .glass {
-  background: rgba(255, 255, 255, 0.8);
+  background: rgba(20, 20, 20, 0.7);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--color-outline-variant);
 }
 
-@media (prefers-color-scheme: dark) {
-  .glass {
-    background: rgba(15, 20, 30, 0.7);
-    border-color: rgba(255, 255, 255, 0.06);
-  }
+.glass-card,
+.monster-card {
+  background: linear-gradient(145deg, var(--color-surface-container-low) 0%, var(--color-surface-container) 100%);
+  border: 1px solid var(--color-outline-variant);
+  /* Forged/recessed depth: inner top highlight + faint amber inner bloom + drop */
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.05),
+    inset 0 0 20px rgba(255, 179, 71, 0.02),
+    0 4px 6px -1px rgba(0, 0, 0, 0.5),
+    0 2px 4px -1px rgba(0, 0, 0, 0.3);
 }
 
-/* Glass card with subtle border sheen */
-.glass-card {
-  background: white;
-  border: 1px solid rgba(0, 0, 0, 0.06);
+.glass-card:hover,
+.monster-card:hover {
+  border-color: var(--color-outline);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    inset 0 0 30px rgba(255, 179, 71, 0.05),
+    0 0 15px rgba(255, 179, 71, 0.15),
+    0 10px 15px -3px rgba(0, 0, 0, 0.5);
 }
 
-@media (prefers-color-scheme: dark) {
-  .glass-card {
-    background: rgba(15, 20, 35, 0.6);
-    border: 1px solid rgba(255, 255, 255, 0.06);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-  }
+/* Decorative inset border (0.5rem) for full monster cards */
+.monster-card-frame {
+  position: relative;
+  overflow: hidden;
+}
+.monster-card-frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 0.5rem solid rgba(159, 142, 124, 0.1);
+  pointer-events: none;
+  z-index: 10;
 }
 
-/* Accent glow for buttons and interactive elements */
+/* Torch-amber bloom (replaces the old cyan glow; alias kept for legacy usage) */
+.glow-amber,
 .glow-cyan {
-  box-shadow: 0 0 20px rgba(6, 182, 212, 0.3), 0 0 60px rgba(6, 182, 212, 0.1);
+  box-shadow: 0 0 20px rgba(255, 179, 71, 0.3), 0 0 60px rgba(255, 179, 71, 0.12);
 }
 
+/* "Stat icon" — torchlit amber with a soft halo */
+.stat-icon {
+  color: var(--color-primary);
+  text-shadow: 0 0 8px rgba(255, 215, 169, 0.3);
+}
 
-/* Card hand nav */
+/* Carved input — recessed into the stone, slime-green focus glow */
+.carved-input {
+  background-color: var(--color-surface-container-lowest);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+  border: 1px solid var(--color-surface-variant);
+  color: var(--color-on-surface);
+}
+.carved-input:focus {
+  outline: none;
+  border-color: var(--color-secondary-container);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5), 0 0 8px rgba(117, 253, 0, 0.2);
+}
+
+/* Rune chip — filter/status pills, glow amber when active */
+.rune-chip {
+  background-color: var(--color-surface-container-highest);
+  border: 1px solid var(--color-outline-variant);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  transition: all 0.2s ease;
+}
+.rune-chip:hover,
+.rune-chip.active {
+  background-color: var(--color-primary-container);
+  color: var(--color-on-primary-container);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px rgba(255, 179, 71, 0.2);
+}
+
+/* Stone-slab / forged-plate button */
+.stone-button {
+  background-color: var(--color-surface-container-highest);
+  color: var(--color-primary);
+  border: 1px solid var(--color-outline);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 2px 4px rgba(0, 0, 0, 0.5);
+  transition: all 0.3s ease;
+}
+.stone-button:hover {
+  background-color: var(--color-surface-variant);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 15px rgba(255, 179, 71, 0.2);
+}
+
+/* ──────────────────────────────────────────────────────────────────────────
+   Game-detail "encounter" view (design/code-detail.html). Distinct from the
+   library .monster-card: a deep inset shadow + a thin inset frame line, plus
+   bevelled scroll panels and recessed stat meters.
+   ────────────────────────────────────────────────────────────────────────── */
+.encounter-card {
+  background-color: var(--color-surface-container-low);
+  border: 1px solid var(--color-outline-variant);
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), 0 10px 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Forged bevel: light top-left, dark bottom-right — for the scroll panels */
+.bevel-border {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.8);
+  border-right: 1px solid rgba(0, 0, 0, 0.8);
+}
+
+/* Recessed stat meter (complexity = amber, time = slime-green) */
+.stat-bar-track {
+  background-color: var(--color-surface-container-lowest);
+  border: 1px solid var(--color-surface-variant);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.stat-bar-fill {
+  position: relative;
+  height: 100%;
+  background: linear-gradient(90deg, #462a00 0%, #ffb347 100%);
+}
+.stat-bar-fill.time {
+  background: linear-gradient(90deg, #153800 0%, #75fd00 100%);
+}
+.stat-bar-fill.brown {
+  background: linear-gradient(90deg, #2a1800 0%, #845400 100%);
+}
+.stat-bar-fill::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(0, 0, 0, 0.5) 10px, rgba(0, 0, 0, 0.5) 12px);
+}
+
+/* Cursor torch — warm bloom that follows the pointer on the encounter page.
+   `fixed` (not absolute) so it never extends the document / adds scrollbars. */
+.torch-glow {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 300px;
+  height: 300px;
+  background: radial-gradient(circle, rgba(255, 179, 71, 0.15) 0%, rgba(19, 19, 19, 0) 70%);
+  border-radius: 50%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  transition: transform 0.1s ease-out;
+  z-index: 0;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .torch-glow { display: none; }
+}
+
+/* Card hand nav (unchanged behaviour, dungeon-tinted via tokens elsewhere) */
 .card-hand-container {
   pointer-events: none;
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
-
-.card-hand-wrapper {
-  pointer-events: none;
-}
-
+.card-hand-wrapper { pointer-events: none; }
 .nav-card {
   pointer-events: auto;
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
-              z-index 0s;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), z-index 0s;
   transform-origin: bottom center;
 }
-
-.nav-card:hover {
-  z-index: 25 !important;
-}
-
-.nav-card-active {
-  animation: card-played 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
+.nav-card:hover { z-index: 25 !important; }
+.nav-card-active { animation: card-played 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); }
 @keyframes card-played {
   0% { transform: scale(1); }
   50% { transform: scale(1.15); }
   100% { transform: scale(1.1); }
 }
 
-/* Force native dropdown options to have readable text */
+/* Native dropdowns readable on stone */
+select {
+  background-color: var(--color-surface-container-high);
+  color: var(--color-on-surface);
+}
 select option {
-  color: #171717;
-  background: #fff;
+  background-color: var(--color-surface-container-high);
+  color: var(--color-on-surface);
 }
 
-@media (prefers-color-scheme: dark) {
-  select {
-    background-color: #27272a; /* zinc-800 */
-    color: #f4f4f5; /* zinc-100 */
-  }
-
-  select option {
-    background-color: #27272a;
-    color: #f4f4f5;
-  }
-}
-
+/* Scrollbars — weathered */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #a1a1aa transparent;
-}
-
-@media (prefers-color-scheme: dark) {
-  * {
-    scrollbar-color: #1e293b transparent;
-  }
+  scrollbar-color: var(--color-outline-variant) transparent;
 }

@@ -29,9 +29,9 @@ export function ExpansionTierRow({
 
   return (
     <div
-      className={`flex min-h-[4.5rem] items-stretch border-b border-zinc-200 dark:border-white/10 ${
-        isOver ? "bg-zinc-100 dark:bg-white/10" : ""
-      } ${selectedId !== null ? "bg-zinc-50 dark:bg-white/5" : ""}`}
+      className={`flex min-h-[4.5rem] items-stretch border-b border-outline-variant ${
+        isOver ? "bg-surface-container-highest" : ""
+      } ${selectedId !== null ? "bg-surface-container-high" : ""}`}
     >
       <div
         className={`flex w-10 shrink-0 cursor-pointer items-center justify-center text-base font-bold text-white ${TIER_COLORS[tier]}`}

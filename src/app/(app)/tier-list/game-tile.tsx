@@ -58,10 +58,10 @@ export function GameTile({ game, overlay, isSelected, onTileTap }: GameTileProps
       onPointerDown={handlePointerDown}
       onPointerUp={handlePointerUp}
       title={game.name}
-      className={`relative h-16 w-16 shrink-0 cursor-grab overflow-hidden rounded border border-zinc-200 bg-zinc-100 active:cursor-grabbing dark:border-white/10 dark:bg-white/5 ${
+      className={`relative h-16 w-16 shrink-0 cursor-grab overflow-hidden rounded border border-outline-variant bg-surface-container-high active:cursor-grabbing ${
         isDragging && !overlay ? "opacity-30" : ""
-      } ${overlay ? "shadow-lg ring-2 ring-cyan-500" : ""} ${
-        isSelected ? "ring-2 ring-amber-400 scale-110 z-10" : ""
+      } ${overlay ? "shadow-lg ring-2 ring-primary" : ""} ${
+        isSelected ? "ring-2 ring-primary scale-110 z-10" : ""
       }`}
     >
       <TileImage game={game} />
@@ -77,7 +77,7 @@ export function GameTileOverlay({ game }: GameTileOverlayProps) {
   return (
     <div
       title={game.name}
-      className="relative h-16 w-16 shrink-0 overflow-hidden rounded border border-zinc-200 bg-zinc-100 shadow-lg ring-2 ring-cyan-500 dark:border-white/10 dark:bg-white/5"
+      className="relative h-16 w-16 shrink-0 overflow-hidden rounded border border-outline-variant bg-surface-container-high shadow-lg ring-2 ring-primary"
     >
       <TileImage game={game} />
     </div>
@@ -100,7 +100,7 @@ function TileImage({ game }: { game: BoardGame }) {
   }
 
   return (
-    <span className="flex h-full w-full items-center justify-center text-[8px] leading-tight text-zinc-500 dark:text-zinc-400">
+    <span className="flex h-full w-full items-center justify-center text-[8px] leading-tight text-on-surface-variant">
       {game.name}
     </span>
   );

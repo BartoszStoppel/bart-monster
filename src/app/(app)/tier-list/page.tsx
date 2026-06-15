@@ -37,10 +37,14 @@ export default async function TierListPage({ searchParams }: PageProps) {
     ]);
 
   return (
-    <div>
-      <h1 className="mb-4 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        Tier List
-      </h1>
+    <div className="flex flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <h1 className="font-display text-display-lg text-primary">The Tier Forge</h1>
+        <p className="max-w-2xl text-on-surface-variant">
+          Drag each beast into its rank, from legendary S-tier to the F-tier
+          cull pile. Your verdicts feed the shared codex scores.
+        </p>
+      </section>
       <TierListBoard
         partyGames={partyGames ?? []}
         boardGames={boardGames ?? []}

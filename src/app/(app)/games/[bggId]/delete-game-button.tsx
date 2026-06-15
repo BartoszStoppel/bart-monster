@@ -33,7 +33,7 @@ export function DeleteGameButton({ bggId, gameName }: DeleteGameButtonProps) {
     return (
       <button
         onClick={() => setConfirming(true)}
-        className="rounded-md border border-red-200 px-3 py-1.5 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
+        className="rounded-md border border-error px-3 py-1.5 text-sm font-medium text-error transition-colors hover:bg-error-container/15"
       >
         Remove Game
       </button>
@@ -43,25 +43,25 @@ export function DeleteGameButton({ bggId, gameName }: DeleteGameButtonProps) {
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-red-600 dark:text-red-400">
+        <span className="text-sm text-error">
           Delete {gameName}?
         </span>
         <button
           onClick={handleDelete}
           disabled={deleting}
-          className="rounded-md bg-red-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-red-700 disabled:opacity-50"
+          className="rounded-md bg-error-container px-3 py-1.5 text-sm font-medium text-on-error-container transition-colors hover:brightness-110 disabled:opacity-50"
         >
           {deleting ? "Deleting..." : "Confirm"}
         </button>
         <button
           onClick={() => { setConfirming(false); setErrorMsg(null); }}
-          className="rounded-md px-3 py-1.5 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+          className="rounded-md px-3 py-1.5 text-sm font-medium text-on-surface-variant transition-colors hover:text-on-surface"
         >
           Cancel
         </button>
       </div>
       {errorMsg && (
-        <p className="text-xs text-red-500">{errorMsg}</p>
+        <p className="text-xs text-error">{errorMsg}</p>
       )}
     </div>
   );

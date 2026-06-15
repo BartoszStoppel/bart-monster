@@ -38,7 +38,7 @@ export function SubmitFeedbackForm() {
       <div>
         <label
           htmlFor="fb-title"
-          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          className="mb-1 block font-stat text-xs uppercase tracking-wide text-on-surface-variant"
         >
           Title
         </label>
@@ -50,14 +50,14 @@ export function SubmitFeedbackForm() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Short summary..."
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+          className="carved-input w-full rounded-lg px-3 py-2 text-sm placeholder:text-on-surface-variant/60 focus:outline-none"
         />
       </div>
 
       <div>
         <label
           htmlFor="fb-description"
-          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          className="mb-1 block font-stat text-xs uppercase tracking-wide text-on-surface-variant"
         >
           Description
         </label>
@@ -69,14 +69,14 @@ export function SubmitFeedbackForm() {
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Describe what you'd like or what's broken..."
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder:text-zinc-400 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100 dark:placeholder:text-zinc-500"
+          className="carved-input w-full rounded-lg px-3 py-2 text-sm placeholder:text-on-surface-variant/60 focus:outline-none"
         />
       </div>
 
       <div>
         <label
           htmlFor="fb-category"
-          className="mb-1 block text-sm font-medium text-zinc-700 dark:text-zinc-300"
+          className="mb-1 block font-stat text-xs uppercase tracking-wide text-on-surface-variant"
         >
           Category
         </label>
@@ -84,7 +84,7 @@ export function SubmitFeedbackForm() {
           id="fb-category"
           value={category}
           onChange={(e) => setCategory(e.target.value as FeedbackCategory)}
-          className="w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
+          className="carved-input w-full rounded-lg px-3 py-2 text-sm focus:outline-none"
         >
           {CATEGORIES.map((c) => (
             <option key={c.value} value={c.value}>
@@ -95,14 +95,15 @@ export function SubmitFeedbackForm() {
       </div>
 
       {error && (
-        <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+        <p className="text-sm text-error">{error}</p>
       )}
 
       <button
         type="submit"
         disabled={isPending}
-        className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
+        className="stone-button flex items-center gap-2 rounded-lg px-4 py-2 font-stat text-stat-label disabled:opacity-50"
       >
+        <span className="material-symbols-outlined text-[18px]">send</span>
         {isPending ? "Submitting..." : "Submit"}
       </button>
     </form>

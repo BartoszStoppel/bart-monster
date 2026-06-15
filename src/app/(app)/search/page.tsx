@@ -48,28 +48,27 @@ export default function SearchPage() {
   }
 
   return (
-    <div>
-      <Link
-        href="/"
-        className="mb-4 inline-flex items-center gap-1 text-sm font-medium text-zinc-500 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-      >
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" className="h-4 w-4">
-          <path fillRule="evenodd" d="M14 8a.75.75 0 0 1-.75.75H4.56l3.22 3.22a.75.75 0 1 1-1.06 1.06l-4.5-4.5a.75.75 0 0 1 0-1.06l4.5-4.5a.75.75 0 0 1 1.06 1.06L4.56 7.25h8.69A.75.75 0 0 1 14 8Z" clipRule="evenodd" />
-        </svg>
-        Back to Collection
-      </Link>
-      <h1 className="mb-2 text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-        Search Games
-      </h1>
-      <p className="mb-6 text-sm text-zinc-500 dark:text-zinc-400">
-        Search BoardGameGeek and add games to the group collection
-      </p>
+    <div className="flex flex-col gap-stack-loose">
+      <section className="flex flex-col gap-stack-compact">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1 self-start font-stat text-stat-label text-on-surface-variant transition-colors hover:text-on-surface"
+        >
+          <span className="material-symbols-outlined text-[18px]">arrow_back</span>
+          Back to the Library
+        </Link>
+        <h1 className="font-display text-display-lg text-primary">Summon a Monster</h1>
+        <p className="max-w-2xl text-on-surface-variant">
+          Search the BoardGameGeek bestiary and bind new creatures to the shared codex.
+        </p>
+      </section>
 
       <GameSearchBar onSelect={handleSelect} />
 
       {fetching && (
-        <div className="mt-4 rounded-lg border border-cyan-200 bg-cyan-50 p-3 text-sm text-cyan-700 dark:border-cyan-800 dark:bg-cyan-900/20 dark:text-cyan-300">
-          Fetching game details...
+        <div className="glass-card flex items-center gap-2 rounded-lg p-card-padding font-stat text-stat-label text-primary">
+          <span className="material-symbols-outlined animate-spin text-[18px]">progress_activity</span>
+          Summoning game details...
         </div>
       )}
 
@@ -83,35 +82,37 @@ export default function SearchPage() {
       )}
 
       {error && (
-        <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+        <div className="glass-card flex items-center gap-2 rounded-lg border-error p-card-padding font-stat text-stat-label text-error">
+          <span className="material-symbols-outlined text-[18px]">error</span>
           {error}
         </div>
       )}
 
       {added.length > 0 && (
-        <div className="mt-6">
-          <h2 className="mb-3 text-sm font-medium text-zinc-500 dark:text-zinc-400">
-            Recently Added
+        <section className="flex flex-col gap-stack-compact">
+          <h2 className="font-display text-headline-lg-mobile text-on-surface">
+            Recently Summoned
           </h2>
-          <ul className="space-y-2">
+          <ul className="flex flex-col gap-2">
             {added.map((game) => (
               <li
                 key={game.bggId}
-                className="flex items-center justify-between rounded-lg border border-green-200 bg-green-50 px-4 py-2 dark:border-green-800 dark:bg-green-900/20"
+                className="glass-card flex items-center justify-between rounded-lg border-secondary-container px-card-padding py-2"
               >
-                <span className="text-sm font-medium text-green-800 dark:text-green-200">
+                <span className="flex items-center gap-2 font-stat text-stat-label text-secondary">
+                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
                   {game.name}
                 </span>
                 <a
                   href={`/games/${game.bggId}`}
-                  className="text-xs font-medium text-green-600 hover:text-green-700 dark:text-green-400"
+                  className="font-stat text-stat-label text-secondary transition-colors hover:text-secondary-container"
                 >
                   View
                 </a>
               </li>
             ))}
           </ul>
-        </div>
+        </section>
       )}
     </div>
   );

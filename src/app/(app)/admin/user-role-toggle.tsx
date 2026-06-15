@@ -30,33 +30,35 @@ export function UserRoleToggle({
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
-      <div>
+    <div className="glass-card flex items-center justify-between gap-4 rounded-lg p-card-padding">
+      <div className="flex min-w-0 flex-col gap-1">
         <div className="flex items-center gap-2">
-          <span className="font-medium text-zinc-900 dark:text-zinc-50">
+          <span className="truncate font-display text-headline-lg-mobile text-on-surface">
             {displayName}
           </span>
           {isAdmin && (
-            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-xs font-medium text-amber-700 dark:bg-amber-900/30 dark:text-amber-300">
+            <span className="rune-chip active flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 font-stat text-caption">
+              <span className="material-symbols-outlined text-[14px]">shield_person</span>
               Admin
             </span>
           )}
         </div>
-        <span className="text-sm text-zinc-500 dark:text-zinc-400">
-          {email}
-        </span>
+        <span className="truncate text-on-surface-variant">{email}</span>
       </div>
       <button
         onClick={handleToggle}
         disabled={updating || isSelf}
         title={isSelf ? "You cannot remove your own admin role" : undefined}
-        className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
+        className={`flex shrink-0 items-center gap-2 rounded-md px-4 py-2 font-stat text-stat-label transition-colors disabled:opacity-50 ${
           isAdmin
-            ? "border border-red-200 text-red-600 hover:bg-red-50 dark:border-red-800 dark:text-red-400 dark:hover:bg-red-900/20"
-            : "border border-green-200 text-green-600 hover:bg-green-50 dark:border-green-800 dark:text-green-400 dark:hover:bg-green-900/20"
+            ? "border border-error text-error hover:bg-error-container/15"
+            : "border border-secondary-container text-secondary hover:bg-secondary-container/15"
         }`}
       >
-        {updating ? "..." : isAdmin ? "Remove Admin" : "Make Admin"}
+        <span className="material-symbols-outlined text-[16px]">
+          {isAdmin ? "remove_moderator" : "add_moderator"}
+        </span>
+        {updating ? "…" : isAdmin ? "Remove Admin" : "Make Admin"}
       </button>
     </div>
   );

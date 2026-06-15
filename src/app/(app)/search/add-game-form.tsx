@@ -97,25 +97,26 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
   return (
     <form
       onSubmit={handleSubmit}
-      className="mt-4 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-white/10 dark:bg-white/5"
+      className="glass-card rounded-lg p-6"
     >
-      <p className="mb-4 text-sm font-medium text-zinc-900 dark:text-zinc-50">
-        Adding <span className="font-bold">{game.name}</span>
-        {game.yearPublished ? ` (${game.yearPublished})` : ""}
+      <p className="mb-4 flex items-center gap-2 text-sm text-on-surface">
+        <span className="material-symbols-outlined stat-icon text-[20px]">auto_fix_high</span>
+        Binding <span className="font-display text-headline-lg-mobile text-on-surface">{game.name}</span>
+        {game.yearPublished ? (
+          <span className="font-stat text-stat-label text-on-surface-variant">({game.yearPublished})</span>
+        ) : null}
       </p>
 
       <div className="mb-4">
-        <label className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400">
+        <label className="mb-1.5 block font-stat text-stat-label text-on-surface-variant">
           Category
         </label>
         <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setCategory("party")}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-              category === "party"
-                ? "bg-purple-600 text-white"
-                : "border border-zinc-300 text-zinc-600 hover:border-purple-400 hover:text-purple-600 dark:border-white/10 dark:text-zinc-400"
+            className={`rune-chip rounded-md px-4 py-2 text-sm font-medium ${
+              category === "party" ? "active" : "text-on-surface-variant"
             }`}
           >
             Party Game
@@ -123,10 +124,8 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
           <button
             type="button"
             onClick={() => setCategory("board")}
-            className={`rounded-md px-4 py-2 text-sm font-medium transition-colors ${
-              category === "board"
-                ? "bg-cyan-600 text-white"
-                : "border border-zinc-300 text-zinc-600 hover:border-cyan-400 hover:text-cyan-600 dark:border-white/10 dark:text-zinc-400"
+            className={`rune-chip rounded-md px-4 py-2 text-sm font-medium ${
+              category === "board" ? "active" : "text-on-surface-variant"
             }`}
           >
             Board Game
@@ -138,7 +137,7 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
         <div>
           <label
             htmlFor="minPlayers"
-            className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400"
+            className="mb-1.5 block font-stat text-stat-label text-on-surface-variant"
           >
             Min Players
           </label>
@@ -148,13 +147,13 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
             value={minPlayers}
             onChange={(e) => setMinPlayers(e.target.value)}
             onBlur={() => handleBlur(minPlayers, 1, 99, setMinPlayers)}
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/10 dark:bg-white/10 dark:text-zinc-100"
+            className="carved-input w-full rounded-md px-3 py-2 text-sm"
           />
         </div>
         <div>
           <label
             htmlFor="maxPlayers"
-            className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400"
+            className="mb-1.5 block font-stat text-stat-label text-on-surface-variant"
           >
             Max Players
           </label>
@@ -164,13 +163,13 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
             value={maxPlayers}
             onChange={(e) => setMaxPlayers(e.target.value)}
             onBlur={() => handleBlur(maxPlayers, 1, 99, setMaxPlayers)}
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/10 dark:bg-white/10 dark:text-zinc-100"
+            className="carved-input w-full rounded-md px-3 py-2 text-sm"
           />
         </div>
         <div>
           <label
             htmlFor="playingTime"
-            className="mb-1.5 block text-xs font-medium text-zinc-500 dark:text-zinc-400"
+            className="mb-1.5 block font-stat text-stat-label text-on-surface-variant"
           >
             Play Time (min)
           </label>
@@ -180,12 +179,12 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
             value={playingTime}
             onChange={(e) => setPlayingTime(e.target.value)}
             onBlur={() => handleBlur(playingTime, 1, 9999, setPlayingTime)}
-            className="w-full rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 dark:border-white/10 dark:bg-white/10 dark:text-zinc-100"
+            className="carved-input w-full rounded-md px-3 py-2 text-sm"
           />
         </div>
       </div>
 
-      <p className="mb-4 text-xs text-zinc-400 dark:text-zinc-500">
+      <p className="mb-4 text-xs text-on-surface-variant">
         BGG says {game.minPlayers}–{game.maxPlayers} players, {game.playingTime} min.
         Adjust to match your group&apos;s experience.
       </p>
@@ -194,14 +193,14 @@ export function AddGameForm({ game, onAdded, onCancel, onError }: AddGameFormPro
         <button
           type="submit"
           disabled={saving || !category}
-          className="rounded-md bg-green-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-green-700 disabled:opacity-50"
+          className="stone-button rounded-md px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
         >
           {saving ? "Adding..." : "Add to Collection"}
         </button>
         <button
           type="button"
           onClick={onCancel}
-          className="rounded-md px-4 py-2 text-sm font-medium text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+          className="rounded-md px-4 py-2 text-sm font-medium text-on-surface-variant transition-colors hover:text-on-surface"
         >
           Cancel
         </button>

@@ -12,17 +12,17 @@ export function ReadOnlyGameTile({ game, shadow, hotTake }: ReadOnlyGameTileProp
 
   let borderClass: string;
   if (hotTake) {
-    borderClass = "border-red-500 shadow-[0_0_14px_5px_rgba(239,68,68,0.6)] dark:border-red-400 dark:shadow-[0_0_14px_5px_rgba(239,68,68,0.5)]";
+    borderClass = "border-error shadow-[0_0_14px_5px_rgba(163,1,19,0.6)]";
   } else if (shadow) {
-    borderClass = "border-dashed border-purple-400 opacity-40 dark:border-purple-500";
+    borderClass = "border-dashed border-primary opacity-40";
   } else {
-    borderClass = "border-zinc-200 dark:border-white/10";
+    borderClass = "border-outline-variant";
   }
 
   return (
     <div
       title={shadow ? `${game.name} (predicted)` : hotTake ? `${game.name} 🔥 Hottest take` : game.name}
-      className={`relative h-16 w-16 shrink-0 overflow-hidden rounded bg-zinc-100 dark:bg-white/5 ${borderClass}`}
+      className={`relative h-16 w-16 shrink-0 overflow-hidden rounded bg-surface-container-high ${borderClass}`}
     >
       {imageUrl ? (
         <Image
@@ -33,7 +33,7 @@ export function ReadOnlyGameTile({ game, shadow, hotTake }: ReadOnlyGameTileProp
           sizes="64px"
         />
       ) : (
-        <span className="flex h-full w-full items-center justify-center text-[8px] leading-tight text-zinc-500 dark:text-zinc-400">
+        <span className="flex h-full w-full items-center justify-center text-[8px] leading-tight text-on-surface-variant">
           {game.name}
         </span>
       )}

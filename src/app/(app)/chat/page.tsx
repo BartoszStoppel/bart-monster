@@ -95,23 +95,22 @@ export default function ChatPage() {
 
   return (
     <div className="-mx-2 -my-6 -mb-28 flex h-[calc(100dvh-49px)] min-h-0 flex-col overflow-hidden">
-      <div className="border-b border-zinc-200 px-4 py-3 dark:border-white/[0.06]">
-        <h1 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-          Chat with Bort
-        </h1>
-        <p className="text-xs text-zinc-500 dark:text-zinc-400">
+      <div className="flex flex-col gap-stack-compact border-b border-outline-variant bg-surface-container-low px-margin py-4">
+        <h1 className="font-display text-headline-lg text-primary">Chat with Bort</h1>
+        <p className="text-sm text-on-surface-variant">
           Ask about games, get recommendations, compare rankings
         </p>
       </div>
 
-      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
+      <div className="min-h-0 flex-1 overflow-y-auto px-margin py-6">
         {messages.length === 0 && (
           <div className="flex h-full items-center justify-center">
-            <div className="text-center">
-              <p className="text-sm text-zinc-400 dark:text-zinc-500">
+            <div className="max-w-md text-center">
+              <span className="material-symbols-outlined stat-icon text-[40px]">forum</span>
+              <p className="mt-3 text-on-surface-variant">
                 Ask Bort anything about your board game collection
               </p>
-              <div className="mt-4 flex flex-wrap justify-center gap-2">
+              <div className="mt-6 flex flex-wrap justify-center gap-2">
                 {SUGGESTIONS.map((s) => (
                   <button
                     key={s}
@@ -119,7 +118,7 @@ export default function ChatPage() {
                       setInput(s);
                       inputRef.current?.focus();
                     }}
-                    className="rounded-full border border-zinc-200 px-3 py-1.5 text-xs text-zinc-600 transition-colors hover:border-zinc-400 hover:text-zinc-900 dark:border-white/10 dark:text-zinc-400 dark:hover:border-zinc-500 dark:hover:text-zinc-200"
+                    className="rune-chip rounded-full px-3 py-1.5 font-stat text-xs text-on-surface-variant"
                   >
                     {s}
                   </button>
@@ -135,10 +134,10 @@ export default function ChatPage() {
             className={`mb-4 flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
           >
             <div
-              className={`max-w-[80%] rounded-2xl px-4 py-2 text-sm ${
+              className={`max-w-[80%] rounded-lg border px-4 py-2 text-sm ${
                 msg.role === "user"
-                  ? "bg-cyan-600 text-white"
-                  : "bg-zinc-100 text-zinc-900 dark:bg-white/5 dark:text-zinc-100"
+                  ? "border-primary/40 bg-primary-container text-on-primary-container shadow-sm"
+                  : "border-outline-variant bg-surface-container-high text-on-surface"
               }`}
             >
               {msg.role === "assistant" ? (
@@ -158,7 +157,7 @@ export default function ChatPage() {
 
       <form
         onSubmit={handleSubmit}
-        className="shrink-0 border-t border-zinc-200 px-4 py-3 dark:border-white/[0.06]"
+        className="shrink-0 border-t border-outline-variant bg-surface-container-low px-margin py-4"
       >
         <div className="flex gap-2">
           <textarea
@@ -168,13 +167,14 @@ export default function ChatPage() {
             onKeyDown={handleKeyDown}
             placeholder="Ask about games..."
             rows={1}
-            className="flex-1 resize-none rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 placeholder-zinc-400 focus:border-cyan-500 focus:outline-none dark:border-white/10 dark:bg-white/5 dark:text-zinc-100 dark:placeholder-zinc-500 dark:focus:border-cyan-500"
+            className="carved-input flex-1 resize-none rounded-lg px-3 py-2 text-sm placeholder-on-surface-variant/60 focus:outline-none"
           />
           <button
             type="submit"
             disabled={streaming || !input.trim()}
-            className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-4 py-2 text-sm font-medium text-white transition-colors shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:brightness-110 disabled:opacity-50"
+            className="stone-button flex items-center gap-2 rounded-lg px-4 py-2 font-stat text-stat-label transition-colors disabled:opacity-50"
           >
+            <span className="material-symbols-outlined text-[18px]">send</span>
             Send
           </button>
         </div>
@@ -188,19 +188,19 @@ function ThinkingIndicator() {
     <div className="flex items-center gap-3 py-1">
       <div className="relative h-6 w-6">
         {/* Outer orbiting ring */}
-        <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-cyan-500 [animation-duration:1.5s]" />
+        <div className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-primary [animation-duration:1.5s]" />
         {/* Inner orbiting ring — opposite direction */}
-        <div className="absolute inset-1 animate-spin rounded-full border-2 border-transparent border-b-violet-500 [animation-direction:reverse] [animation-duration:1s]" />
+        <div className="absolute inset-1 animate-spin rounded-full border-2 border-transparent border-b-secondary [animation-direction:reverse] [animation-duration:1s]" />
         {/* Center glow dot */}
-        <div className="absolute inset-[7px] animate-pulse rounded-full bg-cyan-500 shadow-[0_0_8px_2px_rgba(6,182,212,0.6)] [animation-duration:1.2s]" />
+        <div className="absolute inset-[7px] animate-pulse rounded-full bg-primary shadow-[0_0_8px_2px_rgba(255,179,71,0.6)] [animation-duration:1.2s]" />
       </div>
-      <span className="text-xs text-zinc-400 dark:text-zinc-500">
+      <span className="text-xs text-on-surface-variant">
         <span className="inline-flex items-baseline">
           Bort is thinking
           <span className="ml-0.5 inline-flex w-4">
-            <span className="animate-[dotPulse_1.4s_infinite_both] text-zinc-400 dark:text-zinc-500">.</span>
-            <span className="animate-[dotPulse_1.4s_0.2s_infinite_both] text-zinc-400 dark:text-zinc-500">.</span>
-            <span className="animate-[dotPulse_1.4s_0.4s_infinite_both] text-zinc-400 dark:text-zinc-500">.</span>
+            <span className="animate-[dotPulse_1.4s_infinite_both] text-on-surface-variant">.</span>
+            <span className="animate-[dotPulse_1.4s_0.2s_infinite_both] text-on-surface-variant">.</span>
+            <span className="animate-[dotPulse_1.4s_0.4s_infinite_both] text-on-surface-variant">.</span>
           </span>
         </span>
       </span>
