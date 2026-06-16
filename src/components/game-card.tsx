@@ -4,7 +4,8 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { GameEditForm } from "./game-edit-form";
-import { getRarity, RARITY_BADGE } from "@/lib/rarity";
+import { getMonsterLevel, levelBadgeClass } from "@/lib/monster-level";
+import { BggMark } from "@/components/bgg-mark";
 import type { BoardGame } from "@/types/database";
 import type { GameBadges, CategoryBadges } from "@/app/(app)/sortable-game-grid";
 
@@ -104,7 +105,7 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
       : "—";
 
   const imageUrl = game.image_url || game.thumbnail_url;
-  const rarity = getRarity(avgScore, game.bgg_rating);
+  const level = getMonsterLevel(avgScore, game);
   const genre =
     game.categories && game.categories.length > 0
       ? game.categories.slice(0, 2).join(" · ")
@@ -141,10 +142,10 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
           {/* Art-to-stone fade — blends the art down into the stat block (Stitch: inset-0) */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent" />
 
-          {/* Rarity header */}
-          {rarity && (
-            <div className={`absolute left-3 top-3 z-20 rounded border bg-surface-container-highest px-2 py-1 font-stat text-stat-label shadow-sm ${RARITY_BADGE[rarity]}`}>
-              {rarity}
+          {/* Level badge */}
+          {level != null && (
+            <div className={`absolute left-3 top-3 z-20 rounded border bg-surface-container-highest px-2 py-1 font-stat text-stat-label shadow-sm ${levelBadgeClass(level)}`}>
+              LVL {level}
             </div>
           )}
 
@@ -195,9 +196,9 @@ export function GameCard({ game, avgScore, badges, owned, wishlisted, isAdmin: a
               </div>
             )}
             {game.bgg_rating ? (
-              <div className="flex items-center gap-1 rounded border border-outline-variant bg-surface-container-highest/90 px-1.5 py-0.5 shadow-lg backdrop-blur-sm">
-                <Image src="/bgg-icon.png" alt="BGG" width={12} height={12} className="rounded-sm" />
-                <span className="font-stat text-xs font-bold text-on-surface">{game.bgg_rating.toFixed(1)}</span>
+              <div className="flex items-center gap-1 rounded border border-outline-variant bg-surface-container-highest/90 px-1.5 py-0.5 text-on-surface shadow-lg backdrop-blur-sm">
+                <BggMark className="h-3 w-3 shrink-0" />
+                <span className="font-stat text-xs font-bold">{game.bgg_rating.toFixed(1)}</span>
               </div>
             ) : null}
           </div>

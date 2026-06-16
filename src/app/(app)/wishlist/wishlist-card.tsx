@@ -4,7 +4,7 @@ import { useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
-import { getRarity, RARITY_BADGE } from "@/lib/rarity";
+import { getMonsterLevel, levelBadgeClass } from "@/lib/monster-level";
 import type { WishlistItem, ProfileInfo } from "./wishlist-types";
 import { moveToOwned, removeFromWishlist } from "./actions";
 
@@ -87,10 +87,7 @@ export function WishlistCard({ item, readOnly, onRemove, onMoveToOwned }: Wishli
         : `${game.min_players}-${game.max_players}P`
       : null;
 
-  const rarity = getRarity(
-    item.communityScore,
-    game.bgg_rating != null ? Number(game.bgg_rating) : null
-  );
+  const level = getMonsterLevel(item.communityScore, game);
 
   async function handlePriority(value: number) {
     const prev = priority;
@@ -163,9 +160,9 @@ export function WishlistCard({ item, readOnly, onRemove, onMoveToOwned }: Wishli
             ?
           </div>
         )}
-        {rarity && (
-          <div className={`absolute left-1 top-1 z-10 rounded border bg-surface-container-highest px-1.5 py-0.5 font-stat text-[10px] shadow-sm ${RARITY_BADGE[rarity]}`}>
-            {rarity}
+        {level != null && (
+          <div className={`absolute left-1 top-1 z-10 rounded border bg-surface-container-highest px-1.5 py-0.5 font-stat text-[10px] shadow-sm ${levelBadgeClass(level)}`}>
+            LVL {level}
           </div>
         )}
       </Link>

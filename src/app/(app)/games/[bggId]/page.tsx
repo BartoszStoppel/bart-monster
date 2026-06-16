@@ -7,11 +7,11 @@ import { DeleteGameButton } from "./delete-game-button";
 import { CollectionToggles } from "./collection-toggles";
 import { BggDetails, SuggestedPlayersTable } from "./bgg-details";
 import { ExpansionSection } from "./expansion-section";
-import { TorchGlow } from "./torch-glow";
 import type { CommunityExpansion, CommunityExpansionVote } from "./expansion-community-modal";
 import { getHouseholdIds } from "@/lib/household";
 import { TIER_COLORS } from "@/lib/tier-colors";
-import { getRarity } from "@/lib/rarity";
+import { getMonsterLevel, levelBadgeClass } from "@/lib/monster-level";
+import { StatMeter } from "./stat-meter";
 import type { ExpansionTierPlacement, Tier } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -25,64 +25,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   board: "Board Game",
 };
 
-/**
- * BoardGameGeek mark as a monochrome inline SVG (path from Simple Icons) so it
- * inherits `currentColor` and themes like the Material Symbol stat icons,
- * instead of the colour-clashing raster logo.
- */
-function BggMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={className}>
-      <path d="m19.7 4.44-2.38.64L19.65 0 4.53 5.56l.83 6.67-1.4 1.34L8.12 24l8.85-3.26 3.07-7.22-1.32-1.27.98-7.81Z" />
-    </svg>
-  );
-}
 
-/**
- * A single labelled stat meter (matches the Complexity/Time bars from
- * design/code-detail.html): icon + label on the left, value on the right, a
- * recessed track + proportional fill below. `tone` picks amber vs slime-green.
- */
-function StatMeter({
-  icon,
-  bggIcon,
-  label,
-  value,
-  pct,
-  tone = "amber",
-}: {
-  icon?: string;
-  bggIcon?: boolean;
-  label: string;
-  value: string;
-  pct: number;
-  tone?: "amber" | "green" | "brown";
-}) {
-  const clamped = Math.max(0, Math.min(100, pct));
-  const fillClass = tone === "green" ? "time" : tone === "brown" ? "brown" : "";
-  const valueClass =
-    tone === "green" ? "text-secondary-container" : tone === "brown" ? "text-on-surface-variant" : "text-primary";
-  return (
-    <div className="flex h-full flex-col justify-end gap-1">
-      <div className="flex items-end justify-between gap-2">
-        <span className="flex min-w-0 items-center gap-1 truncate whitespace-nowrap font-stat text-stat-label text-on-surface-variant">
-          {bggIcon ? (
-            <BggMark className="h-[14px] w-[14px] shrink-0" />
-          ) : (
-            <span className="material-symbols-outlined text-[16px]">{icon}</span>
-          )}{" "}
-          {label}
-        </span>
-        <span className={`shrink-0 whitespace-nowrap font-stat text-stat-label ${valueClass}`}>
-          {value}
-        </span>
-      </div>
-      <div className="stat-bar-track h-3 w-full">
-        <div className={`stat-bar-fill ${fillClass}`} style={{ width: `${clamped}%` }} />
-      </div>
-    </div>
-  );
-}
 
 export default async function GameDetailPage({ params }: GameDetailPageProps) {
   const { bggId: bggIdParam } = await params;
@@ -226,16 +169,10 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
   const oursAvg = scoredRankings.length
     ? scoredRankings.reduce((a, r) => a + (r.score as number), 0) / scoredRankings.length
     : null;
-  const rarity = getRarity(oursAvg, game.bgg_rating != null ? Number(game.bgg_rating) : null);
   const heroImage = game.image_url || game.thumbnail_url;
 
-  // Encounter-card derived values (design/code-detail.html mapping)
-  const level =
-    oursAvg != null
-      ? Math.round(oursAvg)
-      : game.bgg_rating != null
-        ? Math.round(Number(game.bgg_rating))
-        : null;
+  // Monster level (1–10): blends our rating, BGG, complexity, time, age, players.
+  const level = getMonsterLevel(oursAvg, game);
   const subtitle = game.categories?.length
     ? game.categories.slice(0, 3).join(" · ")
     : game.category
@@ -252,29 +189,21 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
         : "—";
 
   return (
-    <>
-      <TorchGlow />
-      <div className="relative z-10 flex flex-col gap-margin">
+    <div className="relative z-10 flex flex-col gap-margin">
         {/* Encounter view — two-column (design/code-detail.html) */}
         <div className="grid grid-cols-1 gap-gutter md:grid-cols-12">
           {/* Left: the encounter card + actions */}
           <div className="flex flex-col gap-stack-compact md:col-span-5">
             <article className="encounter-card hero-reveal flex flex-col rounded-lg">
-              {/* Rarity header */}
-              <div className="flex items-center justify-between border-b border-outline-variant bg-surface-container-high px-4 py-2">
-                <div className="flex items-center gap-2">
-                  <span
-                    className="material-symbols-outlined text-[18px] text-primary"
-                    style={{ fontVariationSettings: "'FILL' 1" }}
-                  >
-                    star
-                  </span>
-                  <span className="font-stat text-stat-label uppercase tracking-widest text-primary">
-                    {rarity ? `${rarity} Encounter` : "Unknown Relic"}
-                  </span>
-                </div>
+              {/* Header band — threat level */}
+              <div className="flex items-center justify-end border-b border-outline-variant bg-surface-container-high px-4 py-2">
                 {level != null && (
-                  <span className="font-stat text-stat-label text-on-surface-variant">LVL {level}</span>
+                  <span
+                    title="Threat level (1–10) from our rating, BGG, complexity, time, age & player count"
+                    className={`rounded border bg-surface-container-highest px-2 py-0.5 font-stat text-stat-label ${levelBadgeClass(level)}`}
+                  >
+                    LVL {level}
+                  </span>
                 )}
               </div>
 
@@ -312,22 +241,22 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
 
                 <div className="mt-4 grid grid-cols-2 items-end gap-x-4 gap-y-3">
                   {oursAvg != null && (
-                    <StatMeter icon="local_fire_department" label="Our Rating" value={`${oursAvg.toFixed(1)}/10`} pct={(oursAvg / 10) * 100} tone="brown" />
+                    <StatMeter icon="local_fire_department" label="Power" value={`${oursAvg.toFixed(1)}/10`} pct={(oursAvg / 10) * 100} tone="amber" hint="Power — our group's average rating, out of 10." />
                   )}
                   {game.bgg_rating != null && (
-                    <StatMeter bggIcon label="BGG" value={`${Number(game.bgg_rating).toFixed(1)}/10`} pct={(Number(game.bgg_rating) / 10) * 100} tone="green" />
+                    <StatMeter bggIcon label="Renown" value={`${Number(game.bgg_rating).toFixed(1)}/10`} pct={(Number(game.bgg_rating) / 10) * 100} tone="green" hint="Renown — BoardGameGeek's community rating, out of 10." />
                   )}
                   {weight != null && (
-                    <StatMeter icon="swords" label="Complexity" value={`${weight.toFixed(2)}/5`} pct={complexityPct} tone="amber" />
+                    <StatMeter icon="swords" label="Ferocity" value={`${weight.toFixed(2)}/5`} pct={complexityPct} tone="amber" hint="Ferocity — how complex the game is to learn and play (BGG weight, out of 5)." />
                   )}
                   {game.playing_time != null && (
-                    <StatMeter icon="hourglass_empty" label="Time" value={timeLabel} pct={timePct} tone="green" />
+                    <StatMeter icon="hourglass_empty" label="Stamina" value={timeLabel} pct={timePct} tone="green" hint="Stamina — typical play time, in minutes." />
                   )}
                   {playerRange && (
-                    <StatMeter icon="groups" label="Players" value={playerRange} pct={(Math.min(game.max_players ?? game.min_players ?? 0, 8) / 8) * 100} tone="amber" />
+                    <StatMeter icon="groups" label="Charm" value={playerRange} pct={(Math.min(game.max_players ?? game.min_players ?? 0, 8) / 8) * 100} tone="amber" hint="Charm — the player counts this game supports." />
                   )}
                   {game.min_age != null && (
-                    <StatMeter icon="calendar_today" label="Age" value={`${game.min_age}+`} pct={(Math.min(game.min_age, 18) / 18) * 100} tone="green" />
+                    <StatMeter icon="calendar_today" label="Maturity" value={`${game.min_age}+`} pct={(Math.min(game.min_age, 18) / 18) * 100} tone="green" hint="Maturity — minimum recommended player age." />
                   )}
                 </div>
               </div>
@@ -439,6 +368,5 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
           <BggDetails game={game} />
         </div>
       </div>
-    </>
   );
 }

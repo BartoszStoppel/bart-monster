@@ -100,14 +100,13 @@ export default async function CollectionPage() {
   }
 
   return (
-    <div className="flex flex-col gap-stack-loose">
+    <div className="flex flex-col gap-stack-compact">
       <section className="flex flex-col gap-stack-compact">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-display-lg text-primary">The Great Library</h1>
-            <p className="mt-2 max-w-2xl text-on-surface-variant">
-              Browse the codex of {games?.length ?? 0} tabletop adventures. Filter by
-              species and rating to find your next encounter.
+            <h1 className="font-display text-display-lg text-primary">The Codex</h1>
+            <p className="mt-1 italic text-on-surface-variant">
+              {games?.length ?? 0} monsters await.
             </p>
           </div>
           <Link

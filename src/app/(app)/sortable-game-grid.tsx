@@ -1,29 +1,28 @@
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
-import Image from "next/image";
 import { GameCard } from "@/components/game-card";
+import { BggMark } from "@/components/bgg-mark";
 import { createClient } from "@/lib/supabase/client";
+import { getMonsterLevel } from "@/lib/monster-level";
 import type { BoardGame } from "@/types/database";
 
-type SortOption = "ours" | "bgg" | "name" | "weight" | "decorated";
-type CategoryFilter = "all" | "board" | "party";
+type SortOption = "ours" | "level" | "bgg" | "name" | "weight" | "decorated";
+type Category = "board" | "party";
 
 const SORT_OPTIONS: { value: SortOption; label: string; icon: string }[] = [
   { value: "ours", label: "Our Rating", icon: "trophy" },
+  { value: "level", label: "Level", icon: "stairs" },
   { value: "bgg", label: "BGG", icon: "public" },
   { value: "name", label: "Name", icon: "sort_by_alpha" },
   { value: "weight", label: "Weight", icon: "fitness_center" },
   { value: "decorated", label: "Decorated", icon: "military_tech" },
 ];
 
-const CATEGORY_OPTIONS: { value: CategoryFilter; label: string; icon: string }[] = [
-  { value: "all", label: "All Species", icon: "apps" },
+const CATEGORY_OPTIONS: { value: Category; label: string; icon: string }[] = [
   { value: "board", label: "Board", icon: "castle" },
   { value: "party", label: "Party", icon: "celebration" },
 ];
-
-const PAGE_SIZE = 24;
 
 export interface CategoryBadges {
   gold: string[];
@@ -56,9 +55,17 @@ export function SortableGameGrid({
 }: SortableGameGridProps) {
   const [games, setGames] = useState(initialGames);
   const [sort, setSort] = useState<SortOption>("ours");
-  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [categories, setCategories] = useState<Set<Category>>(() => new Set<Category>(["board", "party"]));
   const [ownedOnly, setOwnedOnly] = useState(false);
-  const [visible, setVisible] = useState(PAGE_SIZE);
+
+  function toggleCategory(value: Category) {
+    setCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
   const [ownedIds, setOwnedIds] = useState(() => new Set(ownedSet));
   const [wishlistIds, setWishlistIds] = useState(() => new Set(wishlistSetProp));
 
@@ -159,9 +166,7 @@ export function SortableGameGrid({
   );
 
   const sorted = useMemo(() => {
-    let filtered = category === "all"
-      ? games
-      : games.filter((g) => g.category === category);
+    let filtered = games.filter((g) => categories.has(g.category as Category));
     if (ownedOnly) {
       filtered = filtered.filter((g) => ownedIds.has(g.bgg_id));
     }
@@ -175,6 +180,13 @@ export function SortableGameGrid({
           if (sa == null) return 1;
           if (sb == null) return -1;
           return sb - sa;
+        });
+        break;
+      case "level":
+        copy.sort((a, b) => {
+          const la = getMonsterLevel(scores.get(a.bgg_id), a) ?? -1;
+          const lb = getMonsterLevel(scores.get(b.bgg_id), b) ?? -1;
+          return lb - la || a.name.localeCompare(b.name);
         });
         break;
       case "bgg":
@@ -203,30 +215,31 @@ export function SortableGameGrid({
         break;
     }
     return copy;
-  }, [games, sort, scores, category, ownedOnly, ownedIds, decorationScore]);
+  }, [games, sort, scores, categories, ownedOnly, ownedIds, decorationScore]);
 
-  const shown = sorted.slice(0, visible);
+  const shown = sorted;
 
   return (
     <div className="flex flex-col gap-stack-loose">
-      {/* Rune-chip filter row */}
-      <div className="flex flex-wrap items-center gap-3">
-        {CATEGORY_OPTIONS.map((opt) => (
+      {/* Controls: filter chips (Board/Party/Owned) on one row, sort below */}
+      <div className="flex flex-col gap-3">
+        {/* Filter row — funnel icon, category toggles, owned */}
+        <div className="flex flex-wrap items-center gap-3">
+          <span className="material-symbols-outlined text-[20px] text-on-surface-variant">filter_alt</span>
+          {CATEGORY_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => toggleCategory(opt.value)}
+              className={`rune-chip flex items-center gap-2 rounded-full px-4 py-1.5 font-stat text-stat-label ${
+                categories.has(opt.value) ? "active" : "text-on-surface-variant"
+              }`}
+            >
+              <span className="material-symbols-outlined text-[16px]">{opt.icon}</span>
+              {opt.label}
+            </button>
+          ))}
           <button
-            key={opt.value}
-            onClick={() => { setCategory(opt.value); setVisible(PAGE_SIZE); }}
-            className={`rune-chip flex items-center gap-2 rounded-full px-4 py-1.5 font-stat text-stat-label ${
-              category === opt.value ? "active" : "text-on-surface-variant"
-            }`}
-          >
-            <span className="material-symbols-outlined text-[16px]">{opt.icon}</span>
-            {opt.label}
-          </button>
-        ))}
-
-        <div className="ml-auto flex flex-wrap items-center gap-3">
-          <button
-            onClick={() => { setOwnedOnly((v) => !v); setVisible(PAGE_SIZE); }}
+            onClick={() => setOwnedOnly((v) => !v)}
             className={`flex items-center gap-2 rounded-full border px-4 py-1.5 font-stat text-stat-label transition-all ${
               ownedOnly
                 ? "border-secondary-container bg-secondary-container text-on-secondary-container shadow-[0_0_10px_rgba(117,253,0,0.2)]"
@@ -236,27 +249,28 @@ export function SortableGameGrid({
             <span className="material-symbols-outlined text-[16px]">inventory_2</span>
             Owned
           </button>
+        </div>
 
-          <div className="hidden items-center gap-1.5 sm:flex">
-            <span className="material-symbols-outlined text-[18px] text-on-surface-variant">sort</span>
-            {SORT_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                onClick={() => setSort(opt.value)}
-                title={`Sort by ${opt.label}`}
-                className={`rune-chip flex items-center gap-1.5 rounded-full px-3 py-1.5 font-stat text-stat-label ${
-                  sort === opt.value ? "active" : "text-on-surface-variant"
-                }`}
-              >
-                {opt.value === "bgg" ? (
-                  <Image src="/bgg-icon.png" alt="BGG" width={16} height={16} className="rounded-sm" />
-                ) : (
-                  <span className="material-symbols-outlined text-[16px]">{opt.icon}</span>
-                )}
-                <span className="hidden lg:inline">{opt.label}</span>
-              </button>
-            ))}
-          </div>
+        {/* Sort row — left-aligned, wraps cleanly when narrow */}
+        <div className="flex flex-wrap items-center justify-start gap-1.5">
+          <span className="material-symbols-outlined text-[18px] text-on-surface-variant">sort</span>
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setSort(opt.value)}
+              title={`Sort by ${opt.label}`}
+              className={`rune-chip flex items-center gap-1.5 rounded-full px-3 py-1.5 font-stat text-stat-label ${
+                sort === opt.value ? "active" : "text-on-surface-variant"
+              }`}
+            >
+              {opt.value === "bgg" ? (
+                <BggMark className="h-4 w-4 shrink-0" />
+              ) : (
+                <span className="material-symbols-outlined text-[16px]">{opt.icon}</span>
+              )}
+              <span className="hidden lg:inline">{opt.label}</span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -284,16 +298,6 @@ export function SortableGameGrid({
         </p>
       )}
 
-      {visible < sorted.length && (
-        <div className="flex justify-center">
-          <button
-            onClick={() => setVisible((v) => v + PAGE_SIZE)}
-            className="stone-button rounded-md px-8 py-3 font-stat text-stat-label"
-          >
-            Reveal More Monsters
-          </button>
-        </div>
-      )}
     </div>
   );
 }

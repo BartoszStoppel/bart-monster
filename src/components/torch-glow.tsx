@@ -3,10 +3,10 @@
 import { useEffect, useRef } from "react";
 
 /**
- * Atmospheric torch that follows the cursor (design/code-detail.html). Renders
- * a single fixed bloom and moves it with a direct style write — no React state,
- * so pointer moves don't trigger re-renders. Hidden via CSS under
- * prefers-reduced-motion.
+ * Atmospheric torch that follows the cursor. Renders a single fixed bloom and
+ * moves it with a direct style write — no React state, so pointer moves don't
+ * trigger re-renders. Mounted globally in the (app) layout; hidden via CSS
+ * under prefers-reduced-motion.
  */
 export function TorchGlow() {
   const ref = useRef<HTMLDivElement>(null);
