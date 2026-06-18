@@ -351,8 +351,12 @@ h1, h2, h3 {
   background-image: repeating-linear-gradient(90deg, transparent, transparent 10px, rgba(0, 0, 0, 0.5) 10px, rgba(0, 0, 0, 0.5) 12px);
 }
 
-/* Cursor torch — warm bloom that follows the pointer on the encounter page.
-   `fixed` (not absolute) so it never extends the document / adds scrollbars. */
+/* Cursor torch — warm bloom that follows the pointer site-wide.
+   `fixed` (not absolute) so it never extends the document / adds scrollbars.
+   z-index floats it ABOVE page content (cards have opaque backgrounds, so a
+   glow behind them would vanish whenever the cursor was over one) but below
+   the nav / modals (z-50), and `mix-blend-mode: screen` + `pointer-events:
+   none` let it additively light whatever's beneath without blocking clicks. */
 .torch-glow {
   position: fixed;
   top: 0;
@@ -364,7 +368,7 @@ h1, h2, h3 {
   pointer-events: none;
   mix-blend-mode: screen;
   transition: transform 0.1s ease-out;
-  z-index: 0;
+  z-index: 40;
   will-change: transform;
 }
 @media (prefers-reduced-motion: reduce) {

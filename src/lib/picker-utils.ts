@@ -1,9 +1,13 @@
 import type { BoardGame } from "@/types/database";
 
-export type PickerMode = "random" | "favor-easy" | "favor-hard" | "player-ranked";
+export type PickerMode = "random" | "complexity" | "player-ranked";
 
 /**
  * Calculate probability weights for each game based on the selected mode.
+ *
+ * For "complexity": `complexityBias` runs 0–100. 50 is neutral (equal weights);
+ * below 50 favors lighter games, above 50 favors heavier ones, and the bias
+ * strengthens the further the slider moves from center.
  *
  * For "player-ranked": uses the selected players' tier scores.
  * If a player hasn't scored a game, their personal average score is used
@@ -13,7 +17,8 @@ export function calculateWeights(
   games: BoardGame[],
   mode: PickerMode,
   userScoreMap: Record<string, Record<string, number>>,
-  selectedPlayerIds: string[]
+  selectedPlayerIds: string[],
+  complexityBias = 50
 ): number[] {
   if (games.length === 0) return [];
 
@@ -21,14 +26,19 @@ export function calculateWeights(
     case "random":
       return games.map(() => 1);
 
-    case "favor-easy": {
+    case "complexity": {
       const weights = games.map((g) => g.bgg_weight ?? 2.5);
+      const minW = Math.min(...weights);
       const maxW = Math.max(...weights);
-      return weights.map((w) => maxW - w + 0.5);
-    }
-
-    case "favor-hard": {
-      return games.map((g) => g.bgg_weight ?? 2.5);
+      // -1 (full easy) .. 0 (neutral) .. +1 (full hard)
+      const bias = (complexityBias - 50) / 50;
+      if (bias === 0 || maxW === minW) return games.map(() => 1);
+      const STRENGTH = 2.5; // max ln-weight spread at the slider extremes
+      return weights.map((w) => {
+        // c: -1 for the lightest game in the pool, +1 for the heaviest
+        const c = (2 * (w - minW)) / (maxW - minW) - 1;
+        return Math.exp(bias * c * STRENGTH);
+      });
     }
 
     case "player-ranked": {

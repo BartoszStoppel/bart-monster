@@ -13,13 +13,14 @@ All theme values are tokens in `src/app/globals.css` (`@theme inline`) — tune 
       dungeon tokens; owned=slime-green, wishlist=torch-amber, "Ours"=amber / BGG=stone; stat row in
       `font-stat`; serif title; art→stone fade.
 
-## ⏳ Stage 3 — remaining component sweep
-- [ ] **Nav / card-hand** (`src/components/nav.tsx`) — dungeon tokens; consider serif "TABLE MONSTERS" wordmark in `text-primary`
-- [ ] **Login page** (`src/app/login/…`) — backdrop already themed; restyle the sign-in button → `.stone-button`, card → `.glass-card`
-- [ ] **Buttons** site-wide → `.stone-button` (amber text, forged plate)
-- [ ] **Inputs / search** → `.carved-input` (recessed, slime-green focus)
-- [ ] **Filter / category pills** → `.rune-chip` (amber when active)
-- [ ] **`(app)` pages**: tier-list, wishlist, community, picker, search, game detail `[bggId]` — remap remaining `cyan-*`/`zinc-*`/`emerald`/`violet`/`orange`
+## ✅ Stage 3 — component sweep (DONE 2026-06-17)
+- [x] **Nav / card-hand**, **Login page**, **buttons → `.stone-button`**, **inputs → `.carved-input`**,
+      **pills → `.rune-chip`** — all swept in commits up to `1db416a`.
+- [x] **`(app)` pages** (tier-list, wishlist, community, picker, search, game detail) — fully remapped.
+- [x] **Loot-rarity scales**: `ranks.ts` (stone→slime→sky→violet→amber bands), `tier-colors.ts`
+      (S=ruby…F=stone), `monster-level.ts` level badges, statistics charts (amber/slime/stone hexes) — all on-theme.
+- [x] **Last straggler**: `community/section-error-boundary.tsx` red pairs → `error` tokens.
+- Verified: full-palette grep across `src/` is clean (only the intentional rarity files remain), `pnpm build` passes.
 - [ ] Optional: rarity header on cards (could map tier S/A/B/C/D/F → Legendary/Epic/Rare/…); `.monster-card-frame` inset border on the game **detail** page card (too busy on the dense grid)
 
 ## ❓ Open questions for Bart (review in browser first)

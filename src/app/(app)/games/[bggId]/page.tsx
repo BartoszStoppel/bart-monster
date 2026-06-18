@@ -97,6 +97,26 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
 
   const currentUserWishlisted = wishlisterInfos.some((w) => householdSet.has(w.userId));
 
+  // Renown — glory of conquering a rare beast. Inverse of the monster-level
+  // idea: the FEWER members have ranked (tier-placed) this game, the harder it
+  // is to conquer and the greater its renown. Measured as the share of the
+  // whole roster that has NOT yet ranked it.
+  const { count: totalMembers } = await supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true });
+  const conqueredBy = rankings.length;
+  // Renown VALUE (the formula/score) is inverse — high when few have conquered it.
+  const renownPct =
+    totalMembers && totalMembers > 0
+      ? (1 - conqueredBy / totalMembers) * 100
+      : null;
+  // The meter BAR shows the un-inverted conquest share (how much of the roster
+  // has ranked it) so it reads as a normal progress-to-conquered fill.
+  const conqueredPct =
+    totalMembers && totalMembers > 0
+      ? (conqueredBy / totalMembers) * 100
+      : 0;
+
   // Expansion tier list: admin-curated word bank, the user's own placements,
   // and the community aggregate shown in the breakdown popup.
   const { data: bank } = await supabase
@@ -243,8 +263,8 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
                   {oursAvg != null && (
                     <StatMeter icon="local_fire_department" label="Power" value={`${oursAvg.toFixed(1)}/10`} pct={(oursAvg / 10) * 100} tone="amber" hint="Power — our group's average rating, out of 10." />
                   )}
-                  {game.bgg_rating != null && (
-                    <StatMeter bggIcon label="Renown" value={`${Number(game.bgg_rating).toFixed(1)}/10`} pct={(Number(game.bgg_rating) / 10) * 100} tone="green" hint="Renown — BoardGameGeek's community rating, out of 10." />
+                  {renownPct != null && (
+                    <StatMeter icon="auto_awesome" label="Renown" value={`${(renownPct / 10).toFixed(1)}/10`} pct={conqueredPct} tone="green" hint={`Renown — the glory of conquering a rare beast. Only ${conqueredBy} of ${totalMembers} ${totalMembers === 1 ? "challenger has" : "challengers have"} ranked it; the fewer, the greater the renown.`} />
                   )}
                   {weight != null && (
                     <StatMeter icon="swords" label="Ferocity" value={`${weight.toFixed(2)}/5`} pct={complexityPct} tone="amber" hint="Ferocity — how complex the game is to learn and play (BGG weight, out of 5)." />

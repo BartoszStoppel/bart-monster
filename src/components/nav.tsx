@@ -161,7 +161,7 @@ function AvatarMenu({
             alt=""
             width={28}
             height={28}
-            className="rounded-full"
+            className="h-7 w-7 shrink-0 rounded-full object-cover"
             referrerPolicy="no-referrer"
           />
         ) : (

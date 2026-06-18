@@ -29,8 +29,8 @@ export class SectionErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.error) {
       return (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/30">
-          <p className="text-sm text-red-600 dark:text-red-400">
+        <div className="rounded-lg border border-error bg-error-container/15 p-4">
+          <p className="text-sm text-error">
             Failed to load {this.props.name}. Check the console for details.
           </p>
         </div>

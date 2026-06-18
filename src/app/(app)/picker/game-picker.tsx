@@ -15,8 +15,7 @@ const TIERS = ["S", "A", "B", "C", "D", "F"] as const;
 
 const MODE_OPTIONS: { value: PickerMode; label: string }[] = [
   { value: "random", label: "Random" },
-  { value: "favor-easy", label: "Favor Easy" },
-  { value: "favor-hard", label: "Favor Hard" },
+  { value: "complexity", label: "Complexity" },
   { value: "player-ranked", label: "Player Ranked" },
 ];
 
@@ -70,6 +69,7 @@ export function GamePicker({
   const [mode, setMode] = useState<PickerMode>("random");
   const [category, setCategory] = useState<CategoryFilter>("all");
   const [aggression, setAggression] = useState(50);
+  const [complexityBias, setComplexityBias] = useState(50);
   const [minTime, setMinTime] = useState<number | null>(null);
   const [maxTime, setMaxTime] = useState<number | null>(null);
   const [selectedTiers, setSelectedTiers] = useState<Set<string>>(
@@ -132,14 +132,19 @@ export function GamePicker({
   const playerIds = useMemo(() => [...selectedPlayers], [selectedPlayers]);
 
   const weights = useMemo(
-    () => calculateWeights(pool, mode, userScoreMap, playerIds),
-    [pool, mode, userScoreMap, playerIds]
+    () => calculateWeights(pool, mode, userScoreMap, playerIds, complexityBias),
+    [pool, mode, userScoreMap, playerIds, complexityBias]
   );
 
   const adjustedWeights = useMemo(() => {
-    if (mode === "random") return weights;
-    const exp = 0.1 + (aggression / 100) * 2.9;
-    return weights.map((w) => Math.pow(w, exp));
+    // Player-ranked sharpens its score-based weights via the aggression slider.
+    // Complexity bakes its direction + strength into the slider itself, and
+    // random is uniform — both are already final.
+    if (mode === "player-ranked") {
+      const exp = 0.1 + (aggression / 100) * 2.9;
+      return weights.map((w) => Math.pow(w, exp));
+    }
+    return weights;
   }, [weights, mode, aggression]);
 
   const segments: WheelSegment[] = useMemo(
@@ -352,7 +357,34 @@ export function GamePicker({
             ))}
           </div>
         </div>
-        {mode !== "random" && (
+        {mode === "complexity" && (
+          <div className="glass-card flex flex-col gap-stack-compact rounded-lg p-card-padding">
+            <div className="flex items-center gap-2 font-stat text-stat-label text-on-surface-variant">
+              <span className="material-symbols-outlined text-[16px]">fitness_center</span>
+              Complexity
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="font-stat text-caption text-on-surface-variant">
+                Easy
+              </span>
+              <input
+                type="range"
+                min={0}
+                max={100}
+                value={complexityBias}
+                onChange={(e) => {
+                  setComplexityBias(Number(e.target.value));
+                  setResult(null);
+                }}
+                className="h-2 flex-1 cursor-pointer appearance-none rounded-lg bg-surface-container-highest accent-primary-container"
+              />
+              <span className="font-stat text-caption text-on-surface-variant">
+                Hard
+              </span>
+            </div>
+          </div>
+        )}
+        {mode === "player-ranked" && (
           <div className="glass-card flex flex-col gap-stack-compact rounded-lg p-card-padding">
             <div className="flex items-center gap-2 font-stat text-stat-label text-on-surface-variant">
               <span className="material-symbols-outlined text-[16px]">bolt</span>
