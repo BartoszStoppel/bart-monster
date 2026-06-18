@@ -105,13 +105,15 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     .from("profiles")
     .select("id", { count: "exact", head: true });
   const conqueredBy = rankings.length;
-  // Renown VALUE (the formula/score) is inverse — high when few have conquered it.
+  // Renown FORMULA value — inverse: high when few have conquered the beast.
+  // Kept as the canonical score (and the render gate); the meter itself shows
+  // the un-inverted figures below.
   const renownPct =
     totalMembers && totalMembers > 0
       ? (1 - conqueredBy / totalMembers) * 100
       : null;
-  // The meter BAR shows the un-inverted conquest share (how much of the roster
-  // has ranked it) so it reads as a normal progress-to-conquered fill.
+  // The displayed number AND bar both show the un-inverted conquest share —
+  // how much of the roster has ranked it — so the meter reads straight.
   const conqueredPct =
     totalMembers && totalMembers > 0
       ? (conqueredBy / totalMembers) * 100
@@ -264,7 +266,7 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
                     <StatMeter icon="local_fire_department" label="Power" value={`${oursAvg.toFixed(1)}/10`} pct={(oursAvg / 10) * 100} tone="amber" hint="Power — our group's average rating, out of 10." />
                   )}
                   {renownPct != null && (
-                    <StatMeter icon="auto_awesome" label="Renown" value={`${(renownPct / 10).toFixed(1)}/10`} pct={conqueredPct} tone="green" hint={`Renown — the glory of conquering a rare beast. Only ${conqueredBy} of ${totalMembers} ${totalMembers === 1 ? "challenger has" : "challengers have"} ranked it; the fewer, the greater the renown.`} />
+                    <StatMeter icon="auto_awesome" label="Renown" value={`${(conqueredPct / 10).toFixed(1)}/10`} pct={conqueredPct} tone="green" hint={`Renown — how many have faced this beast: ${conqueredBy} of ${totalMembers} ${totalMembers === 1 ? "challenger has" : "challengers have"} ranked it.`} />
                   )}
                   {weight != null && (
                     <StatMeter icon="swords" label="Ferocity" value={`${weight.toFixed(2)}/5`} pct={complexityPct} tone="amber" hint="Ferocity — how complex the game is to learn and play (BGG weight, out of 5)." />
