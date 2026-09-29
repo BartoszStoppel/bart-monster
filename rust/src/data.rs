@@ -40,7 +40,7 @@ pub async fn bootstrap(State(state): State<AppState>, user: CurrentUser) -> Resu
  'feedback',(SELECT coalesce(jsonb_agg(to_jsonb(f)),'[]'::jsonb) FROM hub_feedback f),
  'user_activity',(SELECT coalesce(jsonb_agg(to_jsonb(a)),'[]'::jsonb) FROM hub_activity a),
  'game_rules',CASE WHEN $1 THEN (SELECT coalesce(jsonb_agg(to_jsonb(r)||jsonb_build_object('bgg_id',game_id,'created_by',created_by_id)),'[]'::jsonb) FROM hub_rulebook r) ELSE '[]'::jsonb END
- )"#).bind(user.is_staff).bind(user.id).fetch_one(&state.db).await?;
+ )"#).bind(user.is_staff).bind(user.id).fetch_one(crate::db::pool(&state.db)).await?;
     Ok(Json(json!({"user":user,"tables":tables})))
 }
 
@@ -58,7 +58,7 @@ pub async fn history(
     let metric = Metric::from_str(query.metric.as_deref().unwrap_or("enjoyment"))
         .map_err(|e| AppError::bad(e.to_string()))?;
     let metric = metric.as_str();
-    let rows:Value=crate::db::query_scalar(r#"SELECT coalesce(jsonb_agg(jsonb_build_object('id',id,'metric',metric,'user_id',user_id,'bgg_id',game_id,'day',day,'snapshot_at',day::text||'T12:00:00Z','score',score,'imported',imported) ORDER BY day,id),'[]'::jsonb) FROM hub_dailyscore WHERE metric=$1 AND ($2::integer IS NULL OR game_id=$2) AND ($3::text IS NULL OR coalesce(user_id::text,'community')=$3)"#).bind(metric).bind(query.bgg_id).bind(query.user_id).fetch_one(&state.db).await?;
+    let rows:Value=crate::db::query_scalar(r#"SELECT coalesce(jsonb_agg(jsonb_build_object('id',id,'metric',metric,'user_id',user_id,'bgg_id',game_id,'day',day,'snapshot_at',day::text||'T12:00:00Z','score',score,'imported',imported) ORDER BY day,id),'[]'::jsonb) FROM hub_dailyscore WHERE metric=$1 AND ($2::integer IS NULL OR game_id=$2) AND ($3::text IS NULL OR coalesce(user_id::text,'community')=$3)"#).bind(metric).bind(query.bgg_id).bind(query.user_id).fetch_one(crate::db::pool(&state.db)).await?;
     Ok(Json(rows))
 }
 

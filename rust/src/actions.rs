@@ -196,7 +196,7 @@ async fn insert_game(
         "SELECT EXISTS(SELECT 1 FROM hub_game WHERE bgg_id=$1)",
     )
     .bind(gid as i32)
-    .fetch_one(&state.db)
+    .fetch_one(crate::db::pool(&state.db))
     .await?
     {
         return Ok(());
@@ -315,7 +315,7 @@ pub async fn action(
             crate::db::query("UPDATE hub_user SET display_name=$2,updated_at=now() WHERE id=$1")
                 .bind(user.id)
                 .bind(name)
-                .execute(&state.db)
+                .execute(crate::db::pool(&state.db))
                 .await?;
         }
         "addGame" => insert_game(&state, user, args, false).await?,
@@ -367,7 +367,7 @@ pub async fn action(
                     "Enter a title, description, and valid category.",
                 ));
             }
-            crate::db::query("INSERT INTO hub_feedback(id,created_at,user_id,title,description,category,status,admin_note,updated_at) VALUES($1,now(),$2,$3,$4,$5,'new','',now())").bind(Uuid::new_v4()).bind(user.id).bind(title).bind(description).bind(category).execute(&state.db).await?;
+            crate::db::query("INSERT INTO hub_feedback(id,created_at,user_id,title,description,category,status,admin_note,updated_at) VALUES($1,now(),$2,$3,$4,$5,'new','',now())").bind(Uuid::new_v4()).bind(user.id).bind(title).bind(description).bind(category).execute(crate::db::pool(&state.db)).await?;
         }
         "updateFeedbackStatus" => {
             staff(user)?;
@@ -383,7 +383,7 @@ pub async fn action(
                 .get("adminNote")
                 .map(|_| text(args, "adminNote", 10000))
                 .transpose()?;
-            crate::db::query("UPDATE hub_feedback SET status=$2,admin_note=coalesce($3,admin_note),updated_at=now() WHERE id=$1").bind(fid).bind(status).bind(note).execute(&state.db).await?;
+            crate::db::query("UPDATE hub_feedback SET status=$2,admin_note=coalesce($3,admin_note),updated_at=now() WHERE id=$1").bind(fid).bind(status).bind(note).execute(crate::db::pool(&state.db)).await?;
         }
         "deleteFeedback" => {
             let count = crate::db::query(
@@ -392,7 +392,7 @@ pub async fn action(
             .bind(uuid(args, "feedbackId")?)
             .bind(user.is_staff)
             .bind(user.id)
-            .execute(&state.db)
+            .execute(crate::db::pool(&state.db))
             .await?
             .rows_affected();
             if count == 0 {
@@ -413,7 +413,7 @@ pub async fn action(
             )
             .bind(target)
             .bind(value)
-            .execute(&state.db)
+            .execute(crate::db::pool(&state.db))
             .await?;
         }
         "addExpansionsToBank" => {
@@ -509,19 +509,19 @@ pub async fn action(
             {
                 return Err(AppError::bad("Invalid rulebook module."));
             }
-            crate::db::query("INSERT INTO hub_rulebook(id,created_at,game_id,module_name,module_type,content_md,token_estimate,source,created_by_id,updated_at) VALUES($1,now(),$2,$3,$4,$5,$6,$7,$8,now()) ON CONFLICT(game_id,module_name) DO UPDATE SET module_type=EXCLUDED.module_type,content_md=EXCLUDED.content_md,token_estimate=EXCLUDED.token_estimate,source=EXCLUDED.source,updated_at=now()").bind(Uuid::new_v4()).bind(gid).bind(name).bind(kind).bind(content).bind(content.len().div_ceil(4) as i32).bind(source).bind(user.id).execute(&state.db).await?;
+            crate::db::query("INSERT INTO hub_rulebook(id,created_at,game_id,module_name,module_type,content_md,token_estimate,source,created_by_id,updated_at) VALUES($1,now(),$2,$3,$4,$5,$6,$7,$8,now()) ON CONFLICT(game_id,module_name) DO UPDATE SET module_type=EXCLUDED.module_type,content_md=EXCLUDED.content_md,token_estimate=EXCLUDED.token_estimate,source=EXCLUDED.source,updated_at=now()").bind(Uuid::new_v4()).bind(gid).bind(name).bind(kind).bind(content).bind(content.len().div_ceil(4) as i32).bind(source).bind(user.id).execute(crate::db::pool(&state.db)).await?;
         }
         "deleteGameRules" => {
             staff(user)?;
             crate::db::query("DELETE FROM hub_rulebook WHERE id=$1")
                 .bind(uuid(args, "id")?)
-                .execute(&state.db)
+                .execute(crate::db::pool(&state.db))
                 .await?;
         }
         "heartbeat" => {
             let seconds = args["seconds"].as_i64().unwrap_or(0).clamp(0, 60) as i32;
             let visit = args["is_visit"].as_bool().unwrap_or(false);
-            crate::db::query("INSERT INTO hub_activity(user_id,visit_count,total_seconds,last_seen_at) VALUES($1,$2,0,now()) ON CONFLICT(user_id) DO UPDATE SET total_seconds=hub_activity.total_seconds+LEAST($3,GREATEST(0,EXTRACT(EPOCH FROM now()-hub_activity.last_seen_at)::integer)),visit_count=hub_activity.visit_count+CASE WHEN hub_activity.last_seen_at<now()-interval '30 minutes' THEN 1 ELSE 0 END,last_seen_at=now()").bind(user.id).bind(if visit{1i32}else{0i32}).bind(seconds).execute(&state.db).await?;
+            crate::db::query("INSERT INTO hub_activity(user_id,visit_count,total_seconds,last_seen_at) VALUES($1,$2,0,now()) ON CONFLICT(user_id) DO UPDATE SET total_seconds=hub_activity.total_seconds+LEAST($3,GREATEST(0,EXTRACT(EPOCH FROM now()-hub_activity.last_seen_at)::integer)),visit_count=hub_activity.visit_count+CASE WHEN hub_activity.last_seen_at<now()-interval '30 minutes' THEN 1 ELSE 0 END,last_seen_at=now()").bind(user.id).bind(if visit{1i32}else{0i32}).bind(seconds).execute(crate::db::pool(&state.db)).await?;
         }
         _ => return Err(AppError::bad("Unknown action.")),
     }

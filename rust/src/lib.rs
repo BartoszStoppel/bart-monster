@@ -92,15 +92,6 @@ pub(crate) fn database_options(
     url: &str,
 ) -> std::result::Result<PgConnectOptions, Box<dyn std::error::Error + Send + Sync>> {
     let options = PgConnectOptions::from_str(url)?.statement_cache_capacity(0);
-    let host = options
-        .get_host()
-        .trim_end_matches('.')
-        .to_ascii_lowercase();
-    if (host.ends_with(".pooler.supabase.com") || host.ends_with(".supabase.co"))
-        && options.get_port() == 6543
-    {
-        return Err("SQLx requires the Supabase session pooler on port 5432.".into());
-    }
     Ok(options)
 }
 

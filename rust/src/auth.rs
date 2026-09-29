@@ -186,14 +186,14 @@ async fn find_session(
         "SELECT * FROM hub_rustsession WHERE session_hash = $1 AND expires_at > now()",
     )
     .bind(key)
-    .fetch_optional(&state.db)
+    .fetch_optional(crate::db::pool(&state.db))
     .await?)
 }
 
 async fn user_by_id(db: &PgPool, id: Uuid) -> Result<Option<CurrentUser>, AuthError> {
     Ok(crate::db::query_as::<_, CurrentUser>(
         "SELECT id, display_name, email, avatar_url, is_staff, is_superuser, partner_id FROM hub_user WHERE id = $1 AND is_active",
-    ).bind(id).fetch_optional(db).await?)
+    ).bind(id).fetch_optional(crate::db::pool(db)).await?)
 }
 
 impl<S> FromRequestParts<S> for AuthSession
@@ -301,7 +301,7 @@ async fn bootstrap(
     if row.as_ref().is_some_and(|r| r.user_id.is_some()) && user.is_none() {
         crate::db::query("DELETE FROM hub_rustsession WHERE session_hash = $1")
             .bind(&row.as_ref().unwrap().session_hash)
-            .execute(&state.db)
+            .execute(crate::db::pool(&state.db))
             .await?;
         row = None;
     }
@@ -312,10 +312,10 @@ async fn bootstrap(
         let token = random_token();
         let csrf = random_token();
         crate::db::query("DELETE FROM hub_rustsession WHERE expires_at <= now()")
-            .execute(&state.db)
+            .execute(crate::db::pool(&state.db))
             .await?;
         crate::db::query("INSERT INTO hub_rustsession (session_hash, csrf_token, expires_at) VALUES ($1, $2, now() + interval '1 hour')")
-            .bind(digest(&token)).bind(&csrf).execute(&state.db).await?;
+            .bind(digest(&token)).bind(&csrf).execute(crate::db::pool(&state.db)).await?;
         cookie = Some(session_cookie(&state.config, &token, ANONYMOUS_SECONDS));
         csrf
     };
@@ -354,7 +354,7 @@ async fn google_login(
         .append_pair("code_challenge", &digest(&verifier))
         .append_pair("code_challenge_method", "s256");
     let updated = crate::db::query("UPDATE hub_rustsession SET oauth_verifier=$1, oauth_state_hash=$2, oauth_started_at=now() WHERE session_hash=$3 AND expires_at > now()")
-        .bind(verifier).bind(digest(&oauth_state)).bind(row.session_hash).execute(&state.db).await?;
+        .bind(verifier).bind(digest(&oauth_state)).bind(row.session_hash).execute(crate::db::pool(&state.db)).await?;
     if updated.rows_affected() != 1 {
         return Err(AuthError::invalid_login());
     }
@@ -513,7 +513,7 @@ async fn logout(State(state): State<AuthState>, headers: HeaderMap) -> Result<Re
     verify_csrf(&headers, &row.csrf_token, &state.config.app_origin)?;
     crate::db::query("DELETE FROM hub_rustsession WHERE session_hash=$1")
         .bind(row.session_hash)
-        .execute(&state.db)
+        .execute(crate::db::pool(&state.db))
         .await?;
     let mut response = private_response(Json(json!({"ok":true})).into_response());
     response

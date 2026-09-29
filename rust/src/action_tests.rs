@@ -22,29 +22,13 @@ use uuid::Uuid;
 const ORIGIN: &str = "http://localhost:3000";
 
 #[test]
-fn database_options_rejects_supabase_transaction_pool_endpoints() {
-    for endpoint in [
-        "aws-0-test.pooler.supabase.com:6543/test",
-        "db.test.supabase.co:6543/test",
-        "AWS-0-TEST.POOLER.SUPABASE.COM.:6543/test",
-        "DB.TEST.SUPABASE.CO.:6543/test",
-        "aws-0-test.pooler.supabase.com:5432/test?port=6543",
-        "127.0.0.1:5432/test?host=aws-0-test.pooler.supabase.com&port=6543",
-        "127.0.0.1:5432/test?port=6543&host=DB.TEST.SUPABASE.CO.",
-    ] {
-        let url = format!("postgresql://test:synthetic-secret@{endpoint}");
-        let error = crate::database_options(&url).unwrap_err().to_string();
-        assert_eq!(
-            error, "SQLx requires the Supabase session pooler on port 5432.",
-            "guard should reject the effective endpoint: {endpoint}"
-        );
-        assert!(!error.contains("synthetic-secret"));
-    }
-}
-
-#[test]
-fn database_options_accepts_session_and_local_connections_using_effective_ports() {
+fn database_options_preserves_effective_transaction_session_and_local_endpoints() {
     for (endpoint, host, port) in [
+        (
+            "aws-0-test.pooler.supabase.com:6543/test",
+            "aws-0-test.pooler.supabase.com",
+            6543,
+        ),
         (
             "aws-0-test.pooler.supabase.com:5432/test",
             "aws-0-test.pooler.supabase.com",
@@ -63,6 +47,11 @@ fn database_options_accepts_session_and_local_connections_using_effective_ports(
             "127.0.0.1",
             6543,
         ),
+        (
+            "127.0.0.1:5432/test?host=aws-0-test.pooler.supabase.com&port=6543",
+            "aws-0-test.pooler.supabase.com",
+            6543,
+        ),
     ] {
         let options = crate::database_options(&format!("postgresql://test@{endpoint}")).unwrap();
         assert_eq!(options.get_host(), host);
@@ -73,7 +62,7 @@ fn database_options_accepts_session_and_local_connections_using_effective_ports(
 #[test]
 fn database_options_preserves_tls_role_database_and_schema_options() {
     let options = crate::database_options(
-        "postgresql://private_role.testref:synthetic-secret@aws-0-test.pooler.supabase.com:5432/postgres?sslmode=require&options=-c%20search_path%3Dprivate_schema",
+        "postgresql://private_role.testref:synthetic-secret@aws-0-test.pooler.supabase.com:6543/postgres?sslmode=require&options=-c%20search_path%3Dprivate_schema",
     ).unwrap();
     assert_eq!(options.get_username(), "private_role.testref");
     assert_eq!(options.get_database(), Some("postgres"));
@@ -318,6 +307,93 @@ impl Fixture {
             .unwrap();
         self.admin_db.close().await;
     }
+}
+
+#[tokio::test]
+#[ignore = "requires ACTION_TEST_DATABASE_URL for local bart_actions_test"]
+async fn standalone_pool_queries_pin_commit_and_rollback_before_returning_results() {
+    let f = Fixture::new().await;
+    // SAVEPOINT succeeds only inside an explicit transaction. Its absence in the
+    // next operation proves the adapter committed and started a fresh transaction.
+    crate::db::query("SAVEPOINT standalone_probe")
+        .execute(crate::db::pool(&f.db))
+        .await
+        .unwrap();
+    let error = crate::db::query("RELEASE SAVEPOINT standalone_probe")
+        .execute(crate::db::pool(&f.db))
+        .await
+        .unwrap_err();
+    assert_eq!(
+        error.as_database_error().and_then(|e| e.code()).as_deref(),
+        Some("3B001")
+    );
+
+    let result = crate::db::query("UPDATE hub_game SET description=$1 WHERE bgg_id=$2")
+        .bind("Committed after statement failure")
+        .bind(1i32)
+        .execute(crate::db::pool(&f.db))
+        .await
+        .unwrap();
+    assert_eq!(result.rows_affected(), 1);
+    let description: String = sqlx::query_scalar("SELECT description FROM hub_game WHERE bgg_id=1")
+        .fetch_one(&f.db)
+        .await
+        .unwrap();
+    assert_eq!(description, "Committed after statement failure");
+
+    // This FK is deferred: INSERT yields RETURNING data, but COMMIT must fail.
+    // Neither fetch_optional nor fetch_all may expose that uncommitted success.
+    let sql = "INSERT INTO hub_feedback(id,created_at,user_id,title,description,category,status,admin_note,updated_at) VALUES($1,now(),$2,'Invalid owner','Must roll back','bug','new','',now()) RETURNING id";
+    let invalid_owner = Uuid::new_v4();
+    let optional_id = Uuid::new_v4();
+    let error = crate::db::query_scalar::<_, Uuid>(sql)
+        .bind(optional_id)
+        .bind(invalid_owner)
+        .fetch_optional(crate::db::pool(&f.db))
+        .await
+        .unwrap_err();
+    assert_eq!(
+        error.as_database_error().and_then(|e| e.code()).as_deref(),
+        Some("23503")
+    );
+    let all_id = Uuid::new_v4();
+    let error = crate::db::query_scalar::<_, Uuid>(sql)
+        .bind(all_id)
+        .bind(invalid_owner)
+        .fetch_all(crate::db::pool(&f.db))
+        .await
+        .unwrap_err();
+    assert_eq!(
+        error.as_database_error().and_then(|e| e.code()).as_deref(),
+        Some("23503")
+    );
+    let remaining: i64 =
+        crate::db::query_scalar("SELECT count(*) FROM hub_feedback WHERE id=ANY($1)")
+            .bind(vec![optional_id, all_id])
+            .fetch_one(crate::db::pool(&f.db))
+            .await
+            .unwrap();
+    assert_eq!(remaining, 0);
+
+    let mut tasks = tokio::task::JoinSet::new();
+    for n in 0..32i32 {
+        let db = f.db.clone();
+        tasks.spawn(async move {
+            let identity = Uuid::new_v4();
+            let text = format!("Distinct UTF-8 value {n}: héllo 🎲");
+            for _ in 0..4 {
+                let row: (i32, String, Uuid, bool) = crate::db::query_as(
+                    "SELECT $1::integer,$2::text,$3::uuid,statement_timestamp()>transaction_timestamp()",
+                ).bind(n).bind(&text).bind(identity)
+                    .fetch_one(crate::db::pool(&db)).await.unwrap();
+                assert_eq!(row, (n, text.clone(), identity, true));
+            }
+        });
+    }
+    while let Some(result) = tasks.join_next().await {
+        result.unwrap();
+    }
+    f.finish().await;
 }
 
 #[tokio::test]

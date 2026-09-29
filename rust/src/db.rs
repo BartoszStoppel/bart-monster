@@ -1,11 +1,91 @@
-//! Central query policy: disable persistent prepared statements on every query.
-//! Production also requires Supabase's session pooler: SQLx 0.8 can send prepare
-//! and bind separately, so unnamed statements alone do not make transaction pooling safe.
+//! Use nonpersistent statements and pin standalone queries inside a transaction.
+//! SQLx 0.8 separates prepare and bind with Sync; an explicit transaction keeps
+//! Supabase's transaction pooler on the same backend across those exchanges.
+use futures_util::{
+    TryStreamExt,
+    future::BoxFuture,
+    stream::{self, BoxStream},
+};
 use sqlx::{
-    Database, FromRow,
+    Database, Describe, Either, Error, Execute, Executor, FromRow, PgPool, Postgres,
     database::HasStatementCache,
+    postgres::{PgQueryResult, PgRow, PgStatement, PgTypeInfo},
     query::{Query, QueryAs, QueryScalar},
 };
+
+/// Executor for a single standalone operation against a transaction pooler.
+/// Results are buffered until COMMIT succeeds, so callers cannot observe success
+/// before deferred constraints or the commit have been checked. Use an explicit
+/// transaction directly for operations that need to be atomic together.
+#[derive(Clone, Copy, Debug)]
+pub struct TransactionPool<'p>(&'p PgPool);
+
+pub fn pool(pool: &PgPool) -> TransactionPool<'_> {
+    TransactionPool(pool)
+}
+
+impl<'p> Executor<'p> for TransactionPool<'p> {
+    type Database = Postgres;
+
+    fn fetch_many<'e, 'q: 'e, E>(
+        self,
+        query: E,
+    ) -> BoxStream<'e, Result<Either<PgQueryResult, PgRow>, Error>>
+    where
+        'p: 'e,
+        E: 'q + Execute<'q, Postgres>,
+    {
+        Box::pin(
+            stream::once(async move {
+                let mut transaction = self.0.begin().await?;
+                let rows: Vec<_> = (&mut *transaction).fetch_many(query).try_collect().await?;
+                transaction.commit().await?;
+                Ok::<_, Error>(rows)
+            })
+            .map_ok(|rows| stream::iter(rows.into_iter().map(Ok)))
+            .try_flatten(),
+        )
+    }
+
+    fn fetch_optional<'e, 'q: 'e, E>(self, query: E) -> BoxFuture<'e, Result<Option<PgRow>, Error>>
+    where
+        'p: 'e,
+        E: 'q + Execute<'q, Postgres>,
+    {
+        Box::pin(async move {
+            let mut transaction = self.0.begin().await?;
+            let row = (&mut *transaction).fetch_optional(query).await?;
+            transaction.commit().await?;
+            Ok(row)
+        })
+    }
+
+    fn prepare_with<'e, 'q: 'e>(
+        self,
+        _sql: &'q str,
+        _parameters: &'e [PgTypeInfo],
+    ) -> BoxFuture<'e, Result<PgStatement<'q>, Error>>
+    where
+        'p: 'e,
+    {
+        Box::pin(async {
+            Err(Error::Protocol(
+                "explicit prepared statements are unsupported through the transaction pool; use crate::db queries".into(),
+            ))
+        })
+    }
+
+    fn describe<'e, 'q: 'e>(self, _sql: &'q str) -> BoxFuture<'e, Result<Describe<Postgres>, Error>>
+    where
+        'p: 'e,
+    {
+        Box::pin(async {
+            Err(Error::Protocol(
+                "query description requires a direct/session connection".into(),
+            ))
+        })
+    }
+}
 
 pub fn query<DB: Database + HasStatementCache>(sql: &str) -> Query<'_, DB, DB::Arguments<'_>> {
     sqlx::query(sql).persistent(false)
@@ -30,7 +110,7 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sqlx::{Connection, Execute, PgConnection, Postgres, Row, postgres::PgConnectOptions};
+    use sqlx::{Connection, PgConnection, Row, postgres::PgConnectOptions};
     use std::str::FromStr;
 
     #[test]
@@ -46,10 +126,23 @@ mod tests {
         assert!(!Execute::persistent(&bulk.build().persistent(false)));
     }
 
+    #[tokio::test]
+    async fn transaction_pool_rejects_explicit_named_statement_apis() {
+        let database = PgPool::connect_lazy("postgres://localhost/unused").unwrap();
+        assert!(matches!(
+            pool(&database).prepare("SELECT 1").await,
+            Err(Error::Protocol(_))
+        ));
+        assert!(matches!(
+            pool(&database).describe("SELECT 1").await,
+            Err(Error::Protocol(_))
+        ));
+    }
+
     #[test]
     fn runtime_queries_do_not_bypass_central_query_policy() {
-        // These checks enforce query configuration, not transaction-pool compatibility.
-        // The runtime separately requires session pooling for Supabase.
+        // Nonpersistent queries must also run through pool() or an explicit
+        // transaction so prepare/bind cannot use different pooled backends.
         for (name, source) in [
             ("actions.rs", include_str!("actions.rs")),
             ("auth.rs", include_str!("auth.rs")),

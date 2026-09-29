@@ -138,7 +138,9 @@ pub async fn board_state(
     metric: Metric,
 ) -> Result<Value, StoreError> {
     let scope = make_scope(user_id, category, game_id, metric);
-    let rows = load(&mut *pool.acquire().await?, &scope).await?;
+    let mut tx = pool.begin().await?;
+    let rows = load(&mut tx, &scope).await?;
+    tx.commit().await?;
     response(&rows, &scope)
 }
 
