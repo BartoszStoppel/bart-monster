@@ -1,120 +1,100 @@
 # bart.monster
 
-A Django home for a board-game group: shared collection, BGG discovery, personal enjoyment/difficulty and expansion tier lists, community scores and taste comparisons, household wishlists, a weighted picker, statistics, achievements, feedback, Furtch stories, and an optional AI rules assistant.
+A board-game home for a group of friends. Rust/Axum handles authentication, catalog changes, rankings, daily history, BGG requests, and the rules assistant. React/Vite renders the collection, tier lists, community, picker, statistics, achievements, administration, and Furtch stories.
 
-The app uses Django templates and a small vanilla JavaScript file. There is no frontend build step. Django manages application data and sessions; the existing Supabase project remains the production PostgreSQL host and Google sign-in provider. SQLite is convenient locally.
+The application target is **https://bart.monster** on Vercel's native Rust runtime. The existing Supabase project remains the PostgreSQL host and Google sign-in provider. The private production schema is still named `bart_django`; that historical name preserves deployed data and does not require Python or Django.
 
-The Django rewrite, difficulty rankings, and database cleanup are live at **https://bart.monster** as of September 29, 2026. Vercel runs Django; Supabase remains the database and Google sign-in provider. Existing players retain their accounts and data but must sign in again for a Django session. See [the results](docs/refactor-results.md), [migration guide](docs/django-migration.md), and [Supabase audit](docs/supabase-audit.md).
+The frontend reuses the original Next.js dashboard's page structure, components, and navigation through small compatibility adapters, with a brown palette. An original brown screenshot or exact historical brown palette was not recovered, so pixel-for-pixel color fidelity is not claimed. The Python/Django runtime has been removed; its rollback source remains at commit `9a1596e`.
 
-## Scores, daily history, and hot takes
+## Local development
 
-Enjoyment tier scores run from 10 to 1 across each player's ordered rankings, separately for board and party games. Adding, removing, or moving one game can change other games' scores too. Every completed drag or **Move** action saves automatically, for both game and expansion tiers. The board stays in place and displays **Saving…** or **Saved**, with scores supplied by the server.
-
-Rapid moves are saved in order. Temporary failures retry automatically; an identical save, including a retry after a lost response, acknowledges the current ranking without another database write. A conflicting edit from another tab stops the queue and shows a reload link. Keep the tab open until **Saved** appears: pending moves are held in memory, and navigation warns while changes remain unsaved. Without JavaScript, each **Move** form saves through a normal page request.
-
-For each metric, history stores **at most one value per game/player/day and one community average per game/day**. Each player counts once in the community average, using their latest tier score. Editing more often does not increase their weight. Today's value updates immediately; the final saved value becomes that day's closing value. Older days stay unchanged. There is **no nightly job** and no need to keep intraday events. Quiet days carry the previous known value forward without redundant database rows.
-
-Statistics and game pages default to community history, with optional player history and signed daily changes. Dates use `America/Indiana/Indianapolis`. Unranking clears today's personal score and recalculates the community average; it does not erase older days. A day ending with no score creates a chart gap. Displayed current collection/statistics averages require three ratings; history retains the average across the available rankings even below that threshold.
-
-The original Supabase export is retained separately for rollback. Import compacts old events into each local day's last recorded value, including decreases. Missing legacy observations are shown as **Unknown** gaps: the old app failed to record most community history, so that period cannot be reconstructed honestly. The application retains daily history indefinitely. It tracks game tier scores, not standalone ratings/comments, expansion rankings, or BGG metadata. Deleting a catalog game removes its history; deleting a user removes their personal history. Use backups to recover deliberately deleted data. Admin account deletion also updates today’s community average for both metrics; earlier community days remain fixed.
-
-Ownership, wishlists, explicit ratings/comments, and tier positions share one `UserGame` association. These remain independent: ranking a game does not mark it owned, and unranking leaves ownership and comments intact. Completely empty associations are removed; notes and priorities are retained even when a game is not currently wishlisted. Households use connected partner links consistently, including one-sided legacy links. Household awards count each game once, and a ranking by either partner removes it from the household’s Shelf of Shame. The picker applies enjoyment tier filters and player-ranked weights only to selected players; games those players have not ranked remain eligible. Source IDs and timestamps are kept for reconciliation. Activity, achievements, bounties, and curated expansions keep their separate lifecycles.
-
-On **Community**, each player's hottest take always has a red glow, with no checkbox or display toggle. It is the ranked game whose score differs most from its community average, considering only games with at least three non-null rankings in the selected category. Both unusually high and unusually low scores qualify. Ties select the lowest BGG ID. The highlight is rendered by Django and works without JavaScript.
-
-## Difficulty rankings
-
-Switch **Enjoyment / Difficulty** on the tier list, Community, profiles, and statistics. Difficulty asks how much effort a game takes to learn and play well. Its fixed levels are **1 Cuddly, 2 Tame, 3 Challenging, 4 Demanding, 5 Brutal, 6 Monstrous**; higher means harder. Order within a difficulty tier is visual only. Every placement autosaves, and a game ranked in one mode appears in the other mode's Unranked bank until assessed there. Existing placements in the other mode stay intact.
-
-Community difficulty averages each player's current vote once. Shared query helpers supply current enjoyment/difficulty means and vote counts; unrelated table joins cannot inflate those counts. It replaces BGG difficulty in game details, collection sorting, charts, the picker's Favor easy / Favor hard modes, and chat filtering/recommendations. Games without votes show **Unrated**; there is no BGG fallback. Averages with fewer than three votes are marked as early estimates. Difficulty-based picker modes exclude unrated candidates and report that count; other picker modes keep them eligible.
-
-Community supports independent metric and Board games / Party games filters. Both player lists sort by existing player level descending, then enjoyment-ranked game count, then stable user ID. Switching metric does not change earned levels. Each mode has its own automatic hot-take glow; enjoyment taste comparisons and predictions appear only in Enjoyment mode.
-
-`UserGame` stores both independent placements without a duplicate table or current difficulty-score cache. `DailyScore.metric` separates personal/community daily history for enjoyment and difficulty. Both follow the daily retention policy above. BGG's unrelated enjoyment rating and catalog metadata remain available. See the [approved design and implementation](docs/difficulty-rating-plan.md) for edge cases and validation.
-
-## Run locally
-
-Requires Python 3.12+ and [uv](https://docs.astral.sh/uv/).
+Install Rust/Cargo, Bun, and PostgreSQL. Copy `.env.example` to `.env` and set `DATABASE_URL` to a disposable local database. PostgreSQL is required; there is no SQLite fallback or local password-login bypass.
 
 ```sh
-uv sync --frozen
-cp .env.example .env
-uv run manage.py migrate
-uv run manage.py createsuperuser
-uv run manage.py runserver
+bun install --cwd web --frozen-lockfile
+bun run --cwd web build
+cargo run --bin bart-monster -- migrate
+cargo run --bin bart-monster
 ```
 
-Open http://127.0.0.1:8000. Expand **Sign in with a local account** to use the superuser. Set its display name in `/admin/`. A fresh install starts with an empty catalog; add games at `/search`, or import the existing site using [the migration guide](docs/django-migration.md).
+Open http://localhost:8000. Rust serves the built frontend. Configure the existing Supabase URL/anonymous key and allow `http://localhost:8000/callback` in Supabase for local Google login. New identities receive ordinary player accounts; staff permissions never come from editable provider metadata.
 
-Configuration comes from the environment, then `.env`, then the existing `.env.local`; earlier values win. Leave an optional setting out rather than defining it as empty if you want to inherit its legacy value. `DJANGO_DEBUG=true` enables development settings. Production requires an explicit secret and HTTPS.
+For Vite hot reload, run the backend with `PORT=8080 APP_ORIGIN=http://localhost:5173` and run `bun run --cwd web dev` in another terminal. Vite proxies API requests to port 8080. The built-frontend workflow above is the simplest way to test the entire callback flow.
 
-Optional integrations:
+Environment values take precedence over `.env`, followed by `.env.local`. `APP_ORIGIN` must be an exact HTTPS origin outside local development; on Vercel it can fall back to the trusted `VERCEL_URL`. Rust stores opaque session keys as hashes in PostgreSQL, uses HttpOnly/SameSite cookies, and binds `X-CSRF-Token` to the session and exact request origin. Changing runtimes requires signing in again.
 
-- `BGG_API_TOKEN`: BGG searches and metadata refreshes.
-- `SUPABASE_URL` / `SUPABASE_ANON_KEY`: existing Google sign-in; legacy `NEXT_PUBLIC_SUPABASE_*` names also work. Allow the Django callback URL in Supabase before testing Google sign-in.
-- `ANTHROPIC_API_KEY`: chat and PDF-to-Markdown conversion. `CHAT_MODEL` selects the model; defaults to `claude-sonnet-4-6`.
+Optional integrations are `BGG_API_TOKEN`, `ANTHROPIC_API_KEY`, and `CHAT_MODEL` (default `claude-sonnet-4-6`). Missing BGG or AI configuration does not remove existing collection data. Chat sends relevant collection data and selected rulebooks to Anthropic. Database credentials and server API keys stay out of the browser.
 
-Rules answers share a cache entry for the same set of expansions regardless of name casing, order, or duplicate selections. Long chats send a bounded recent conversation while keeping earlier messages visible.
+## Rankings and history
 
-Missing integrations do not prevent local sign-in or existing collection features. API errors are shown in the UI. Chat sends collection data and selected rulebooks to Anthropic, as the original app did.
+Enjoyment scores run from 10 to 1 across a player's ordered tier list, separately for board and party games. The server computes scores; moving one game can rescale other games. Every completed game or expansion move autosaves. Requests are serialized, temporary failures retry, identical retries make no additional writes, and conflicting revisions cannot overwrite another tab. There is no manual Save button.
 
-## Verify
+Difficulty is independent: **1 Cuddly, 2 Tame, 3 Challenging, 4 Demanding, 5 Brutal, 6 Monstrous**. Order within a difficulty tier is visual only. Ranking a game in one mode makes it available in the other mode's Unranked bank until assessed there. Community difficulty replaces BGG complexity; no votes means **Unrated**, and fewer than three votes is an early estimate. BGG enjoyment ratings remain separate.
+
+Community supports Enjoyment/Difficulty and Board/Party filters. Players sort by their existing category-specific enjoyment level, then ranked-game count and stable ID. Difficulty votes do not duplicate progression. Eligible hot takes always receive the red glow; there is no checkbox.
+
+For each metric, history stores at most one personal score per player/game/local day and one community average per game/local day. Today's value changes as edits are saved, including decreases. Earlier days remain fixed. Each player's latest score counts once; repeated edits do not increase their weight. **No nightly job is required.** Dates use `America/Indiana/Indianapolis`.
+
+Daily history has no automatic expiry or global row cap. Quiet days carry known values forward in charts without redundant stored observations. Unranking writes a null closing value, and unknown legacy observations remain gaps. History covers game tier scores, not expansion tiers, standalone ratings/comments, or BGG metadata. Catalog deletion removes that game's associated data/history. The restored administration UI manages player roles and does not expose account deletion. Any future account-deletion operation must preserve earlier community history and recompute today's surviving means. Backups protect against deliberate deletion.
+
+Ownership, wishlists, ratings/comments, enjoyment, and difficulty share one `hub_usergame` association while retaining independent fields. Unranking preserves collection state and comments. Connected partner links define households, including one-sided links. The picker uses selected attending players' ratings and collection availability.
+
+## Checks
 
 ```sh
-uv run manage.py test
-uv run ruff check config hub manage.py
-uv run ruff format --check config hub manage.py
-uv run manage.py makemigrations --check --dry-run
-uv run manage.py collectstatic --noinput
+cargo fmt --all -- --check
+cargo clippy --all-targets -- -D warnings
+cargo test --lib
+bun run --cwd web build
+bun run --cwd web test
 ```
 
-Tests cover routes with empty/populated data, auth/CSRF/admin boundaries, transactional tier saves, repeated/stale edits, daily history and unknown legacy gaps, downward score changes, independent user–game fields, consolidation migrations, hot-take eligibility, scoring, expansion isolation, category/deletion recalculation, ownership, wishlists, picker filters, community calculations, import rollback, PKCE callback validation, BGG parsing, and mocked AI/tool behavior. Tests never call paid AI services or the live database. Run the suite against a disposable PostgreSQL database via `DATABASE_URL` to also exercise its row-lock tests; those six tests are skipped on SQLite.
-
-The optional ten-check browser suite covers collection dropdowns, long chats, difficulty mode switching/mobile charts and real dragging, rapid queued moves and daily rollups, retries before and after a committed save, conflicts, expansion/keyboard moves, and the JavaScript-free fallback. It runs against Django's disposable test database and local test server:
+PostgreSQL integration tests are explicit and refuse remote database URLs. Use disposable local databases. Ranking and chat tests require the Rust baseline first. Authentication tests create an isolated schema. Action tests create their own schemas and require a separate local database named `bart_actions_test`.
 
 ```sh
-uv run --with playwright python -m playwright install chromium
-uv run --with playwright manage.py test hub.browser_checks
+# DATABASE_URL must point to a disposable local test database.
+cargo run --bin bart-monster -- migrate
+AUTH_TEST_DATABASE_URL="$DATABASE_URL" cargo test --lib auth::integration_tests -- --ignored
+RANKING_TEST_DATABASE_URL="$DATABASE_URL" cargo test --lib ranking_store::tests::postgres -- --ignored
+CHAT_TEST_DATABASE_URL="$DATABASE_URL" cargo test --lib chat::integration_tests::postgres -- --ignored
+# ACTION_TEST_DATABASE_URL must point to the separate local bart_actions_test database.
+cargo test --lib action_tests -- --ignored
 ```
 
-Set `CHROMIUM_EXECUTABLE` to reuse an existing Chromium binary instead of installing one. Playwright is only needed for these browser checks; it is not an application dependency.
+Coverage includes score decreases, daily rollups, independent metrics, stale/identical saves, PostgreSQL concurrency, authentication/CSRF, BGG parsing, bounded model calls, citations, and rulebook caching. Provider tests use local mocks and make no paid AI requests. See [verification details](docs/refactor-results.md).
+
+## Hosting and releases
+
+Keep the current Vercel project and Supabase database. `vercel.json` builds `web/dist` with Bun and routes API/auth requests to `api/index.rs`; static assets and frontend routes stay on Vercel. The native Rust function has a 300-second limit. Chat and PDF conversion each have a 240-second overall provider-work deadline; an expiring database lease prevents duplicate chat requests for one user across instances.
+
+Production requests and explicit migrations use the existing private role/schema through Supabase's **session pooler on port 5432** with TLS. Each warm instance allows one database connection and closes idle connections after five seconds. All runtime queries use shared wrappers with `persistent(false)`, but that setting alone is not sufficient for SQLx 0.8 transaction-pool compatibility. Concurrent live checks on port 6543 still produced protocol/decoding errors, so this application rejects the Supabase transaction-pooler endpoint. Migrations run only as an explicit release step. The Rust `migrate` command creates the baseline only for an empty application schema, then adds sessions/chat leases. It does not re-import or overwrite existing rankings.
 
 ```sh
-uv run manage.py fetch_games 13 266192       # Add or refresh specified BGG games
-uv run manage.py fetch_games --refresh-all # Refresh existing metadata; keep categories
+bunx vercel@latest deploy --yes
+bunx vercel@latest deploy --prod --skip-domain --yes
+bunx vercel@latest promote <verified-deployment-url> --yes
 ```
 
-## Deploy
+Back up current data and validate an isolated preview before production promotion. Preserve the previous deployment and old read-only public tables during the rollback window. Never import a legacy export over newer production writes. [Deployment and data preservation](docs/django-migration.md) documents the release sequence; its filename is retained for existing links.
 
-Keep **Supabase for PostgreSQL and Google sign-in**. Supabase's hosted [Edge Functions use TypeScript/Deno](https://supabase.com/docs/guides/functions/quickstart), so the Django process runs on the application host. [Vercel runs Django](https://vercel.com/docs/frameworks/full-stack/django) in the existing project. `vercel.json` selects Django and a 300-second function limit; Vercel collects static files during the build.
-
-Production uses the private `bart_django` schema/role; previews use `bart_django_preview`. Neither is available to Supabase browser API roles. Vercel connects through the transaction pooler on port 6543 with `DATABASE_POOL_MODE=transaction` and `DATABASE_CONN_MAX_AGE=0`; settings disable prepared statements and server-side cursors. Apply migrations separately through the session pooler on port 5432, using the same dedicated role. Vercel deployments require `DATABASE_URL` and cannot fall back to SQLite. Deployment/branch hosts are added from Vercel environment variables. Follow the [migration guide](docs/django-migration.md) for release steps and rollback precautions.
-
-The Docker image remains available for local production rehearsals or a container deployment:
+The optional Docker image contains the Rust executable and built frontend, with no Python runtime:
 
 ```sh
 docker build -t bart-monster .
-# Set DATABASE_URL for an isolated Django target, plus secrets/hosts/integrations in .env.production.
-# Set DJANGO_DEBUG=false, and configure HTTPS at the reverse proxy.
-docker run --rm --env-file .env.production bart-monster python manage.py migrate
+docker run --rm --env-file .env.production bart-monster migrate
 docker run --rm --env-file .env.production -p 8000:8000 bart-monster
 ```
 
-Set `TRUST_PROXY=true` only when a trusted reverse proxy replaces the `X-Forwarded-Proto` header. Set `DJANGO_CSRF_TRUSTED_ORIGINS=https://bart.monster` and the correct `DJANGO_ALLOWED_HOSTS`. Run `manage.py check --deploy` with production configuration. The image collects static assets and serves them through WhiteNoise; migrations are a separate release step. Back up the PostgreSQL database normally. Configure a shared Django cache if deploying multiple instances and you need globally shared BGG caching/chat concurrency limits; the default cache is per process.
+Set a container-reachable database URL and public `APP_ORIGIN`; terminate HTTPS at the trusted host/proxy. Vercel's request-body limit applies to uploaded PDFs even though the application parser accepts up to 20 MB.
 
-## Structure
+## Source map
 
-- `config/`: settings, routes, WSGI entry point.
-- `hub/models.py`, `forms.py`, `admin.py`: data, validation, and administration.
-- `hub/ranking.py`: shared scoring, transactions, revisions, and taste predictions.
-- `hub/insights.py`: daily history summaries and community/hot-take/household/achievement calculations.
-- `hub/views.py`: normal Django views and small JSON endpoints.
-- `hub/bgg.py`, `auth.py`, `chat.py`: external integrations; `hub/chat_tools.py` shares tool schemas and parameter definitions.
-- `hub/templates/`, `hub/static/`: shared HTML, CSS, and progressive enhancement.
-- `hub/data/`: preserved stories and rank definitions.
-- `supabase/`: historical schema and migration evidence; **do not apply it to Django**. `audits/efficiency.sql` contains read-only diagnostics, outside the migrations directory.
-- `archive/`, `emails/`, and the personal email scripts remain as historical/personal material; they are not part of the Django runtime.
+- `rust/src/`: Axum routes, authentication, SQL data/actions, ranking calculation/storage, BGG and chat integrations.
+- `rust/migrations/`: fresh-install baseline and additive Rust session/lease migration.
+- `rust/data/`: preserved assistant tool schemas. Player ranks live in `web/src/lib/ranks.ts`; stories remain in the frontend Furtch page.
+- `api/index.rs`: Vercel entrypoint; `rust/src/main.rs`: local/container entrypoint.
+- `web/src/`: original dashboard components/pages, Vite adapters, brown theme, and autosave UI.
+- `supabase/`: historical SQL and read-only legacy audit; never replay its migrations against the private application schema.
+- `archive/`, `emails/`, `scripts/`: preserved historical/personal material, excluded from deployment.
 
-Documentation: [migration and cutover](docs/django-migration.md), [measurements and verification](docs/refactor-results.md), [Supabase audit](docs/supabase-audit.md), [coding guidance](CLAUDE.md), and [the archived monster site](archive/README.md). `ideas.md` is the separate ideas backlog and is not rewritten as part of this documentation sync.
-
-This refactor uses full-page forms for most actions, automatic saves for tier edits, and complete chat replies instead of token streaming. Tier moves also work with keyboards and without JavaScript. The admin interface is Django's built-in admin. See [the migration guide](docs/django-migration.md) for data preservation and cutover details.
+Further documentation: [database audit](docs/supabase-audit.md), [difficulty behavior](docs/difficulty-rating-plan.md), [verification](docs/refactor-results.md), [coding defaults](CLAUDE.md), and [archive](archive/README.md). `ideas.md` remains the user's separate backlog and is not changed during documentation syncs.

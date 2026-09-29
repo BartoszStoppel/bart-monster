@@ -56,3 +56,8 @@ staticfiles/
 htmlcov/
 backups/
 !\.env.example
+
+# Rust application and restored UI
+/target/
+web/node_modules/
+web/dist/

@@ -1,29 +1,25 @@
 # Supabase efficiency and duplication audit
 
-Audited **2026-09-28**, against the linked live project, cross-checked with the project configured in `.env.local`. PostgreSQL reports version 17.6. This was a read-only inspection; no application rows, tables, indexes, policies, or migrations were changed.
+This report preserves the **September 28, 2026 read-only audit** of the original public application schema. That inspection changed no rows, tables, policies or indexes. Its 14 tables held **11,065 rows and 3.82 MiB** including indexes/TOAST; the reported server was PostgreSQL 17.6. These are historical measurements, not current database totals or projected storage savings.
 
-The database is small and mostly well separated: **14 public application tables, 11,065 rows, 3.82 MiB including indexes and TOAST storage**. There is no evidence for halving stored data without discarding useful information. The strongest simplification is retiring the derived alignment table when Django takes over. Correctness and avoidable writes matter more here than disk savings.
+The approved consolidation was completed during the September 29 cutover. The current Rust application preserves that consolidated data in the existing private `bart_django` schema; `bart_django_preview` isolates previews. These names are historical. Supabase remains PostgreSQL and Google identity, and Vercel runs native Rust. No new legacy import is part of the Rust replacement.
 
-## Implementation status after approval
+## Current design
 
-The recommendations are deployed in Django as of September 29, 2026. Vercel serves the application, and the existing Supabase project holds isolated `bart_django` production and `bart_django_preview` schemas. The final frozen export/import was verified field for field. Legacy public tables remain intact with API writes frozen for the rollback window; their eventual retirement is still pending. The inventory below describes the original audit, not current total database disk usage.
+- `hub_usergame` combines collection, rating/comment, enjoyment and difficulty state while retaining independent fields, source IDs and timestamps. Ranking never implies ownership. Empty rows can be pruned, but inactive wishlist notes/priority and difficulty-only rows survive.
+- `hub_dailyscore` stores one local-day closing value per metric/player/game and one community average per metric/game/day. Same-day updates include decreases, prior days remain unchanged, and each player counts once. The user's daily-granularity request superseded the original intraday history model. No nightly task or automatic history expiry is needed.
+- Community comparisons are derived from current rankings rather than stored in a repeated profile/alignments cache. Expansion placements obtain the parent game through their expansion row.
+- Activity, achievements/awards, bounties, curated expansions, rulebooks, answer cache and run audit remain separate because their lifecycles differ. Composite unique constraints supply indexes for covered prefix lookups.
+- Difficulty adds fields and a history metric to existing tables, with fixed community votes 1–6. There is no duplicate current difficulty-score table or BGG complexity fallback. Raw backups retain retired BGG fields.
+- Rust adds only `hub_rustsession` and `hub_chatlease` for secure opaque sessions and expiring cross-instance request coordination. Existing data is not copied into a parallel Rust schema. Database queries use the private role through the Supabase session pooler on port 5432, with one connection per instance and a five-second idle timeout. Shared wrappers disable persistent prepared statements, but live tests showed that this alone does not make SQLx 0.8 safe through the port-6543 transaction pooler.
 
-- Collection, rating, and game-placement tables are consolidated into `UserGame`. The rehearsal retained 1,143 associations from 1,575 source rows, omitting 28 empty collection associations while retaining independent flags, notes, ratings, and comments. Source IDs/timestamps remain available for reconciliation.
-- Alignments are derived; expansion placements store their parent only through the expansion. Overlapping foreign-key indexes are omitted where a composite unique index covers the lookup. Replacement index plans were checked in PostgreSQL.
-- Activity, achievements, bounties, curated expansions, rulebooks, caches, and run logs remain separate as recommended. Current scores and ordering are normalized: the rehearsal corrected 91 scores and nine positions using the canonical formula and deterministic tie resolution.
-- The subsequent request for **daily granularity supersedes the original intraday-retention recommendation below**. Application history now keeps one daily closing value per player/game and one daily community average, with each player counted once. Today's row updates immediately, so no nightly job is needed. The raw export preserves all original events for rollback.
-- The rehearsal compacted 9,085 events into 5,180 historical daily rows and added 1,185 truthful current-day baseline rows. Missing legacy observations remain unknown chart gaps. No past averages were invented.
-- Explicit missing-table flags handle the three absent rules tables without masking other export failures. Existing Django installations have a data migration; the source and local database were backed up first.
+The historical import merged 1,575 source association rows into 1,143 consolidated rows and compacted 9,085 events into 5,180 historical daily values. It added 1,185 truthful current-day baseline values, without inventing missing past averages. Source exports retain omitted empty rows and every original event. See [data preservation and releases](django-migration.md).
 
-See [the migration guide](django-migration.md) for implementation, backups, verified counts, and cutover steps, and [the results](refactor-results.md) for tests. The sections below record the original audit and distinguish source findings from the implemented target schema.
+## Original measured inventory
 
-The later approved difficulty feature also reuses `UserGame` and adds a metric discriminator to `DailyScore`, keeping the application table count unchanged. The current Django schema removes `bgg_weight` and `bgg_num_weights`; the raw source export retains both. Community difficulty now drives all difficulty consumers, and legacy import explicitly omits those retired fields. These changes are live in the new Django schema; the original audited public tables and historical size measurements remain unchanged in this report. See [the difficulty design](difficulty-rating-plan.md) and [migration guide](django-migration.md#difficulty-schema-upgrade).
+Counts were exact `COUNT(*)` results; sizes used `pg_total_relation_size`. Supabase-managed auth/storage schemas were outside cleanup scope.
 
-## Measured inventory
-
-Counts are exact `COUNT(*)` results. Sizes use `pg_total_relation_size`, including each table's indexes and TOAST; these are allocated relation sizes, not billing totals or estimated reclaimable space. Supabase-managed auth/storage schemas are outside this cleanup scope.
-
-| Table | Rows | Allocated size |
+| Original public table | Rows | Allocated size |
 | --- | ---: | ---: |
 | `score_snapshots` | 9,085 | 1,720 KiB |
 | `board_games` | 234 | 928 KiB |
@@ -40,68 +36,48 @@ Counts are exact `COUNT(*)` results. Sizes use `pg_total_relation_size`, includi
 | `feedback` | 10 | 32 KiB |
 | `profiles` | 27 | 32 KiB |
 
-The three rules tables in the repository (`game_rules`, `rules_answer_cache`, `rules_agent_runs`) **do not exist in this live public schema**. Migration `20260531000000_game_rules.sql` is absent from the live migration ledger. Do not describe those tables as live, empty tables or include their proposed indexes in live savings.
+The declared legacy rules tables (`game_rules`, `rules_answer_cache`, `rules_agent_runs`) did not exist in the audited public schema, and their historical migration was not in the live ledger. They were not counted as empty live tables or as storage savings. The current private schema has distinct rulebook/cache/run tables used by Rust.
 
-## Recommended cleanup
+## Original duplication findings and dispositions
 
-| Priority | Change | Evidence and benefit | Conditions |
-| --- | --- | --- | --- |
-| High | Retire `user_alignments` after the application cutover | All 42 rows are derived from rankings/profiles. It repeats profile names/avatars and stores 246 ally/rival JSON entries. Statistics show 9,132 updates for those 42 rows. Removes a table and the all-user recomputation/write path. | Legacy community/profile/achievement pages still read it. Django already computes comparisons from current placements. Keep the legacy table available during rollback. |
-| Medium | Derive the parent game of an expansion placement | `expansion_tier_placements.game_bgg_id` repeats `game_expansions.game_bgg_id`. All 20 rows currently agree, but the two independent foreign keys do not require that agreement. | Django already omits the repeated column and validates it on import. Legacy filters/writes must change before dropping it in Supabase. |
-| Low | Remove empty collection associations and stop recreating them | 28 of 521 rows have neither ownership nor wishlist enabled, no priority, and no nonblank note. | These rows still have IDs and `added_at`; archive them before pruning if that timestamp matters. Both save paths must delete only rows meeting the full empty predicate. Preserve inactive rows with notes or priority. No rows were deleted during this audit. |
-| Low | Review `idx_game_expansions_game` | Its `game_bgg_id` lookup is also supported by the leading column of the unique `(game_bgg_id, name)` index. Potential saving: only 16 KiB. | It has 233 recorded scans, so this is an overlapping-index candidate, not proven unused. Compare plans before removing it; keep the unique constraint. |
+`user_alignments` held 42 derived rows containing repeated profile names/avatars and 246 ally/rival JSON entries. Statistics recorded 9,132 updates to those rows. The active application computes comparisons instead. Keep the legacy table read-only through rollback retention rather than changing its contract in place.
 
-The first two changes are implemented in the deployed Django schema. The old public schema is retained solely for rollback, so changing its contracts separately is unnecessary.
+Expansion placement `game_bgg_id` repeated the curated expansion's parent. All 20 values agreed at audit time, but independent foreign keys did not enforce agreement. The consolidated schema derives that parent and validates the ranking scope.
 
-## Table consolidation options
+Twenty-eight collection rows had no ownership/wishlist flags, no priority and no nonblank note. They were archived before consolidation. Of 1,575 rows across collection/rating/placement tables, 1,152 distinct user/game pairs existed; 423 repeated pairs were structural duplication, not lost user intent. There were 631 ranked pairs without a collection row, 19 ratings without one, and 46 explicit ratings differed from tier scores. Forty-seven ratings contained comments. These differences are why the merged table keeps independent fields.
 
-**Collection + ratings + tier placements:** a single `user_games` table is technically possible. The existing tables have 1,575 rows representing 1,152 distinct `(user_id, bgg_id)` pairs; combining them would eliminate 423 repeated associations and two tables. This is a row-count comparison, not a prediction of bytes saved.
+Activity stays separate: its 22 rows had 9,980 recorded updates versus 19 profile updates. Combining it with users would couple frequent heartbeats to ranking/user locks. Achievements and single-claim bounties also have different lifecycles. Curated expansions remain separate from refreshable BGG expansion metadata because bank membership is an administrative choice and can include custom entries.
 
-This is optional, not the first recommendation. Ownership, wishlist, explicit rating/comment, and relative tier score are independent states. There are 631 ranked pairs without a collection row, 19 ratings without a collection row, and 46 of 48 explicit ratings differ from their tier score. Of the 48 ratings, 47 contain comments. A merger must retain separate `rating` and `score` fields, nullable tier/rating state, original timestamps and legacy IDs for reconciliation, and must not imply that ranking a game means owning it. Unranking must leave ratings and collection flags intact. At this size, the existing three narrow tables are reasonable.
+Rulebooks, cached answers and run logs have different invalidation/retention needs. The historical rules migration proposed duplicate indexes covered by unique constraints; the private schema omits those overlaps. Board/party `category` and BGG `categories` are distinct. `playing_time` and `max_play_time` differed for four games, so frequent equality did not justify deleting one.
 
-**Activity + profiles:** technically one-to-one, but keep them separate. The 22 activity rows have 9,980 recorded updates versus 19 profile updates. Heartbeats have a different write frequency and would contend with the profile/user rows that Django locks during ranking saves. Saving one small table is not worth coupling those operations.
+## Original history defects
 
-**Achievements + bounties:** keep separate. They have similar descriptive fields but no identical definitions or shared slugs. Multiple people can receive an achievement; a bounty has its own single-claim state. Django shares their field definitions through an abstract model already.
+No identical same-series/same-timestamp history events or conflicting same-timestamp scores were found. There were **4,667 consecutive equal-score observations at different times** because the old saver rewrote every ranked game. Daily closing values remove that unnecessary granularity while the raw export retains evidence.
 
-**Games + expansions / cached BGG expansions:** keep the curated expansion bank separate. All 26 current bank entries happen to reference items in their parent game's BGG JSON, but the JSON is overwritten on refresh and represents available BGG metadata. Bank membership is an admin choice, supports custom entries, and is referenced by rankings. Equality of today's names/IDs does not make those lifecycles interchangeable.
+The source contained **1,613 downward transitions**. Never compact with daily maxima, discard decreases, or reconstruct older community scores from current placements.
 
-**Rules library + answer cache + run log:** keep separate when introducing the feature. Source rulebooks, disposable cached answers, and historical run records have different retention and invalidation needs. The unapplied SQL migration declares both a unique constraint and an identical lookup index on `(bgg_id, modules_hash, question_norm)`; omit that extra index in any future implementation. Its separate `game_rules(bgg_id)` index also overlaps the unique `(bgg_id, module_name)` index. Django does not apply that legacy migration.
+Two defects explained missing chart data:
 
-Other apparent duplicates carry different meanings: board-game `category` is the site's board/party split, while `categories` comes from BGG. `playing_time` equals `max_play_time` for 230 games but differs for four and is independently editable/used by the picker. Extended BGG fields are displayed on game detail pages. None should be dropped simply because their values often coincide.
+1. Of 9,085 snapshots, 8,992 were personal; all 93 community snapshots had one April 4 timestamp. The authenticated INSERT policy required `auth.uid() = user_id`, which null community rows could not satisfy. The browser attempted and ignored failed community inserts. Rust computes trusted personal/community values transactionally on the server.
+2. The old chart requested up to 50,000 rows in one request, but an audited response returned `Content-Range: 0-999/9085`. A larger client limit did not bypass the API cap. The Rust history endpoint queries the requested series directly in PostgreSQL, with no global 1,000-row truncation.
 
-## Original history findings
+The legacy score column was NOT NULL and its expected user foreign key was absent. The private daily schema supports explicit unranked/null values and preserves relationships. Catalog deletion removes that game's history. The restored Rust administration UI exposes role management, not account deletion. A future account-deletion implementation must remove personal records safely and refresh today's community means while leaving earlier surviving community days fixed. Preserving history after deliberate identity/catalog deletion would require a separate soft-delete/retained-identity design; setting a deleted user's ID to NULL would falsely label their values as community scores.
 
-There are **no identical history events** when grouped by `(user_id, bgg_id, score, snapshot_at)`, and no same-series/same-timestamp conflicting scores. There are **4,667 consecutive equal-score observations at different timestamps**. The legacy saver records every ranked game on every save, even when its score did not change. These are repeated observations, not proven duplicate requests. They remain in the raw export; the approved daily model compacts them by local calendar date.
+## Original integrity and index evidence
 
-The saved data contains 1,613 downward transitions. Do not remove them, replace history with daily maxima, or reconstruct past community averages from today's placements. The initial Django rewrite preserved raw events. The approved cleanup now stores daily closing values and retains the raw source export separately.
+- No duplicate association keys, normalized game names, parent-scoped normalized expansion names, or repeated non-null BGG expansion IDs within a parent were found.
+- No existing null association keys, null tier scores or negative positions were found, although the legacy schema permitted null keys. The consolidated schema tightens these relationships.
+- Three position collisions affected six placements. Explicit ordering/normalization preserved the games instead of deleting colliding rows.
+- The initial audit found 96 score differences across seven users, including float-rounding differences; 15 differences across three users remained after excluding tied lists and 0.1 variations. Reconciliation used the canonical formula and recorded current corrections without rewriting historical observations.
+- No identical live indexes were found. A game-prefix expansion lookup was covered by its composite unique index, but its scan history meant it was overlapping rather than proven unused. Replacement query plans were checked during consolidation.
+- Eight original foreign keys lacked leading-column indexes. At this database size that was not proof of a bottleneck. Retain required uniqueness/history indexes and measure actual queries before deleting or adding indexes.
 
-Two live findings directly affect the chart:
+PostgreSQL creates indexes for unique constraints, and leading columns of multicolumn B-tree indexes can support these filters. See [unique indexes](https://www.postgresql.org/docs/17/indexes-unique.html) and [multicolumn indexes](https://www.postgresql.org/docs/17/indexes-multicolumn.html). These findings are not a latency benchmark or a claim that half the database can be removed safely.
 
-1. **Community history is not being recorded by the normal legacy client path.** There are 8,992 personal snapshots through September 20, but all 93 community snapshots have the single timestamp `2026-04-04 16:00:00+00`. RLS is enabled; the only INSERT policy requires `auth.uid() = user_id`. Community rows have `user_id = NULL`, so they cannot satisfy that check for a normal authenticated client. The legacy `use-tier-save.ts` sends those inserts through the authenticated browser client and ignores their errors. This conclusion follows from the live policy and repository code; no test write was made. Use trusted, transactional server-side aggregation, as in Django, rather than allowing clients to supply arbitrary community scores. [Supabase's RLS reference](https://supabase.com/docs/guides/database/postgres/row-level-security) explains how insert checks apply.
-2. **The old chart's single request is truncated.** The legacy statistics page requests up to 50,000 rows ordered oldest first without pagination. A read-only HEAD request with those limits returned `Content-Range: 0-999/9085`: the live API cap is 1,000. Increasing the client limit does not retrieve the rest. Django queries the selected series directly; its importer paginates REST reads until exhausted.
+## Retention and reproducibility
 
-The database also still declares `score_snapshots.score NOT NULL`, so it cannot represent an unranked/null event using the Django convention. Its expected `user_id` foreign key is absent despite the historical migration text; no orphaned snapshot user IDs currently exist. Django's separate daily schema supports null scores and restores the relationship. Deleting a user cascades their personal history; deleting a game cascades all history for that game, as documented in the migration guide. Django admin account deletion refreshes today’s community averages for both metrics without rewriting previous community days. If history must survive deliberate account/catalog deletion too, use soft deletion or a retained identity design in a separate change; setting a deleted user's ID to NULL would falsely label their scores as community history.
+Old public tables remain rollback material with API writes frozen. No destructive legacy-table retirement accompanied the original audit or current Rust replacement. Keep the private schema, Supabase Auth, backups and current writes intact. A rollback to the original Next.js deployment requires reconciling newer private-schema writes before restoring old permissions.
 
-## Integrity and index findings
+[efficiency.sql](../supabase/audits/efficiency.sql) remains a read-only diagnostic for the historical 14-table public schema. It reports counts, sizes, duplicate/empty associations, history repetition, score drift, constraints, policies and indexes inside a transaction that rolls back. It is intentionally outside `supabase/migrations/` and must not be mistaken for a current private-schema migration.
 
-- No duplicate user/game keys in collections, ratings, or placements; no duplicate user/expansion, user/category alignment, or user/achievement pairs. No duplicated normalized game names, normalized expansion names within a parent, or repeated non-null BGG expansion IDs within a parent.
-- No null association keys in collections, ratings, placements, or awards; no null tier scores; no negative tier positions. Nevertheless, the legacy schema permits null association keys. Tighten those constraints during migration so future rows cannot evade pair uniqueness.
-- All expansion placement parents agree. Profile partners are reciprocal, alignment profile copies currently match, and alignment user/category coverage matches current rankings.
-- **Three ranking position collisions** affect six rows across three users. These are duplicate positions, not duplicate games. Resolve the ordering explicitly before normalization; do not delete a game to remove a collision.
-- Comparing current saved scores with the repository's 10-to-1 formula finds 96 differences across seven users, including 59 differences of 0.1. Even excluding entire rankings with tied positions and differences of 0.1, **15 scores across three users differ by up to 1.5**. This is evidence of current-score drift worth reconciling; the audit cannot identify when it happened. Preserve past snapshots and record any correction as a new event, not a historical rewrite.
-- No exact duplicate live indexes were found. Zero scan counts do not justify dropping primary keys or unique indexes. Database statistics report a reset timestamp of `2025-12-08 11:03:29+00`; individual counters can have different lifetimes. This was not a workload benchmark.
-- Eight foreign keys lack an index beginning with their referencing columns, including `tier_placements.bgg_id`, `user_game_collection.bgg_id`, and `expansion_tier_placements.expansion_id`. At 20–1,006 rows these are not automatically bottlenecks. Django creates foreign-key indexes; benchmark actual filters/cascades before adding legacy indexes. Keep the history indexes while evaluating the new chart's filtered workload.
-
-PostgreSQL creates indexes for unique constraints automatically, and leading columns of multicolumn B-tree indexes support those filters. See the [unique-index documentation](https://www.postgresql.org/docs/17/indexes-unique.html) and [multicolumn-index documentation](https://www.postgresql.org/docs/17/indexes-multicolumn.html). Prefix overlap alone does not establish a performance win from dropping an index.
-
-## Cutover and remaining retention
-
-The final export, import, reconciliation, preview verification, and production promotion are complete. Live checks covered autosave/daily history, difficulty, pages, BGG, AI chat/PDF, and Google authorization redirects; completing Google sign-in remains an interactive browser check. Keep the old deployment, private export, and legacy tables through the rollback window. Do not restore the old application without preserving newer Django writes. See the [deployment record](django-migration.md#deployment-record-september-29-2026).
-
-No destructive legacy-table cleanup was applied during the audit, rehearsal, or cutover. The old API write grants and heartbeat RPC execute grants are frozen; Django uses its own private schema. Retiring the legacy tables remains a later operation after rollback retention.
-
-## Reproducing the checks
-
-[efficiency.sql](../supabase/audits/efficiency.sql) is a read-only diagnostic script for the 14-table legacy schema. It includes exact counts, sizes, duplicate checks, empty associations, history repetition, score drift, constraints, policies, and indexes. It uses a read-only transaction and rolls back; it is deliberately outside `supabase/migrations/`. Run it in the linked project's SQL editor or with a trusted PostgreSQL client. It returns aggregates/schema metadata, not names, emails, comments, credentials, or complete user records.
-
-This audit also used `supabase inspect db table-stats --linked`, `supabase inspect db index-stats --linked`, and the [Management API query endpoint](https://supabase.com/docs/reference/api/v1-run-a-query) with `read_only: true`; the database confirmed `transaction_read_only = on`. Catalog/statistics and data checks were separate observations while the app remained live, not a frozen migration snapshot. Historical SQL and legacy readers were reviewed at Git commit `091d2461f1bf47a6b3b78af7d62275050f33bb20`, alongside the current Django models/importer.
+The original audit also used `supabase inspect db table-stats --linked`, `supabase inspect db index-stats --linked`, and the [Management API query endpoint](https://supabase.com/docs/reference/api/v1-run-a-query) with `read_only: true`. Those were separate live observations rather than a frozen snapshot. The September 29 cutover used a frozen export and field-level reconciliation described in [the deployment guide](django-migration.md).

@@ -1,22 +1,14 @@
 # Archived monster site
 
-The original dancing-monster and map experiment is preserved here. This directory is historical material and is not used by the Django board-game hub now live on Vercel with Supabase. `.vercelignore` excludes the archive from deployments.
+The original dancing-monster and map experiment is preserved here. This is historical material, excluded from Vercel and Docker builds; it is not part of the current Rust/Axum and React/Vite board-game application.
 
-- `public/index.html`: the monster page.
-- `public/map.html`: the map experiment.
-- `public/sprites/`: the original character, animation, and map assets.
-- The package files belong to that earlier experiment; they are not dependencies or build steps for the current app.
+- `public/index.html`: monster page.
+- `public/map.html`: map experiment.
+- `public/sprites/`: original character, animation and map assets.
+- Package files belong to that experiment, not the current application's build.
 
-To view the static archive locally, serve its public directory from the repository root:
+Serve `archive/public` with a static HTTP server to view it locally. These pages have no board-game rankings, daily history or Supabase tables. The archived code/assets are unchanged.
 
-```sh
-python3 -m http.server 8001 --directory archive/public
-```
+The later Next.js board-game dashboard is preserved separately in Git at `091d2461f1bf47a6b3b78af7d62275050f33bb20`; its original layout/components are reused by the Rust application's frontend with a brown palette. The intervening Django runtime is recoverable at `9a1596e`. It is not required to build or run the current application.
 
-Open http://127.0.0.1:8001 or http://127.0.0.1:8001/map.html. The archive has no board-game ratings, history storage, or hot-take controls; those features belong to the Django app described in the [project README](../README.md).
-
-The later Next.js board-game app is preserved separately in Git at `091d2461f1bf47a6b3b78af7d62275050f33bb20`. See [the migration guide](../docs/django-migration.md) and [refactor results](../docs/refactor-results.md) for the current replacement. This documentation update leaves the archived code and assets unchanged.
-
-The [Supabase audit](../docs/supabase-audit.md) and [daily-history/database cleanup](../docs/django-migration.md) concern the later board-game database. Its Django replacement consolidates user–game state and stores daily scores; the static archive has no tables or score history to migrate.
-
-The current hub also has independent enjoyment and difficulty rankings, with community difficulty replacing BGG complexity in application features. The [difficulty design](../docs/difficulty-rating-plan.md) describes this addition; the static archive is unaffected.
+See [the project README](../README.md), [data/deployment guide](../docs/django-migration.md), [Supabase audit](../docs/supabase-audit.md), and [difficulty behavior](../docs/difficulty-rating-plan.md). Current features are separate from this static archive, and personal story/email material remains preserved.
