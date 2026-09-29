@@ -2,7 +2,7 @@
 
 A board-game home for a group of friends. Rust/Axum handles authentication, catalog changes, rankings, daily history, BGG requests, and the rules assistant. React/Vite renders the collection, tier lists, community, picker, statistics, achievements, administration, and Furtch stories.
 
-The application target is **https://bart.monster** on Vercel's native Rust runtime. The existing Supabase project remains the PostgreSQL host and Google sign-in provider. The private production schema is still named `bart_django`; that historical name preserves deployed data and does not require Python or Django.
+The application is live at **https://bart.monster** on Vercel's native Rust runtime. The existing Supabase project remains the PostgreSQL host and Google sign-in provider. The private production schema is still named `bart_django`; that historical name preserves deployed data and does not require Python or Django.
 
 The frontend reuses the original Next.js dashboard's page structure, components, and navigation through small compatibility adapters, with a brown palette. An original brown screenshot or exact historical brown palette was not recovered, so pixel-for-pixel color fidelity is not claimed. The Python/Django runtime has been removed; its rollback source remains at commit `9a1596e`.
 

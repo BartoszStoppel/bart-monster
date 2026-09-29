@@ -2,7 +2,7 @@
 
 This filename is retained for existing documentation links. The active application is Rust/Axum with a React/Vite frontend; Python/Django is a rollback implementation at commit `9a1596e`. The original Next.js application remains at `091d2461f1bf47a6b3b78af7d62275050f33bb20`.
 
-The Rust release retains current Supabase data in place. Production uses the existing private `bart_django` schema/role and previews use `bart_django_preview`. Their historical names are deliberately unchanged: renaming them would add deployment risk without changing application behavior. Supabase Auth and its Google provider remain in the same project. The application target remains https://bart.monster.
+The Rust release retains current Supabase data in place. Production uses the existing private `bart_django` schema/role and previews use `bart_django_preview`. Their historical names are deliberately unchanged: renaming them would add deployment risk without changing application behavior. Supabase Auth and its Google provider remain in the same project. The application is live at https://bart.monster.
 
 ## Schema and connection rules
 
@@ -10,7 +10,7 @@ Use the dedicated application role, with its search path set to the private appl
 
 Use the existing Supabase **transaction-pooler URL on port 6543** with `sslmode=require` for runtime requests. Each warm instance permits one client connection and closes it after five idle seconds. Take the host and role-qualified username from the existing verified connection configuration; do not guess them from a region. Use the corresponding session-pooler URL on port 5432 for explicit release migrations.
 
-SQLx 0.8 sends preparation and binding in separate protocol exchanges. Disabling cached/named statements alone still allowed backend reassignment on port 6543 and caused binary parameter/UTF-8 errors during concurrent checks. Every standalone operation now executes through `crate::db::pool(&pool)`, which starts a transaction, fully collects results, commits, then returns them. Existing explicit transactions use their own connection directly. This pins preparation and binding to one backend and prevents callers from seeing a successful result before deferred constraints or commit have succeeded. Session pooling was also tested: 50 concurrent serverless requests exhausted this project's 15-client session-pool ceiling, so it is unsuitable for runtime fan-out. The final release requires concurrent live read checks of the transaction adapter; ordinary local PostgreSQL checks alone do not prove hosted pool behavior.
+SQLx 0.8 sends preparation and binding in separate protocol exchanges. Disabling cached/named statements alone still allowed backend reassignment on port 6543 and caused binary parameter/UTF-8 errors during concurrent checks. Every standalone operation now executes through `crate::db::pool(&pool)`, which starts a transaction, fully collects results, commits, then returns them. Existing explicit transactions use their own connection directly. This pins preparation and binding to one backend and prevents callers from seeing a successful result before deferred constraints or commit have succeeded. Session pooling was also tested: 50 concurrent serverless requests exhausted this project's 15-client session-pool ceiling, so it is unsuitable for runtime fan-out. The released transaction adapter passed 100 hosted reads at 50-way concurrency without failures or retries; ordinary local PostgreSQL checks alone do not prove hosted pool behavior.
 
 Before release SQL, verify `current_user`, `current_schema()`, `current_setting('search_path')`, and the expected private-schema grants. Credentials belong in environment variables or private ignored files, never source or shell output.
 
@@ -46,6 +46,12 @@ Set `APP_ORIGIN=https://bart.monster` in production. For a preview, use its exac
 7. Promote the verified URL with `bunx vercel@latest promote <deployment-url> --yes`; recheck https://bart.monster. Keep the previous deployment and backups through the rollback window.
 
 The function limit is 300 seconds. Chat bounds its whole lookup chain at 240 seconds, uses per-request provider timeouts, and coordinates per-user duplicate requests through an expiring PostgreSQL lease. PDF conversion also bounds all provider attempts together at 240 seconds. Provider keys remain server-side. Vercel's ingress body-size limit applies independently of the application's PDF parser limit.
+
+## Completed Rust release
+
+On September 29, 2026, deployment `dpl_2LT4h1yaH6MV5iqP3hGzFu6Rqj6T` was promoted to https://bart.monster after the concurrent API checks and 38 desktop/mobile route checks passed. Its immutable URL is https://bart-monster-ep9fn0kzl-barts-projects-af89ee9c.vercel.app. Runtime source is recorded at commit `617ccfd`.
+
+The live domain returned Rust health, authenticated session/catalog/ranking/history responses, SPA deep links, anonymous API rejection, missing-CSRF rejection, and a valid Supabase Google PKCE initiation. The `www` hostname redirects to the canonical origin with HTTP 308 while retaining path and query. Existing browser sessions require a fresh sign-in. The preceding Django deployment `dpl_9wvd5Ft4aZLjmNLq2QPAGPGqAs7q` and private backups remain available for rollback.
 
 ## Data semantics retained by Rust
 
