@@ -1,0 +1,32 @@
+{% extends "hub/base.html" %}
+{% block content %}
+  <div class="heading">
+    <h1>Rulebook library</h1>
+    <a href="/admin/hub/rulebook/">Manage rulebooks</a>
+  </div>
+  <section class="panel">
+    <h2>Convert a PDF</h2>
+    <form id="pdf-form"
+          action="/api/rules/convert"
+          method="post"
+          enctype="multipart/form-data">
+      {% csrf_token %}
+      <label>
+        Rulebook PDF<input type="file" name="file" accept="application/pdf" required>
+      </label>
+      <button>Convert to Markdown</button>
+      <p role="status" id="pdf-status"></p>
+    </form>
+    <p class="muted">Review the converted rules before saving.</p>
+  </section>
+  <form class="panel" method="post">
+    {% csrf_token %}{{ form.as_p }}<button>Save rulebook</button>
+  </form>
+  {% for row in rows %}
+    <p>
+      <a href="?edit={{ row.pk }}">{{ row.game }} · {{ row.module_name }}</a> · {{ row.module_type }}
+    </p>
+  {% empty %}
+    <p>No rulebooks yet.</p>
+  {% endfor %}
+{% endblock %}

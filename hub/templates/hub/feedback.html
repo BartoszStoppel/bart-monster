@@ -1,0 +1,39 @@
+{% extends "hub/base.html" %}
+{% block content %}
+  <h1>Feedback</h1>
+  <details class="panel">
+    <summary>Suggest a feature or report a problem</summary>
+    <form method="post">
+      {% csrf_token %}{{ form.as_p }}<button>Submit</button>
+    </form>
+  </details>
+  {% if form.errors %}
+    <div class="notice error">{{ form.errors }}</div>
+  {% endif %}
+  {% for row in rows %}
+    <article class="panel">
+      <p class="eyebrow">{{ row.category }} · {{ row.get_status_display }}</p>
+      <h2>{{ row.title }}</h2>
+      <p class="muted">{{ row.user }} · {{ row.created_at|date:'M j, Y' }}</p>
+      <p>{{ row.description|linebreaksbr }}</p>
+      {% if row.admin_note %}
+        <blockquote>
+          {{ row.admin_note }}
+        </blockquote>
+      {% endif %}
+      {% if user.is_staff %}
+        <a href="/admin/hub/feedback/{{ row.pk }}/change/">Update status & note</a>
+      {% endif %}
+      {% if row.user_id == user.pk and row.status == "new" or user.is_staff %}
+        <form method="post"
+              action="/feedback/{{ row.pk }}/delete"
+              data-confirm="Delete this feedback?">
+          {% csrf_token %}
+          <button class="quiet danger">Delete</button>
+        </form>
+      {% endif %}
+    </article>
+  {% empty %}
+    <p class="empty">No feedback yet.</p>
+  {% endfor %}
+{% endblock %}

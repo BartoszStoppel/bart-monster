@@ -1,0 +1,6 @@
+<div class="tabs" aria-label="Ranking metric">
+  <a href="?metric=enjoyment{% if history_game %}&amp;history_game={{ history_game.pk }}{% endif %}{% if category %}&amp;category={{ category }}{% endif %}"
+     {% if metric == 'enjoyment' %}aria-current="page"{% endif %}>Enjoyment</a>
+  <a href="?metric=difficulty{% if history_game %}&amp;history_game={{ history_game.pk }}{% endif %}{% if category %}&amp;category={{ category }}{% endif %}"
+     {% if metric == 'difficulty' %}aria-current="page"{% endif %}>Difficulty</a>
+</div>

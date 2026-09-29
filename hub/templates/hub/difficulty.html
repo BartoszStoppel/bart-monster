@@ -1,0 +1,1 @@
+{% if game.difficulty is not None %}{{ game.difficulty|floatformat:1 }} / 6 · {{ game.difficulty_votes }} vote{{ game.difficulty_votes|pluralize }}{% if game.difficulty_votes < 3 %} · early estimate{% endif %}{% else %}Unrated{% endif %}

@@ -1,0 +1,97 @@
+{% extends "hub/base.html" %}
+{% block content %}
+  <div class="heading">
+    <h1>Community</h1>
+    {% include "hub/category.html" %}
+  </div>
+  {% include "hub/metric.html" %}
+  <p class="muted">Players are listed by level, highest first. Levels reflect enjoyment rankings in this category.</p>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Player</th>
+          <th>Rank</th>
+          <th>Ranked</th>
+          {% if metric == "enjoyment" %}<th>Taste twins</th><th>Sworn enemies</th>{% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in rows %}
+          <tr>
+            <td>
+              <a href="/users/{{ row.user.pk }}?metric={{ metric }}">{{ row.user }}</a>
+            </td>
+            <td>{{ row.rank.name }}</td>
+            <td>{{ row.count }}</td>
+            {% if metric == "enjoyment" %}
+              <td>
+                {% for match in row.allies %}
+                  <div>
+                    {{ match.user }} <small>{{ match.distance|floatformat:2 }}</small>
+                  </div>
+            {% empty %}—{% endfor %}
+              </td>
+              <td>
+                {% for match in row.rivals %}
+                  <div>
+                    {{ match.user }} <small>{{ match.distance|floatformat:2 }}</small>
+                  </div>
+            {% empty %}—{% endfor %}
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if metric == "enjoyment" %}<p class="muted">Lower distance means closer taste. Comparisons require at least three shared games.</p>{% endif %}
+  <h2>Everyone's {{ metric }} rankings</h2>
+  <p class="muted">Red glow marks each player's hottest take: their biggest {{ metric }} difference from the community score among games with at least three {{ metric }} rankings.</p>
+  {% for row in rows %}
+    <details class="panel">
+      <summary>{{ row.user }} · {{ row.count }} ranked</summary>
+      <div class="ranked-list">
+        {% for placement in row.placements %}
+          <a href="{{ placement.game.get_absolute_url }}?metric={{ metric }}"
+             {% if placement.game_id == row.hot_take_id %}class="hot-take" title="Hottest take" aria-label="{{ placement.game }} — hottest take, {{ placement.display_tier }} tier, {{ placement.display_score|floatformat:1 }}"{% endif %}>
+            <span class="badge tier-{{ placement.tier_color }}">{{ placement.display_tier }}</span> {{ placement.game }} <small>{{ placement.display_score|floatformat:1 }}</small>
+          </a>
+        {% empty %}
+          <p>No {{ metric }} rankings yet.</p>
+        {% endfor %}
+      </div>
+    </details>
+  {% endfor %}
+  {% if metric == "enjoyment" %}<h2>Your predicted favorites</h2>
+  <p class="muted">Unranked games estimated from people with similar taste.</p>
+  <div class="grid">
+    {% for item in predictions %}
+      <div>
+        {% include "hub/card.html" with game=item.game %}
+        <p>Predicted {{ item.tier }} · {{ item.score }}</p>
+      </div>
+    {% empty %}
+      <p>More shared rankings are needed for predictions.</p>
+    {% endfor %}
+  </div>
+{% endif %}
+{% if metric == "difficulty" %}
+  <h2>Community difficulty</h2>
+  <div class="ranked-list">
+    {% for game in games %}<p><a href="{{ game.get_absolute_url }}?metric=difficulty">{{ game.name }}</a> · {% include "hub/difficulty.html" %}</p>{% endfor %}
+  </div>
+{% endif %}
+<details class="panel">
+  <summary>The rank ladder</summary>
+  <div class="ranked-list">
+    {% for rank in ranks %}
+      <p>
+        <strong>{{ rank.name }}</strong> · {{ rank.minGames }} games
+        <br>
+        <small>{{ rank.tagline }}</small>
+      </p>
+    {% endfor %}
+  </div>
+</details>
+{% endblock %}

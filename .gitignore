@@ -43,3 +43,16 @@ character.zip
 
 # supabase local dev
 supabase/.temp/
+
+# Django / Python
+.venv/
+__pycache__/
+*.py[cod]
+*.sqlite3
+*.sqlite3-*
+staticfiles/
+.ruff_cache/
+.coverage
+htmlcov/
+backups/
+!\.env.example

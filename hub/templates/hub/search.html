@@ -1,0 +1,47 @@
+{% extends "hub/base.html" %}
+{% block content %}
+  <h1>Find a game</h1>
+  <form class="filters" method="get">
+    <label>
+      BoardGameGeek search<input name="q" value="{{ query }}" type="search" required maxlength="200">
+    </label>
+    <button>Search</button>
+  </form>
+  <details class="panel">
+    <summary>Add by BGG ID</summary>
+    <form class="filters" method="post">
+      {% csrf_token %}
+      <label>
+        BGG ID<input name="bgg_id" type="number" min="1" required>
+      </label>
+      <label>
+        Category<select name="category">
+        <option value="board">Board game</option>
+        <option value="party">Party game</option>
+        </select>
+      </label>
+      <button>Add game</button>
+    </form>
+  </details>
+  {% for result in results %}
+    <article class="list-row">
+      <div>
+        <h2>{{ result.name }}</h2>
+        <p class="muted">{{ result.year_published|default_if_none:'Unknown year' }} · BGG {{ result.bgg_id }}</p>
+      </div>
+      <form method="post" class="inline">
+        {% csrf_token %}
+        <input type="hidden" name="bgg_id" value="{{ result.bgg_id }}">
+        <select name="category" aria-label="Category for {{ result.name }}">
+          <option value="board">Board</option>
+          <option value="party">Party</option>
+        </select>
+        <button>Add</button>
+      </form>
+    </article>
+  {% empty %}
+    {% if query %}
+      <p class="empty">No results. Try a different name or add by BGG ID.</p>
+    {% endif %}
+  {% endfor %}
+{% endblock %}

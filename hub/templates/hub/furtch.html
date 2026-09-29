@@ -1,0 +1,19 @@
+{% extends "hub/base.html" %}
+{% block content %}
+  <div class="reading">
+    <p class="eyebrow">🪲 smk smk smk</p>
+    <h1>The Furtch Chronicles</h1>
+    <p class="muted">Dispatches from the roof. Read at your own risk.</p>
+    {% for story in stories %}
+      <article class="panel story">
+        <p class="eyebrow">Episode {{ story.episode }} · {{ story.date }}</p>
+        <h2>{{ story.title }}</h2>
+        {% for paragraph in story.paragraphs %}
+          <p>{{ paragraph }}</p>
+        {% endfor %}
+        <p class="signature">— Furtch</p>
+      </article>
+    {% endfor %}
+    <p class="muted">Furtch will return. schklp.</p>
+  </div>
+{% endblock %}

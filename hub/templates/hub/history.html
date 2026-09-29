@@ -1,0 +1,71 @@
+<section class="panel" id="score-history">
+  <h2>{{ metric_label|default:"Enjoyment" }} history</h2>
+  {% if metric == "difficulty" %}
+    {% include "hub/difficulty_scale.html" %}
+  {% endif %}
+  <p class="muted">
+    One score per day. Community scores average each player's latest {{ metric|default:'enjoyment' }} score,
+    so each player counts once. Today's value updates automatically; earlier days stay fixed.
+    Scores carry forward on quiet days. Missing days in the imported history are shown as gaps.
+    {% if metric == "difficulty" %}Scores run from Cuddly (1) to Monstrous (6). Lower means easier.{% endif %}
+    Dates use {{ history.timezone }}.
+  </p>
+  {% if history_players %}
+    <form method="get" action="#score-history" class="filters">
+      <input type="hidden" name="metric" value="{{ metric|default:'enjoyment' }}">
+      {% if category %}<input type="hidden" name="category" value="{{ category }}">{% endif %}
+      {% if select_game %}
+        <label>
+          Game
+          <select name="history_game">
+            {% for item in history_games %}
+              <option value="{{ item.pk }}"
+                      {% if item.pk == history_game.pk %}selected{% endif %}>{{ item.name }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      {% endif %}
+      <label>
+        Player
+        <select name="history_user">
+          {% for player in history_players %}
+            <option value="{{ player.id }}"
+                    {% if player.id == history_user %}selected{% endif %}>{{ player.name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <button>View history</button>
+    </form>
+    <h3>{{ history_game.name }}</h3>
+    {{ history|json_script:'history-data' }}
+    <div class="history-chart"
+         data-history="history-data"
+         role="img"
+         aria-label="Daily closing tier scores. Exact scores and changes are in the table below."></div>
+    <details open>
+      <summary>Daily scores and changes</summary>
+      <div class="table-wrap history-table">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Score</th>
+              <th>Change vs previous day</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in history_rows %}
+              <tr>
+                <td>{{ row.date|date:'M j, Y' }}</td>
+                <td>{% if row.missing %}Unknown{% else %}{{ row.score|floatformat:1|default:'Unranked' }}{% endif %}</td>
+                <td>{% if row.change is not None %}{% if row.change > 0 %}+{% endif %}{{ row.change|floatformat:1 }}{% else %}—{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </details>
+  {% else %}
+    <p class="muted">No score history yet.</p>
+  {% endif %}
+</section>

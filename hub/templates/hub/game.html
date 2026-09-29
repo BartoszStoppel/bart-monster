@@ -1,0 +1,206 @@
+{% extends "hub/base.html" %}
+{% block content %}
+  <a href="/">← Collection</a>
+  <div class="game-heading">
+    {% if game.image_url %}
+      <img class="hero-cover"
+           src="{{ game.image_url }}"
+           alt="{{ game.name }} box art">
+    {% endif %}
+    <div>
+      <p class="eyebrow">{{ game.get_category_display }} · {{ game.year_published|default_if_none:'Unknown year' }}</p>
+      <h1>{{ game.name }}</h1>
+      <p>{{ game.min_players|default_if_none:'?' }}–{{ game.max_players|default_if_none:'?' }} players · {{ game.playing_time|default_if_none:'?' }} min · Age {{ game.min_age|default_if_none:'?' }}+</p>
+      <div class="badges">
+        <span>BGG {{ game.bgg_rating|floatformat:1|default:'—' }}</span>
+        <span>Community difficulty: {% include "hub/difficulty.html" %}</span>
+      </div>
+      <p>
+        <a href="https://boardgamegeek.com/boardgame/{{ game.pk }}"
+           target="_blank"
+           rel="noopener">View on BoardGameGeek ↗</a>
+      </p>
+      <p class="muted">Owned by {% for row in owners %}
+        <a href="/users/{{ row.user_id }}">{{ row.user }}</a>
+        {% if not forloop.last %},{% endif %}
+      {% empty %}no one yet{% endfor %}
+    </p>
+  </div>
+</div>
+<div class="columns">
+  <section class="panel">
+    <h2>Your collection</h2>
+    <form method="post" action="/games/{{ game.pk }}/collection">
+      {% csrf_token %}{{ collection_form.as_p }}<button>Save collection</button>
+    </form>
+  </section>
+  <section class="panel">
+    <h2>Your rating & comment</h2>
+    <form method="post" action="/games/{{ game.pk }}/rating">
+      {% csrf_token %}{{ rating_form.as_p }}<button>Save rating</button>
+    </form>
+  </section>
+</div>
+<section class="panel">
+  <h2>Difficulty</h2>
+  <p>Your assessment: {{ own_difficulty|default:'Unranked' }} · <a href="/tier-list?category={{ game.category }}&amp;metric=difficulty">Rank difficulty</a></p>
+  {% for row in difficulty_placements %}<p><a href="/users/{{ row.user_id }}?metric=difficulty">{{ row.user }}</a> · <span class="badge tier-{{ row.tier_color }}">{{ row.display_tier }}</span> {{ row.display_score }} / 6</p>{% empty %}<p>No difficulty votes yet.</p>{% endfor %}
+</section>
+<section class="panel">
+  <h2>About the game</h2>
+  <div class="prose">{{ game.description|linebreaks }}</div>
+  <details>
+    <summary>More from BoardGameGeek</summary>
+    <dl>
+      <dt>Categories</dt>
+      <dd>
+        {{ game.categories|join:', ' }}
+      </dd>
+      <dt>Mechanics</dt>
+      <dd>
+        {{ game.mechanics|join:', ' }}
+      </dd>
+      <dt>Designers</dt>
+      <dd>
+        {{ game.designers|join:', ' }}
+      </dd>
+      <dt>Artists</dt>
+      <dd>
+        {{ game.artists|join:', ' }}
+      </dd>
+      <dt>Publishers</dt>
+      <dd>
+        {{ game.publishers|join:', ' }}
+      </dd>
+      <dt>Alternate names</dt>
+      <dd>
+        {{ game.alternate_names|join:', ' }}
+      </dd>
+      <dt>Language dependence</dt>
+      <dd>
+        {{ game.language_dependence|default:'Unknown' }}
+      </dd>
+      <dt>BGG ratings</dt>
+      <dd>
+        {{ game.bgg_users_rated|default_if_none:'—' }}
+      </dd>
+      <dt>BGG ownership</dt>
+      <dd>
+        {{ game.bgg_owned|default_if_none:'—' }}
+      </dd>
+    </dl>
+    <table>
+      <caption>Suggested player counts</caption>
+      <thead>
+        <tr>
+          <th>Players</th>
+          <th>Best</th>
+          <th>Recommended</th>
+          <th>Not recommended</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for row in game.suggested_players %}
+          <tr>
+            <td>{{ row.numPlayers }}</td>
+            <td>{{ row.best }}</td>
+            <td>{{ row.recommended }}</td>
+            <td>{{ row.notRecommended }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </details>
+</section>
+<div class="columns">
+  <section class="panel">
+    <h2>Group tier scores</h2>
+    {% for row in placements %}
+      <p>
+        <a href="/users/{{ row.user_id }}">{{ row.user }}</a> <span class="badge tier-{{ row.tier }}">{{ row.tier }}</span> {{ row.score|floatformat:1 }}
+      </p>
+    {% empty %}
+      <p class="muted">No rankings yet.</p>
+    {% endfor %}
+  </section>
+  <section class="panel">
+    <h2>Ratings & comments</h2>
+    {% for row in ratings %}
+      <p>
+        <strong>{{ row.user }} · {{ row.rating }}/10</strong>
+        <br>
+        {{ row.comment|linebreaksbr }}
+      </p>
+    {% empty %}
+      <p class="muted">No comments yet.</p>
+    {% endfor %}
+  </section>
+</div>
+<section>
+  <h2>Rank the expansions</h2>
+  {% include "hub/board.html" with metric=expansion_board.metric tier_options=expansion_board.tier_options buckets=expansion_board.buckets save_url=expansion_board.save_url revision=expansion_board.revision move_url=expansion_board.move_url %}
+  <details class="panel">
+    <summary>Community expansion rankings</summary>
+    {% for expansion in expansions %}
+      <h3>{{ expansion.name }}</h3>
+      {% for row in expansion.placements.all %}
+        <p>{{ row.user }}: {{ row.tier }} · {{ row.score|floatformat:1 }}</p>
+      {% empty %}
+        <p class="muted">Not ranked yet.</p>
+      {% endfor %}
+    {% endfor %}
+  </details>
+</section>
+{% include "hub/metric.html" %}
+{% include "hub/history.html" %}
+{% if user.is_staff %}
+  <details class="panel">
+    <summary>Manage game</summary>
+    <form method="post" action="/games/{{ game.pk }}/edit">
+      {% csrf_token %}{{ edit_form.as_p }}<button>Save metadata</button>
+    </form>
+    <form class="inline" method="post" action="/games/{{ game.pk }}/expansion">
+      {% csrf_token %}
+      <label>
+        Custom expansion<input name="name" required maxlength="500">
+      </label>
+      <button>Add expansion</button>
+    </form>
+    {% if game.expansions %}
+      <form method="post" action="/games/{{ game.pk }}/expansion">
+        {% csrf_token %}
+        <fieldset>
+          <legend>Expansions from BGG</legend>
+          {% for ref in game.expansions %}
+            <label>
+              <input type="checkbox" name="bgg_expansion_id" value="{{ ref.id }}">{{ ref.name }}
+            </label>
+          {% endfor %}
+        </fieldset>
+        <button>Add selected expansions</button>
+      </form>
+    {% endif %}
+    {% for expansion in expansions %}
+      <form class="inline"
+            method="post"
+            action="/games/{{ game.pk }}/expansion"
+            data-confirm="Remove this expansion and its rankings?">
+        {% csrf_token %}
+        <input type="hidden" name="delete" value="{{ expansion.pk }}">
+        <span>{{ expansion.name }}</span>
+        <button class="quiet danger">Remove</button>
+      </form>
+    {% endfor %}
+    <form method="post" action="/games/{{ game.pk }}/refresh">
+      {% csrf_token %}
+      <button>Refresh from BGG</button>
+    </form>
+    <form method="post"
+          action="/games/{{ game.pk }}/delete"
+          data-confirm="Delete this game and all its rankings, ratings, and collection entries?">
+      {% csrf_token %}
+      <button class="danger">Delete game</button>
+    </form>
+  </details>
+{% endif %}
+{% endblock %}

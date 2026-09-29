@@ -1,0 +1,247 @@
+[
+  {
+    "name": "Warlord",
+    "minGames": 300,
+    "tagline": "There is nothing left to conquer"
+  },
+  {
+    "name": "Eternal",
+    "minGames": 295,
+    "tagline": "Time itself bows"
+  },
+  {
+    "name": "Ascendant",
+    "minGames": 290,
+    "tagline": "Gravity is optional at this point"
+  },
+  {
+    "name": "Paragon",
+    "minGames": 283,
+    "tagline": "The standard others are measured against"
+  },
+  {
+    "name": "Sovereign",
+    "minGames": 275,
+    "tagline": "Rules by divine right of cardboard"
+  },
+  {
+    "name": "Arbiter",
+    "minGames": 267,
+    "tagline": "Judge, jury, and rules lawyer"
+  },
+  {
+    "name": "Archmage",
+    "minGames": 257,
+    "tagline": "Speaks fluent rulebook"
+  },
+  {
+    "name": "Demigod",
+    "minGames": 247,
+    "tagline": "Half mortal, full commitment"
+  },
+  {
+    "name": "Dragonslayer",
+    "minGames": 235,
+    "tagline": "Has slain beasts with more pages than some books"
+  },
+  {
+    "name": "Colossus",
+    "minGames": 223,
+    "tagline": "Casts a shadow over the table"
+  },
+  {
+    "name": "Overlord",
+    "minGames": 211,
+    "tagline": "Your games fear you"
+  },
+  {
+    "name": "Titan",
+    "minGames": 200,
+    "tagline": "Reached the realm of myth"
+  },
+  {
+    "name": "Juggernaut",
+    "minGames": 189,
+    "tagline": "Unstoppable force, immovable opinion"
+  },
+  {
+    "name": "Warbringer",
+    "minGames": 179,
+    "tagline": "Brings war to every game night"
+  },
+  {
+    "name": "Champion",
+    "minGames": 169,
+    "tagline": "Has opinions and isn't afraid to rank them"
+  },
+  {
+    "name": "Conqueror",
+    "minGames": 159,
+    "tagline": "Came, saw, tier-listed"
+  },
+  {
+    "name": "Reaver",
+    "minGames": 149,
+    "tagline": "Pillages tier lists for fun"
+  },
+  {
+    "name": "Berserker",
+    "minGames": 139,
+    "tagline": "Ranks in a blind rage"
+  },
+  {
+    "name": "Battlemage",
+    "minGames": 132,
+    "tagline": "Strategy and chaos in equal measure"
+  },
+  {
+    "name": "Wizard",
+    "minGames": 127,
+    "tagline": "The hat was earned"
+  },
+  {
+    "name": "Gladiator",
+    "minGames": 120,
+    "tagline": "Are you not entertained?"
+  },
+  {
+    "name": "Marauder",
+    "minGames": 113,
+    "tagline": "Raids game night without mercy"
+  },
+  {
+    "name": "Invoker",
+    "minGames": 107,
+    "tagline": "Summons opinions from the void"
+  },
+  {
+    "name": "Sorcerer",
+    "minGames": 101,
+    "tagline": "Triple digits — respect"
+  },
+  {
+    "name": "Warden",
+    "minGames": 95,
+    "tagline": "Guardian of strong opinions"
+  },
+  {
+    "name": "Harbinger",
+    "minGames": 90,
+    "tagline": "A sign of things to come"
+  },
+  {
+    "name": "Vindicator",
+    "minGames": 84,
+    "tagline": "Proving everyone wrong, one rank at a time"
+  },
+  {
+    "name": "Paladin",
+    "minGames": 79,
+    "tagline": "Noble, righteous, slightly obsessed"
+  },
+  {
+    "name": "Vanguard",
+    "minGames": 74,
+    "tagline": "First to the table, last to leave"
+  },
+  {
+    "name": "Templar",
+    "minGames": 69,
+    "tagline": "Sworn an oath to the hobby"
+  },
+  {
+    "name": "Crusader",
+    "minGames": 65,
+    "tagline": "On a holy mission to rank everything"
+  },
+  {
+    "name": "Stalwart",
+    "minGames": 61,
+    "tagline": "Reliable, steady, always ranking"
+  },
+  {
+    "name": "Guardian",
+    "minGames": 58,
+    "tagline": "Protector of the tier list"
+  },
+  {
+    "name": "Enforcer",
+    "minGames": 54,
+    "tagline": "Does not tolerate unranked games"
+  },
+  {
+    "name": "Sentinel",
+    "minGames": 50,
+    "tagline": "Halfway to a hundred — keep watch"
+  },
+  {
+    "name": "Zealot",
+    "minGames": 46,
+    "tagline": "Believes in the cause a little too much"
+  },
+  {
+    "name": "Knight",
+    "minGames": 42,
+    "tagline": "Earned their spurs at game night"
+  },
+  {
+    "name": "Guard",
+    "minGames": 39,
+    "tagline": "Standing post, ranking games"
+  },
+  {
+    "name": "Footman",
+    "minGames": 36,
+    "tagline": "Marching through the collection"
+  },
+  {
+    "name": "Ranger",
+    "minGames": 32,
+    "tagline": "Wandering the shelves alone"
+  },
+  {
+    "name": "Militia",
+    "minGames": 28,
+    "tagline": "Armed with opinions, lacking training"
+  },
+  {
+    "name": "Scout",
+    "minGames": 25,
+    "tagline": "Exploring what's out there"
+  },
+  {
+    "name": "Apprentice",
+    "minGames": 21,
+    "tagline": "Learning the ancient art of ranking"
+  },
+  {
+    "name": "Acolyte",
+    "minGames": 18,
+    "tagline": "A student of the game"
+  },
+  {
+    "name": "Squire",
+    "minGames": 15,
+    "tagline": "Carrying someone else's games to the table"
+  },
+  {
+    "name": "Peasant",
+    "minGames": 11,
+    "tagline": "Knows games exist, has played some"
+  },
+  {
+    "name": "Initiate",
+    "minGames": 6,
+    "tagline": "Just walked in, still blinking"
+  },
+  {
+    "name": "Cannon Fodder",
+    "minGames": 1,
+    "tagline": "Warm body at the table"
+  },
+  {
+    "name": "Beggar",
+    "minGames": 0,
+    "tagline": "Please sir, may I have a game?"
+  }
+]

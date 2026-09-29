@@ -1,0 +1,6 @@
+<div class="tabs" aria-label="Game category">
+  <a href="?category=board{% if metric %}&amp;metric={{ metric }}{% endif %}"
+     {% if category == 'board' %}aria-current="page"{% endif %}>Board games</a>
+  <a href="?category=party{% if metric %}&amp;metric={{ metric }}{% endif %}"
+     {% if category == 'party' %}aria-current="page"{% endif %}>Party games</a>
+</div>

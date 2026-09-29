@@ -1,106 +1,30 @@
-# Board Game Hub — bart.monster
+# bart.monster
 
-## Overview
+Python/Django is live at https://bart.monster as of September 29, 2026, on Vercel with Supabase PostgreSQL and Google sign-in. Read [README.md](README.md) for setup and behavior, [the migration guide](docs/django-migration.md) for Supabase import/cutover, and [the refactor results](docs/refactor-results.md) for measurements and verification.
 
-Board game rating and discovery site for a small friend group. Users sign in with Google, search BoardGameGeek for games, add them to a shared collection, rate them on tier lists, and compare community scores to BGG averages. Features include a game picker spinner, achievements, statistics charts, and an admin panel.
-
-## Tech Stack
-
-- **Framework:** Next.js 16 (App Router, TypeScript, Tailwind CSS v4)
-- **Auth + Database:** Supabase (Google OAuth, PostgreSQL with RLS)
-- **Board Game Data:** BoardGameGeek XML API v2 (XML parsed with `fast-xml-parser`)
-- **Drag & Drop:** `@dnd-kit` (tier list reordering, collection sorting)
-- **Hosting:** Vercel (project: `bart-monster`, domain: `bart.monster`)
-
-## Commands
-
-```
-npm run dev          # start dev server
-npm run build        # production build (typecheck + build)
-npm run lint         # ESLint
-npm run smoke        # smoke test against local dev server
-npm run smoke:prod   # smoke test against bart.monster
-```
-
-**Workflow:** after making changes, run `npm run build` (catches type errors), then `npm run lint`.
-
-## Project Structure
-
-```
-src/
-├── app/
-│   ├── (auth)/           # login page, OAuth callback route
-│   ├── (app)/            # authenticated pages (behind middleware)
-│   │   ├── page.tsx          # collection grid (home page)
-│   │   ├── search/           # BGG game search + add to collection
-│   │   ├── games/[bggId]/    # game detail, ratings, ownership, delete
-│   │   ├── tier-list/        # drag-and-drop tier list (S/A/B/C/D/F)
-│   │   ├── picker/           # random game picker spinner wheel
-│   │   ├── statistics/       # charts (score distribution, complexity)
-│   │   ├── achievements/     # user achievement badges
-│   │   ├── profile/          # user profile page
-│   │   ├── admin/            # admin panel (admin-only actions)
-│   │   └── community/        # community view
-│   └── api/bgg/             # BGG API proxy routes
-│       ├── search/           # GET — search BGG by name
-│       └── game/[id]/        # GET — fetch game details by BGG ID
-├── components/           # shared UI (nav, game card, search bar, category toggle)
-├── lib/
-│   ├── supabase/server.ts    # server-side Supabase client (uses cookies)
-│   ├── supabase/client.ts    # browser-side Supabase client
-│   ├── bgg/client.ts         # BGG API functions (search, details, summaries)
-│   ├── bgg/parser.ts         # XML → typed objects
-│   ├── bgg/types.ts          # BGG API response types
-│   ├── admin.ts              # isAdmin() check
-│   ├── tier-colors.ts        # tier color mappings
-│   └── picker-utils.ts       # picker wheel utilities
-├── types/database.ts     # TypeScript types for Supabase tables
-└── proxy.ts              # middleware: auth guard + cookie refresh
-supabase/migrations/      # numbered SQL migration files
-scripts/                  # seed script, smoke tests
-archive/                  # old disco-themed site (preserved, not deployed)
-```
-
-## Database Schema
-
-Key tables (see `supabase/migrations/` for full schema):
-
-- **profiles** — user info + `is_admin` flag (auto-created on first login)
-- **board_games** — game metadata from BGG, with `category` ("party" | "board")
-- **user_game_collection** — per-user ownership/wishlist tracking
-- **game_ratings** — 1–10 numeric ratings with optional comments
-- **tier_placements** — S/A/B/C/D/F tier + position + computed score per user per game
-
-Tier scores are computed client-side in `src/app/(app)/tier-list/compute-scores.ts` and saved to the `score` column.
-
-## Environment Variables
-
-Required in `.env.local`:
-```
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-BGG_API_TOKEN=
-```
-
-## Conventions
-
-### Supabase Client Usage
-- **Server components / server actions / route handlers:** `import { createClient } from "@/lib/supabase/server"` — this is `async` (accesses cookies)
-- **Client components:** `import { createClient } from "@/lib/supabase/client"` — call it inside `useEffect` or event handlers only, never at module scope or render time (empty env vars at build time cause crashes)
-
-### Data Fetching
-- All server-rendered pages using Supabase export `export const dynamic = "force-dynamic"`
-- BGG API calls go through `/api/bgg/*` proxy routes from the client, never directly — this avoids CORS and keeps `BGG_API_TOKEN` server-side
-- Server-side code can call `src/lib/bgg/client.ts` functions directly
-
-### Auth & Middleware
-- `src/proxy.ts` handles auth: unauthenticated users are redirected to `/login`, authenticated users on `/login` are redirected to `/`
-- Admin-only features check `isAdmin()` from `src/lib/admin.ts`
-
-### Styling
-- Tailwind CSS v4 — use utility classes, dark mode via `dark:` prefix
-- Color palette: `zinc` for neutrals, `blue` for primary actions
-- The app layout wraps all `(app)` pages with the `<Nav />` component and a max-width container
-
-### Path Alias
-- `@/*` maps to `./src/*` (configured in `tsconfig.json`)
+- Use `uv sync --frozen` and `uv run manage.py …`.
+- Run `uv run manage.py test`, `uv run ruff check config hub manage.py`, and `uv run ruff format --check config hub manage.py` after code changes.
+- Use Django forms/views/templates. Keep client JavaScript small and progressively enhanced.
+- All ranking mutations go through `hub/ranking.py`; never trust client-provided scores.
+- Game and expansion tier edits autosave after each completed drag or Move action. Keep requests serialized, save every completed move, update revisions/scores from the server, and avoid page reloads or a manual Save button.
+- Retry temporary autosave failures. Every identical save acknowledges the current ranking without another write; a stale, different ranking must still conflict. Show failure status and retain navigation protection while changes are unsaved. Run `uv run --with playwright manage.py test hub.browser_checks` for autosave/browser changes (install Chromium or set `CHROMIUM_EXECUTABLE`).
+- Capture old scores before mutating placement objects, and return a revision computed from a fresh database query. Rankings and personal/community daily scores must commit in the same transaction.
+- For each metric, store at most one score per player/game/local date and one community average per game/local date. Same-day edits replace today's value; previous days are retained. Each player's latest score counts once. No nightly job or intraday event table is needed.
+- Carry known scores through quiet days; break the chart for unranked states and unknown legacy gaps. Imported records have provenance so missing historical observations are not presented as unchanged scores. Do not impose a global history cap or invent missing averages.
+- Use `UserGame` for collection flags, explicit ratings/comments, and tier positions. Filter ranking reads with `.ranked()`. Lock the user's row for every mutation, preserve independent fields, and prune only wholly empty associations. Retain inactive wishlist notes/priority.
+- Authenticate views, check staff permissions on shared-data mutations, and keep writes CSRF-protected.
+- Reuse `ranking.lock_ids()` for ordered batch row locks inside a transaction. Keep statistics independent of community taste-match and hot-take assembly; it needs chart data only. Tool schemas share builders/parameters in `hub/chat_tools.py`.
+- Keep board and party scores separate. Expansion rankings are scoped to their parent game.
+- Admin player deletion must lock users/items in ranking order and refresh today’s community history for both metrics after the cascade, including null when no votes remain. Earlier community rows remain unchanged.
+- Resolve household membership from connected partner links with `household_groups`; use it consistently for collection reads, picker suppliers, and awards. Count household games once and include either partner’s rankings. Picker tier filters/weights use attending players only.
+- History currently covers game tier scores, not expansion rankings, standalone ratings/comments, or BGG metadata. Deleting a catalog game/user cascades to its daily scores; unranking a game retains previous days.
+- Difficulty uses fixed levels 1–6: Cuddly, Tame, Challenging, Demanding, Brutal, Monstrous. Ordering within a difficulty tier is visual only. Keep difficulty fields independent on `UserGame`; preserve difficulty-only rows in pruning. Cross-mode Unranked membership is derived, never a vote.
+- Explicitly filter every history read/write/import baseline by `DailyScore.metric`. Use scoped ranking revisions for the user/category/metric. Existing enjoyment URLs retain their meaning; difficulty saves use `/api/rankings/difficulty/<category>`.
+- Use `Game.objects.with_difficulty()` for the authoritative community difficulty mean/count and `.with_enjoyment()` for the enjoyment mean/count with its three-vote display threshold. Both share the correlated score query; do not recreate aggregates in individual views or chat tools. No BGG difficulty fallbacks or invented votes. Unrated games sort last and are excluded only from difficulty filters/charts/picker modes that need a known value. Keep old BGG difficulty fields only in historical migrations/raw backups and explicit legacy-import handling.
+- Community's metric and category filters are independent. Order players by existing category-specific enjoyment level descending, then progression count, then stable user ID. Do not award duplicate progression for difficulty votes or feed them into enjoyment predictions.
+- Community hot takes are always highlighted with a red glow. Use the largest absolute difference from the community average among games with at least three non-null rankings; break ties by lowest BGG ID. Keep this server-rendered and do not add a display checkbox or toggle.
+- Keep the existing Supabase project for production PostgreSQL and Google sign-in. Isolate Django tables in a private schema with a dedicated database role before migration; do not apply Django migrations to the legacy public schema. Vercel runs the verified Django deployment. Production uses `bart_django`; preview uses `bart_django_preview`. Use the transaction pooler for requests, `DATABASE_POOL_MODE=transaction`, and zero persistent connection age; use the session pooler for migrations. Never import a legacy snapshot over post-cutover production writes. Legacy public tables are retained with API writes frozen for rollback.
+- Read [the Supabase audit](docs/supabase-audit.md) and [migration guide](docs/django-migration.md) before cleanup/cutover. Retain a raw export before daily compaction or retiring BGG difficulty columns. Migration `0003` adds independent difficulty/history state; `0004` drops the retired source difficulty fields. Read [the difficulty design](docs/difficulty-rating-plan.md) for feature behavior. Migration `0002` consolidates existing Django data and is irreversible without a backup. Explicit `--allow-missing-table` flags permit only verified absent rules tables; other failed reads must abort. Retire legacy tables only after the old application stops using them. `supabase/audits/efficiency.sql` remains a read-only legacy diagnostic, not a migration.
+- Import commands dry-run by default. Do not connect to live services or modify deployment settings as part of routine tests.
+- Retain personal email scripts, story content, historical SQL, and the archived original site unless explicitly asked to change them.
+- Keep implementation documentation consistent with the tested code and clearly distinguish local verification from deployment. Leave `ideas.md` unchanged during documentation syncs unless explicitly requested.
