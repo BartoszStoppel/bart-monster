@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { OwnershipToggle } from "./ownership-toggle";
 import { WishlistToggle } from "./wishlist-toggle";
 
@@ -27,6 +27,7 @@ export function CollectionToggles({
   initialWishlisters,
 }: CollectionTogglesProps) {
   const [owned, setOwned] = useState(initialOwned);
+  useEffect(() => setOwned(initialOwned), [initialOwned]);
 
   return (
     <>

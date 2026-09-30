@@ -70,14 +70,18 @@ function DropdownPanel({
   pathname,
   onClose,
   footer,
+  alignRightOnMobile = false,
 }: {
   links: NavLink[];
   pathname: string;
   onClose: () => void;
   footer?: React.ReactNode;
+  alignRightOnMobile?: boolean;
 }) {
   return (
-    <div className="absolute left-0 top-full z-50 mt-1 min-w-[160px] rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800">
+    <div
+      className={`absolute ${alignRightOnMobile ? "right-0 sm:right-auto sm:left-0" : "left-0"} top-full z-50 mt-1 min-w-[160px] rounded-lg border border-zinc-200 bg-white py-1 shadow-lg dark:border-zinc-700 dark:bg-zinc-800`}
+    >
       {links.map((link) => (
         <Link
           key={link.href}
@@ -109,7 +113,7 @@ function NavGroupButton({
   group: NavGroup;
   pathname: string;
   isOpen: boolean;
-  onToggle: () => void;
+  onToggle: React.MouseEventHandler<HTMLButtonElement>;
   onClose: () => void;
   onPointerEnter: (e: React.PointerEvent) => void;
   onPointerLeave: (e: React.PointerEvent) => void;
@@ -121,9 +125,13 @@ function NavGroupButton({
       className="relative"
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) onClose();
+      }}
     >
       <button
         onClick={onToggle}
+        aria-expanded={isOpen}
         className={`flex items-center gap-1 rounded-md px-2 py-1.5 text-sm font-medium transition-all ${
           isOpen
             ? "bg-zinc-100 text-zinc-900 dark:bg-white/10 dark:text-zinc-50"
@@ -162,7 +170,7 @@ function AvatarMenu({
   links: NavLink[];
   pathname: string;
   isOpen: boolean;
-  onToggle: () => void;
+  onToggle: React.MouseEventHandler<HTMLButtonElement>;
   onClose: () => void;
   onSignOut: () => void;
   onPointerEnter: (e: React.PointerEvent) => void;
@@ -175,9 +183,13 @@ function AvatarMenu({
       className="relative shrink-0 pl-4"
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) onClose();
+      }}
     >
       <button
         onClick={onToggle}
+        aria-expanded={isOpen}
         className={`flex items-center gap-2 rounded-md px-2 py-1.5 transition-all ${
           isOpen
             ? "bg-zinc-100 dark:bg-white/10"
@@ -207,6 +219,7 @@ function AvatarMenu({
 
       {isOpen && (
         <DropdownPanel
+          alignRightOnMobile
           links={links}
           pathname={pathname}
           onClose={onClose}
@@ -234,6 +247,9 @@ export function Nav() {
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const navRef = useRef<HTMLElement>(null);
   const hoverTimer = useRef<ReturnType<typeof setTimeout>>(null);
+  const openedByHover = useRef(false);
+
+  useEffect(() => () => clearTimeout(hoverTimer.current), []);
 
   useEffect(() => {
     const supabase = createClient();
@@ -267,8 +283,20 @@ export function Nav() {
         setOpenGroup(null);
       }
     }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      const trigger = navRef.current?.querySelector<HTMLButtonElement>(
+        'button[aria-expanded="true"]',
+      );
+      setOpenGroup(null);
+      trigger?.focus();
+    }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, [openGroup]);
 
   async function handleSignOut() {
@@ -277,28 +305,39 @@ export function Nav() {
     window.location.href = "/login";
   }
 
-  function toggle(key: string) {
-    setOpenGroup((prev) => (prev === key ? null : key));
+  function toggle(key: string, event: React.MouseEvent<HTMLButtonElement>) {
+    const keepOpen =
+      event.detail > 0 && openedByHover.current && openGroup === key;
+    openedByHover.current = false;
+    setOpenGroup(keepOpen ? key : openGroup === key ? null : key);
   }
 
   function close() {
+    openedByHover.current = false;
+    clearTimeout(hoverTimer.current);
     setOpenGroup(null);
   }
 
   function handlePointerEnter(key: string, e: React.PointerEvent) {
     if (e.pointerType === "touch") return;
     if (hoverTimer.current) clearTimeout(hoverTimer.current);
+    openedByHover.current = true;
     setOpenGroup(key);
   }
 
   function handlePointerLeave(e: React.PointerEvent) {
-    if (e.pointerType === "touch") return;
+    if (
+      e.pointerType === "touch" ||
+      e.currentTarget.contains(document.activeElement)
+    )
+      return;
     hoverTimer.current = setTimeout(() => setOpenGroup(null), 150);
   }
 
   return (
     <nav
       ref={navRef}
+      onFocusCapture={() => clearTimeout(hoverTimer.current)}
       className="sticky top-0 z-50 border-b border-zinc-200 bg-white/80 backdrop-blur-sm dark:border-zinc-800 dark:bg-zinc-900/80"
     >
       <div className="mx-auto flex max-w-5xl items-center justify-between px-4">
@@ -309,7 +348,7 @@ export function Nav() {
               group={group}
               pathname={pathname}
               isOpen={openGroup === group.label}
-              onToggle={() => toggle(group.label)}
+              onToggle={(event) => toggle(group.label, event)}
               onClose={close}
               onPointerEnter={(e) => handlePointerEnter(group.label, e)}
               onPointerLeave={handlePointerLeave}
@@ -323,7 +362,7 @@ export function Nav() {
             links={profileLinks}
             pathname={pathname}
             isOpen={openGroup === "__profile"}
-            onToggle={() => toggle("__profile")}
+            onToggle={(event) => toggle("__profile", event)}
             onClose={close}
             onSignOut={handleSignOut}
             onPointerEnter={(e) => handlePointerEnter("__profile", e)}

@@ -37,8 +37,15 @@ export function RankBadge({ gamesRanked }: RankBadgeProps) {
         setOpen(false);
       }
     }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, [open]);
 
   const currentIndex = RANKS.findIndex((r) => r.name === rank.name);
@@ -49,6 +56,7 @@ export function RankBadge({ gamesRanked }: RankBadgeProps) {
     <div className="relative inline-block" ref={ref}>
       <button
         type="button"
+        aria-expanded={open}
         onClick={() => setOpen((v) => !v)}
         className={`cursor-pointer text-xs transition-opacity hover:opacity-80 ${rankClasses(rank)}`}
         title={`${gamesRanked} games played`}

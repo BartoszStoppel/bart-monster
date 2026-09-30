@@ -61,7 +61,7 @@ export function ExpansionSection({
           expansions={bank}
           initialPlacements={myPlacements}
           revision={revision}
-          key={`${gameBggId}:${revision}`}
+          key={`${gameBggId}:${revision}:${bank.map((expansion) => expansion.id).join(",")}`}
         />
       ) : (
         <p className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">

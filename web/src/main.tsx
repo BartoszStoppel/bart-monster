@@ -1,4 +1,10 @@
-import { useEffect, useState, type ReactNode } from "react";
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { createRoot } from "react-dom/client";
 import { useLocation, Redirect, navigate } from "@/compat/navigation";
 import { session, invalidateData } from "@/lib/api";
@@ -20,17 +26,34 @@ const modules = import.meta.glob<{
 function App() {
   const route = useLocation();
   const [content, setContent] = useState<ReactNode>(null);
+  const [loadedPath, setLoadedPath] = useState("");
+  const [loadedRoute, setLoadedRoute] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const focusAfterLoad = useRef<HTMLElement | null>(null);
+  const path = location.pathname.replace(/\/$/, "") || "/";
+  useEffect(() => {
+    const rememberFocus = () => {
+      const active = document.activeElement;
+      focusAfterLoad.current =
+        active instanceof HTMLElement && pageRef.current?.contains(active)
+          ? active
+          : null;
+    };
+    window.addEventListener("bart:navigate", rememberFocus);
+    return () => window.removeEventListener("bart:navigate", rememberFocus);
+  }, []);
   useEffect(() => {
     let current = true;
+    const search = location.search;
     setLoading(true);
     setError("");
     (async () => {
-      const path = location.pathname.replace(/\/$/, "") || "/";
       if (path === "/login") return <Login />;
       invalidateData();
       const auth = await session();
+      if (!current) return null;
       if (!auth.user) throw new Redirect("/login");
       if (path === "/search") return <Search />;
       if (path === "/chat") return <Chat />;
@@ -47,15 +70,20 @@ function App() {
       const load = modules[`./app/(app)${key}/page.tsx`];
       if (!load) return <NotFound />;
       const mod = await load();
+      if (!current) return null;
       return await mod.default({
         params: Promise.resolve(params),
         searchParams: Promise.resolve(
-          Object.fromEntries(new URLSearchParams(location.search)),
+          Object.fromEntries(new URLSearchParams(search)),
         ),
       });
     })()
       .then((node) => {
-        if (current) setContent(node);
+        if (current) {
+          setContent(node);
+          setLoadedPath(path);
+          setLoadedRoute(route);
+        }
       })
       .catch((e) => {
         if (!current) return;
@@ -71,10 +99,17 @@ function App() {
     return () => {
       current = false;
     };
-  }, [route]);
-  const body = loading ? (
-    <Loading />
-  ) : error ? (
+  }, [route, path]);
+  const hasContent = content !== null && loadedPath === path;
+  const pending = !error && (loading || loadedRoute !== route);
+  useLayoutEffect(() => {
+    if (pending) return;
+    const target = focusAfterLoad.current;
+    focusAfterLoad.current = null;
+    if (target?.isConnected && document.activeElement === document.body)
+      target.focus({ preventScroll: true });
+  }, [pending]);
+  const body = error ? (
     <div role="alert" className="rounded-lg border border-red-400 p-6">
       <p>{error}</p>
       <button
@@ -84,9 +119,18 @@ function App() {
         Try again
       </button>
     </div>
-  ) : (
+  ) : hasContent ? (
     content
+  ) : (
+    <Loading />
   );
-  return location.pathname === "/login" ? body : <AppLayout>{body}</AppLayout>;
+  // Keep same-page controls mounted so query changes animate and refreshes
+  // reconcile existing state. Block stale controls until new scope data arrives.
+  const page = (
+    <div ref={pageRef} aria-busy={pending} inert={pending && hasContent}>
+      {body}
+    </div>
+  );
+  return path === "/login" ? page : <AppLayout>{page}</AppLayout>;
 }
 createRoot(document.getElementById("root")!).render(<App />);

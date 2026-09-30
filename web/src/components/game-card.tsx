@@ -11,6 +11,9 @@ import type {
   CategoryBadges,
 } from "@/app/(app)/sortable-game-grid";
 
+const revealOnInteraction =
+  "opacity-100 [@media(hover:hover)]:opacity-0 group-hover:opacity-100 group-focus-within:opacity-100";
+
 function BadgeRow({ cat, label }: { cat: CategoryBadges; label: string }) {
   const hasBadges =
     cat.gold.length > 0 ||
@@ -123,14 +126,14 @@ export function GameCard({
     if (cardRef.current) observer.observe(cardRef.current);
     return () => observer.disconnect();
   }, []);
-  const dominantColor = useDominantColor(visible ? imageUrl : null);
+  const dominantColor = useDominantColor(
+    visible ? game.thumbnail_url || imageUrl : null,
+  );
 
   return (
     <div
       ref={cardRef}
-      className={`glass-card group relative flex flex-col overflow-hidden rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/5 ${
-        dominantColor ? "" : ""
-      }`}
+      className="glass-card group relative flex flex-col overflow-hidden rounded-xl transition-all duration-300 hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/5"
       style={{
         borderColor: dominantColor ? `rgba(${dominantColor}, 0.25)` : undefined,
       }}
@@ -167,7 +170,7 @@ export function GameCard({
                 className={`flex h-4.5 w-4.5 items-center justify-center rounded transition-all ${
                   owned
                     ? "bg-emerald-500 text-white shadow-sm shadow-emerald-500/30"
-                    : "bg-white/90 text-zinc-500 opacity-0 group-hover:opacity-100 dark:bg-white/10 dark:text-zinc-300"
+                    : `bg-white/90 text-zinc-500 dark:bg-white/10 dark:text-zinc-300 ${revealOnInteraction}`
                 }`}
                 title={owned ? "You own this" : "Not owned"}
               >
@@ -199,7 +202,7 @@ export function GameCard({
                 className={`flex h-4.5 w-4.5 items-center justify-center rounded transition-all ${
                   wishlisted
                     ? "bg-violet-500 text-white shadow-sm shadow-violet-500/30"
-                    : "bg-white/90 text-zinc-500 opacity-0 group-hover:opacity-100 dark:bg-white/10 dark:text-zinc-300"
+                    : `bg-white/90 text-zinc-500 dark:bg-white/10 dark:text-zinc-300 ${revealOnInteraction}`
                 }`}
                 title={wishlisted ? "On your wishlist" : "Add to wishlist"}
               >
@@ -278,8 +281,10 @@ export function GameCard({
       </Link>
       {admin && !editing && (
         <button
+          type="button"
+          aria-label={`Edit ${game.name}`}
           onClick={() => setEditing(true)}
-          className="absolute right-1.5 bottom-1.5 z-[11] flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white opacity-0 shadow-lg backdrop-blur-sm transition-opacity group-hover:opacity-100"
+          className={`absolute right-1.5 bottom-1.5 z-[11] flex h-5 w-5 items-center justify-center rounded-full bg-black/50 text-white shadow-lg backdrop-blur-sm transition-opacity ${revealOnInteraction}`}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"

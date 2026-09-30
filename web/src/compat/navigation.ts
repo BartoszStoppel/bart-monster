@@ -15,6 +15,12 @@ window.addEventListener("popstate", () => {
   notifyNavigation();
 });
 window.addEventListener("bart:refresh", () => {
+  if (
+    !window.dispatchEvent(
+      new CustomEvent("bart:navigate", { cancelable: true }),
+    )
+  )
+    return;
   refreshVersion++;
   notifyNavigation();
 });

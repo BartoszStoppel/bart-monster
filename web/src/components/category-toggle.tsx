@@ -1,7 +1,7 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { usePillIndicator } from "@/lib/use-pill-indicator";
 
 interface CategoryToggleProps {
   category: "party" | "board";
@@ -11,27 +11,7 @@ interface CategoryToggleProps {
 export function CategoryToggle({ category, basePath }: CategoryToggleProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const containerRef = useRef<HTMLDivElement>(null);
-  const partyRef = useRef<HTMLButtonElement>(null);
-  const boardRef = useRef<HTMLButtonElement>(null);
-  const [pillStyle, setPillStyle] = useState<{ left: number; width: number }>({
-    left: 0,
-    width: 0,
-  });
-
-  useEffect(() => {
-    const activeRef = category === "party" ? partyRef : boardRef;
-    const el = activeRef.current;
-    const container = containerRef.current;
-    if (el && container) {
-      const containerRect = container.getBoundingClientRect();
-      const elRect = el.getBoundingClientRect();
-      setPillStyle({
-        left: elRect.left - containerRect.left,
-        width: elRect.width,
-      });
-    }
-  }, [category]);
+  const { containerRef, setRef, pill } = usePillIndicator(category);
 
   function handleToggle(cat: "party" | "board") {
     const params = new URLSearchParams(searchParams.toString());
@@ -46,10 +26,10 @@ export function CategoryToggle({ category, basePath }: CategoryToggleProps) {
     >
       <div
         className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10"
-        style={{ left: pillStyle.left, width: pillStyle.width }}
+        style={pill}
       />
       <button
-        ref={partyRef}
+        ref={(button) => setRef("party", button)}
         onClick={() => handleToggle("party")}
         className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
           category === "party"
@@ -60,7 +40,7 @@ export function CategoryToggle({ category, basePath }: CategoryToggleProps) {
         Party Games
       </button>
       <button
-        ref={boardRef}
+        ref={(button) => setRef("board", button)}
         onClick={() => handleToggle("board")}
         className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
           category === "board"

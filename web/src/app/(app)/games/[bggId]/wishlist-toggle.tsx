@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 
 interface WishlisterInfo {
@@ -27,6 +27,10 @@ export function WishlistToggle({
   const [wishlisters, setWishlisters] = useState(initialWishlisters);
   const [updating, setUpdating] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  useEffect(() => {
+    setWishlisted(initialWishlisted);
+    setWishlisters(initialWishlisters);
+  }, [initialWishlisted, initialWishlisters]);
 
   async function handleToggle() {
     const adding = !wishlisted;

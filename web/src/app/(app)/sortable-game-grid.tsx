@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { usePillIndicator } from "@/lib/use-pill-indicator";
+
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { GameCard } from "@/components/game-card";
 import { createClient } from "@/lib/supabase/client";
 import type { BoardGame } from "@/types/database";
@@ -21,32 +23,6 @@ const CATEGORY_OPTIONS: { value: CategoryFilter; label: string }[] = [
   { value: "board", label: "Board Games" },
   { value: "party", label: "Party Games" },
 ];
-
-function usePillIndicator<T extends string>(active: T) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const btnRefs = useRef<Map<T, HTMLButtonElement>>(new Map());
-  const [pill, setPill] = useState({ left: 0, width: 0 });
-
-  const measure = useCallback(() => {
-    const container = containerRef.current;
-    const btn = btnRefs.current.get(active);
-    if (container && btn) {
-      const cr = container.getBoundingClientRect();
-      const br = btn.getBoundingClientRect();
-      setPill({ left: br.left - cr.left, width: br.width });
-    }
-  }, [active]);
-
-  useEffect(() => {
-    measure();
-  }, [measure]);
-
-  const setRef = useCallback((key: T, el: HTMLButtonElement | null) => {
-    if (el) btnRefs.current.set(key, el);
-  }, []);
-
-  return { containerRef, setRef, pill };
-}
 
 export interface CategoryBadges {
   gold: string[];
@@ -88,6 +64,11 @@ export function SortableGameGrid({
   const [wishlistIds, setWishlistIds] = useState(
     () => new Set(wishlistSetProp),
   );
+  useEffect(() => {
+    setGames(initialGames);
+    setOwnedIds(new Set(ownedSet));
+    setWishlistIds(new Set(wishlistSetProp));
+  }, [initialGames, ownedSet, wishlistSetProp]);
 
   function handleGameUpdated(bggId: number, updates: Partial<BoardGame>) {
     setGames((prev) =>

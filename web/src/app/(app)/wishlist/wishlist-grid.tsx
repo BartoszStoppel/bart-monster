@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useMemo, useRef, useEffect, useCallback } from "react";
+import { usePillIndicator } from "@/lib/use-pill-indicator";
+
+import { useState, useMemo, useEffect } from "react";
 import { WishlistCard } from "./wishlist-card";
 import { SuggestForMe } from "./suggest-for-me";
 import type {
@@ -24,32 +26,6 @@ const CATEGORY_OPTIONS: { value: CategoryFilter; label: string }[] = [
   { value: "party", label: "Party" },
 ];
 
-function usePillIndicator<T extends string>(active: T) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const btnRefs = useRef<Map<T, HTMLButtonElement>>(new Map());
-  const [pill, setPill] = useState({ left: 0, width: 0 });
-
-  const measure = useCallback(() => {
-    const container = containerRef.current;
-    const btn = btnRefs.current.get(active);
-    if (container && btn) {
-      const cr = container.getBoundingClientRect();
-      const br = btn.getBoundingClientRect();
-      setPill({ left: br.left - cr.left, width: br.width });
-    }
-  }, [active]);
-
-  useEffect(() => {
-    measure();
-  }, [measure]);
-
-  const setRef = useCallback((key: T, el: HTMLButtonElement | null) => {
-    if (el) btnRefs.current.set(key, el);
-  }, []);
-
-  return { containerRef, setRef, pill };
-}
-
 interface WishlistGridProps {
   items: WishlistItem[];
   suggestions: SuggestedGame[];
@@ -64,6 +40,7 @@ export function WishlistGrid({
   const [items, setItems] = useState(initialItems);
   const [sort, setSort] = useState<WishlistSortOption>("priority");
   const [category, setCategory] = useState<CategoryFilter>("all");
+  useEffect(() => setItems(initialItems), [initialItems]);
 
   const {
     containerRef: catContainerRef,

@@ -102,15 +102,19 @@ export function DistributionChart({
     [games],
   );
 
-  const [selectedId, setSelectedId] = useState<number | null>(() => {
-    if (sortedGames.length === 0) return null;
-    const mostRated = sortedGames.reduce((best, g) =>
-      g.scores.length > best.scores.length ? g : best,
-    );
-    return mostRated.bggId;
-  });
-
-  const selected = sortedGames.find((g) => g.bggId === selectedId) ?? null;
+  const mostRated = useMemo(
+    () =>
+      sortedGames.reduce<DistributionGame | null>(
+        (best, game) =>
+          !best || game.scores.length > best.scores.length ? game : best,
+        null,
+      ),
+    [sortedGames],
+  );
+  const [selectedId, setSelectedId] = useState<number | null>(
+    mostRated?.bggId ?? null,
+  );
+  const selected = sortedGames.find((g) => g.bggId === selectedId) ?? mostRated;
 
   const numericScores = useMemo(
     () => selected?.scores.map((s) => s.score) ?? [],
@@ -157,7 +161,7 @@ export function DistributionChart({
             />
           )}
           <select
-            value={selectedId ?? ""}
+            value={selected?.bggId ?? ""}
             onChange={(e) => {
               setSelectedId(Number(e.target.value) || null);
               setHoveredDot(null);
@@ -180,7 +184,8 @@ export function DistributionChart({
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
-          role="img"
+          role="group"
+          aria-label={`Score distribution for ${selected?.name ?? "selected game"}`}
           onClick={(e) => {
             if (e.target === e.currentTarget) setHoveredDot(null);
           }}
@@ -238,9 +243,28 @@ export function DistributionChart({
                 cy={centerY}
                 r={12}
                 fill="transparent"
-                style={{ cursor: "default" }}
-                onPointerEnter={() => setHoveredDot(i)}
-                onPointerLeave={() => setHoveredDot(null)}
+                role="button"
+                tabIndex={0}
+                aria-label={`${entry.displayName}: ${entry.score.toFixed(1)}`}
+                aria-pressed={hoveredDot === i}
+                style={{ cursor: "pointer" }}
+                onPointerEnter={(event) => {
+                  if (event.pointerType === "mouse") setHoveredDot(i);
+                }}
+                onPointerLeave={(event) => {
+                  if (event.pointerType === "mouse") setHoveredDot(null);
+                }}
+                onFocus={(event) => {
+                  if (event.currentTarget.matches(":focus-visible"))
+                    setHoveredDot(i);
+                }}
+                onBlur={() => setHoveredDot(null)}
+                onKeyDown={(event) => {
+                  if (event.key === "Enter" || event.key === " ") {
+                    event.preventDefault();
+                    setHoveredDot(hoveredDot === i ? null : i);
+                  } else if (event.key === "Escape") setHoveredDot(null);
+                }}
                 onClick={() => setHoveredDot(hoveredDot === i ? null : i)}
               />
               <circle
@@ -256,7 +280,7 @@ export function DistributionChart({
 
           {/* Your score indicator */}
           {selected?.yourScore != null && (
-            <>
+            <g pointerEvents="none">
               <line
                 x1={toX(selected.yourScore)}
                 x2={toX(selected.yourScore)}
@@ -272,12 +296,12 @@ export function DistributionChart({
                 className="fill-green-500 stroke-white dark:fill-green-400 dark:stroke-zinc-900"
                 strokeWidth={1}
               />
-            </>
+            </g>
           )}
 
           {/* Community average indicator */}
           {communityAvg != null && (
-            <>
+            <g pointerEvents="none">
               <line
                 x1={toX(communityAvg)}
                 x2={toX(communityAvg)}
@@ -286,7 +310,7 @@ export function DistributionChart({
                 className="stroke-cyan-500 dark:stroke-cyan-400"
                 strokeWidth={1}
               />
-            </>
+            </g>
           )}
 
           {/* BGG rating line */}
@@ -298,6 +322,7 @@ export function DistributionChart({
               y2={PAD.top + PLOT_H}
               className="stroke-orange-500 dark:stroke-orange-400"
               strokeWidth={1}
+              pointerEvents="none"
             />
           )}
 
@@ -327,7 +352,7 @@ export function DistributionChart({
               const tipY = centerY - 32;
               const arrowY = tipY + tipH;
               return (
-                <g style={{ pointerEvents: "none" }}>
+                <g role="tooltip" style={{ pointerEvents: "none" }}>
                   <rect
                     x={tipX - tipW / 2}
                     y={tipY}

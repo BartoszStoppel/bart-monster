@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
@@ -104,6 +104,8 @@ export function WishlistCard({
   const [editingNote, setEditingNote] = useState(false);
   const [moving, setMoving] = useState(false);
   const [failure, setFailure] = useState<string | null>(null);
+  useEffect(() => setPriority(item.priority), [item.priority]);
+  useEffect(() => setNote(item.note ?? ""), [item.note]);
   const noteRef = useRef<HTMLTextAreaElement>(null);
 
   const playerRange =

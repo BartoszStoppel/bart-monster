@@ -1,5 +1,4 @@
 import { metric } from "@/lib/api";
-import { navigate } from "@/compat/navigation";
 ("use client");
 
 import {
@@ -198,36 +197,13 @@ export function TierListBoard({
   revision,
 }: TierListBoardProps) {
   const dndId = useId();
-  const [category, setCategory] = useState(initialCategory);
+  const category = initialCategory;
   const games = category === "party" ? partyGames : boardGames;
   const placements = useMemo(
     () => filterPlacements(allPlacements, games),
     [allPlacements, games],
   );
 
-  const toggleContainerRef = useRef<HTMLDivElement>(null);
-  const partyBtnRef = useRef<HTMLButtonElement>(null);
-  const boardBtnRef = useRef<HTMLButtonElement>(null);
-  const [pillStyle, setPillStyle] = useState<{ left: number; width: number }>({
-    left: 0,
-    width: 0,
-  });
-
-  useEffect(() => {
-    const activeRef = category === "party" ? partyBtnRef : boardBtnRef;
-    const el = activeRef.current;
-    const container = toggleContainerRef.current;
-    if (el && container) {
-      const containerRect = container.getBoundingClientRect();
-      const elRect = el.getBoundingClientRect();
-      setPillStyle({
-        left: elRect.left - containerRect.left,
-        width: elRect.width,
-      });
-    }
-  }, [category]);
-
-  const savedBuckets = useRef<TierBuckets | null>(null);
   const [buckets, setBuckets] = useState<TierBuckets>(() =>
     buildBuckets(games, placements),
   );
@@ -427,13 +403,6 @@ export function TierListBoard({
     }
   }
 
-  function handleCategoryToggle(cat: "party" | "board") {
-    if (cat === category || saving) return;
-    const query = new URLSearchParams(location.search);
-    query.set("category", cat);
-    navigate(`/tier-list?${query}`);
-  }
-
   return (
     <div>
       {saveError && (
@@ -441,51 +410,18 @@ export function TierListBoard({
           {saveError}
         </div>
       )}
-      <div className="mb-4 flex items-center justify-between">
-        <div
-          ref={toggleContainerRef}
-          className="relative flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
-        >
-          <div
-            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10"
-            style={{ left: pillStyle.left, width: pillStyle.width }}
-          />
-          <button
-            ref={partyBtnRef}
-            onClick={() => handleCategoryToggle("party")}
-            className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              category === "party"
-                ? "text-zinc-900 dark:text-zinc-50"
-                : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            Party Games
-          </button>
-          <button
-            ref={boardBtnRef}
-            onClick={() => handleCategoryToggle("board")}
-            className={`relative z-10 rounded-md px-4 py-1.5 text-sm font-medium transition-colors ${
-              category === "board"
-                ? "text-zinc-900 dark:text-zinc-50"
-                : "text-zinc-600 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-            }`}
-          >
-            Board Games
-          </button>
-        </div>
-        <span
-          role="status"
-          aria-label="Ranking save status"
-          aria-live="polite"
-          className="text-xs text-zinc-500 dark:text-zinc-400"
-        >
-          {saveError
-            ? "Unsaved changes"
-            : saving
-              ? "Saving…"
-              : "All changes saved"}
-        </span>
-      </div>
+      <span
+        role="status"
+        aria-label="Ranking save status"
+        aria-live="polite"
+        className="absolute right-0 top-3 text-xs text-zinc-500 dark:text-zinc-400"
+      >
+        {saveError
+          ? "Unsaved changes"
+          : saving
+            ? "Saving…"
+            : "All changes saved"}
+      </span>
 
       <div className="mb-2 flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
         <span className="font-medium">

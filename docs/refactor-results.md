@@ -46,6 +46,22 @@ The final browser smoke on the canonical live domain passed desktop collection/n
 
 The final multi-stage Docker build uses Bun for frontend assets and Cargo for the Rust binary, including the transaction-pool adapter and all updated runtime callers. Verified image `7607fae4605d` is 99,904,759 bytes and runs as UID 10001. Its smoke check passed a fresh disposable PostgreSQL migration, Rust health response, SPA deep-link HTTP 200, database session bootstrap, and anonymous protected-API rejection. Python, environment files and backups were absent from the runtime image. The smoke container/database were removed afterward; migrations remain an explicit release step.
 
+## Interaction follow-up
+
+The follow-up audit compares the restored components with the original source and exercises computed styles and input events. Original card lift, image zoom, button highlights and modal keyframes were present; several surrounding state and input bugs interrupted them or hid controls.
+
+- Same-page query changes and refreshes retain controls so selection highlights can animate. Stale controls are inert during loading, focus returns after loading, and the autosave guard still blocks navigation and refresh while changes are pending. Ranking boards reset when their scope/revision changes, and collection, wishlist and expansion state reconcile fresh data.
+- One selection-indicator hook handles horizontal scrolling and resizing across collection, wishlist, picker and category selectors. Tier category controls remain mounted separately from the independently keyed board.
+- Cached card colors survive return navigation. Thumbnail sampling avoids decoding full cover images; Regicide Legacy's previously failing tint request now returns HTTP 200.
+- Card actions appear on mouse hover, keyboard focus and actual touch devices. Navigation handles hover followed by click, focus changes, Escape and mobile profile-menu placement. Title and rank popovers support keyboard interaction; title popovers toggle on touch.
+- Surface defaults use the CSS components layer, allowing login hover background/border utilities to take effect. Monospace text has a valid font fallback and the original font smoothing is restored.
+- Chart markers respond through their visible dots and larger hit areas; decorative overlays no longer intercept them. Tooltips support touch and focus, with a first touch preview before following scatter-chart links.
+- The picker keeps its ten-second normal spin, avoids restarting when images arrive, disables filters during a spin, and keeps repeated spins moving forward. Failed image loads are bounded. CSS and canvas motion respect reduced-motion preferences without suppressing the selected result.
+
+The local Vite harnesses `web/tests/browser_interactions.py` and `browser_navigation.py` exercise real mouse/touch/keyboard behavior and response-mocked refreshes without mutating their disposable database. Navigation checks cover retained DOM and transitions, keyboard focus, fresh data, autosave protection, metric resets, collection/wishlist reconciliation, expansion changes and preserved profile drafts. These remain explicit release checks, separate from the portable Bun domain tests.
+
+The broader browser pass completed 102 assertions, including 19 routes in each combination of light/dark theme and desktop/touch input, card lift/zoom/control visibility, normal picker result animations and reduced-motion behavior. It reported no JavaScript or API errors and no page overflow. The production frontend build and seven Bun domain tests passed. Rust code and database schema were unchanged by this follow-up.
+
 ## Historical data evidence
 
 The September 29 consolidation retained 27 players, 234 games, 1,006 enjoyment placements, 48 explicit ratings, 26 curated expansions, and 20 expansion placements at that cutover. It merged 1,575 source association rows into 1,143 user–game rows and compacted 9,085 raw history events into 5,180 historical daily values plus 1,185 truthful current-day baseline values. These are historical verified counts, not current production totals.

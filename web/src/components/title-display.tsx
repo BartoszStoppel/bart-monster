@@ -65,6 +65,9 @@ function Popover({
   children: React.ReactNode;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
+  const closeTimer = useRef<ReturnType<typeof setTimeout>>(null);
+
+  useEffect(() => () => clearTimeout(closeTimer.current), []);
 
   useEffect(() => {
     if (!open) return;
@@ -73,8 +76,15 @@ function Popover({
         onClose();
       }
     }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
     document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
+    document.addEventListener("keydown", handleKey);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("keydown", handleKey);
+    };
   }, [open, onClose]);
 
   return (
@@ -82,18 +92,40 @@ function Popover({
       className="relative inline"
       ref={ref}
       onPointerEnter={(e) => {
+        clearTimeout(closeTimer.current);
         if (e.pointerType !== "touch") onOpen();
       }}
       onPointerLeave={(e) => {
-        if (e.pointerType !== "touch") onClose();
+        if (
+          e.pointerType !== "touch" &&
+          !ref.current?.contains(document.activeElement)
+        ) {
+          closeTimer.current = setTimeout(onClose, 150);
+        }
       }}
-      onClick={onOpen}
+      onBlur={(e) => {
+        if (!e.currentTarget.contains(e.relatedTarget)) onClose();
+      }}
     >
-      <span
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={(event) => {
+          if (
+            (event.nativeEvent as PointerEvent).pointerType === "touch" &&
+            open
+          )
+            onClose();
+          else onOpen();
+        }}
+        onFocus={(event) => {
+          clearTimeout(closeTimer.current);
+          if (event.currentTarget.matches(":focus-visible")) onOpen();
+        }}
         className={`cursor-default transition-opacity hover:opacity-70 ${className ?? ""}`}
       >
         {label}
-      </span>
+      </button>
       {open && children}
     </span>
   );

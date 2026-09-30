@@ -3,6 +3,7 @@ import { metric, request } from "@/lib/api";
 import { difficultyTier } from "@/lib/metrics";
 import { createClient } from "@/lib/supabase/server";
 import { TierListBoard } from "./tier-list-board";
+import { TierCategoryToggle } from "./category-toggle";
 
 export const dynamic = "force-dynamic";
 
@@ -61,14 +62,17 @@ export default async function TierListPage({ searchParams }: PageProps) {
       <div className="mb-4">
         <MetricToggle />
       </div>
-      <TierListBoard
-        key={`${initialCategory}:${metric()}`}
-        partyGames={partyGames ?? []}
-        boardGames={boardGames ?? []}
-        allPlacements={placements ?? []}
-        initialCategory={initialCategory}
-        revision={ranking.revision}
-      />
+      <div className="relative">
+        <TierCategoryToggle category={initialCategory} />
+        <TierListBoard
+          key={`${initialCategory}:${metric()}:${ranking.revision}:${[...catalog].join(",")}`}
+          partyGames={partyGames ?? []}
+          boardGames={boardGames ?? []}
+          allPlacements={placements ?? []}
+          initialCategory={initialCategory}
+          revision={ranking.revision}
+        />
+      </div>
     </div>
   );
 }

@@ -50,8 +50,8 @@ function extractColor(img: HTMLImageElement): string | null {
  * @returns An "r, g, b" string, or null while loading/on failure.
  */
 export function useDominantColor(imageUrl: string | null): string | null {
-  const [color, setColor] = useState<string | null>(
-    imageUrl ? (colorCache.get(imageUrl) ?? null) : null,
+  const [sample, setSample] = useState<{ url: string; color: string } | null>(
+    null,
   );
 
   useEffect(() => {
@@ -60,14 +60,12 @@ export function useDominantColor(imageUrl: string | null): string | null {
 
     const img = new Image();
     img.crossOrigin = "anonymous";
-    img.src = `/_next/image?url=${encodeURIComponent(imageUrl)}&w=32&q=75`;
-
     img.onload = () => {
       try {
         const result = extractColor(img);
         if (result) {
           colorCache.set(imageUrl, result);
-          setColor(result);
+          setSample({ url: imageUrl, color: result });
         }
       } catch (err) {
         console.warn("[useDominantColor] extraction failed:", err);
@@ -80,7 +78,16 @@ export function useDominantColor(imageUrl: string | null): string | null {
         imageUrl,
       );
     };
+    img.src = `/_next/image?url=${encodeURIComponent(imageUrl)}&w=32&q=75`;
+
+    return () => {
+      img.onload = null;
+      img.onerror = null;
+    };
   }, [imageUrl]);
 
-  return color;
+  return imageUrl
+    ? (colorCache.get(imageUrl) ??
+        (sample?.url === imageUrl ? sample.color : null))
+    : null;
 }

@@ -1,7 +1,7 @@
 import { scoreMax } from "@/lib/metrics";
 ("use client");
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 
 interface GameScore {
   name: string;
@@ -113,11 +113,37 @@ function buildSmoothPath(
  */
 export function ComplexityChart({ games }: ComplexityChartProps) {
   const [hovered, setHovered] = useState<string | null>(null);
+  const touchPreview = useRef<string | null>(null);
   const [visible, setVisible] = useState({
     yours: true,
     ours: true,
     bgg: true,
   });
+  function markerEvents(key: string, label: string) {
+    return {
+      tabIndex: 0,
+      "aria-label": label,
+      onPointerEnter: (event: React.PointerEvent<Element>) => {
+        if (event.pointerType === "mouse") setHovered(key);
+      },
+      onPointerDown: (event: React.PointerEvent<Element>) => {
+        touchPreview.current =
+          event.pointerType === "touch" && hovered !== key ? key : null;
+      },
+      onClick: (event: React.MouseEvent<Element>) => {
+        if (touchPreview.current === key) {
+          event.preventDefault();
+          touchPreview.current = null;
+          setHovered(key);
+        }
+      },
+      onFocus: () => setHovered(key),
+      onBlur: () => setHovered(null),
+      onKeyDown: (event: React.KeyboardEvent<Element>) => {
+        if (event.key === "Escape") setHovered(null);
+      },
+    };
+  }
 
   const ourGames = games.filter(
     (g) => g.ourScore != null && g.difficulty != null && g.difficulty > 0,
@@ -200,8 +226,14 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
-          role="img"
-          onMouseLeave={() => setHovered(null)}
+          role="group"
+          aria-label="Difficulty versus score chart"
+          onPointerLeave={(event) => {
+            if (event.pointerType === "mouse") setHovered(null);
+          }}
+          onClick={(event) => {
+            if (event.target === event.currentTarget) setHovered(null);
+          }}
         >
           {/* Grid */}
           {(scoreMax() === 6 ? [1, 2, 3, 4, 5, 6] : [2, 4, 6, 8, 10]).map(
@@ -317,15 +349,15 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               const key = `bgg-${g.bggId}`;
               const active = hovered === key;
               return (
-                <a key={key} href={`/games/${g.bggId}`}>
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r={8}
-                    fill="transparent"
-                    onMouseEnter={() => setHovered(key)}
-                    onTouchStart={() => setHovered(key)}
-                  />
+                <a
+                  key={key}
+                  href={`/games/${g.bggId}`}
+                  {...markerEvents(
+                    key,
+                    `${g.name}: BGG score ${g.bggRating}, difficulty ${g.difficulty}`,
+                  )}
+                >
+                  <circle cx={cx} cy={cy} r={8} fill="transparent" />
                   <circle
                     cx={cx}
                     cy={cy}
@@ -345,15 +377,15 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               const key = `our-${g.bggId}`;
               const active = hovered === key;
               return (
-                <a key={key} href={`/games/${g.bggId}`}>
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r={8}
-                    fill="transparent"
-                    onMouseEnter={() => setHovered(key)}
-                    onTouchStart={() => setHovered(key)}
-                  />
+                <a
+                  key={key}
+                  href={`/games/${g.bggId}`}
+                  {...markerEvents(
+                    key,
+                    `${g.name}: community score ${g.ourScore}, difficulty ${g.difficulty}`,
+                  )}
+                >
+                  <circle cx={cx} cy={cy} r={8} fill="transparent" />
                   <circle
                     cx={cx}
                     cy={cy}
@@ -373,15 +405,15 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               const key = `your-${g.bggId}`;
               const active = hovered === key;
               return (
-                <a key={key} href={`/games/${g.bggId}`}>
-                  <circle
-                    cx={cx}
-                    cy={cy}
-                    r={8}
-                    fill="transparent"
-                    onMouseEnter={() => setHovered(key)}
-                    onTouchStart={() => setHovered(key)}
-                  />
+                <a
+                  key={key}
+                  href={`/games/${g.bggId}`}
+                  {...markerEvents(
+                    key,
+                    `${g.name}: your score ${g.yourScore}, difficulty ${g.difficulty}`,
+                  )}
+                >
+                  <circle cx={cx} cy={cy} r={8} fill="transparent" />
                   <circle
                     cx={cx}
                     cy={cy}
@@ -420,7 +452,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               const right = cx < W / 2;
               const tx = right ? cx + 6 : cx - 6 - labelW;
               return (
-                <g pointerEvents="none">
+                <g role="tooltip" pointerEvents="none">
                   <rect
                     x={tx}
                     y={cy - 8}

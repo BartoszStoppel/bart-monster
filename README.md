@@ -63,6 +63,13 @@ cargo test --lib action_tests -- --ignored
 
 Coverage includes score decreases, daily rollups, independent metrics, stale/identical saves, PostgreSQL concurrency, authentication/CSRF, BGG parsing, bounded model calls, citations, and rulebook caching. Provider tests use local mocks and make no paid AI requests. See [verification details](docs/refactor-results.md).
 
+The optional browser interaction checks use Playwright against a local Vite server and Rust API with a disposable staff session. Supply a private JSON fixture containing `session` and `user_id`; these release harnesses are separate from the default Bun tests and refuse remote app URLs. They check mouse/touch/keyboard controls, cached card colors, animated category changes, fresh-data refresh, focus restoration and autosave navigation protection. The interaction harness loads the otherwise unused rank badge directly through Vite, so use the development server on port 5173.
+
+```sh
+uv run --no-project --with playwright python web/tests/browser_interactions.py --fixture /path/to/local-test.json
+uv run --no-project --with playwright python web/tests/browser_navigation.py --base-url http://127.0.0.1:5173 --fixture /path/to/local-test.json
+```
+
 ## Hosting and releases
 
 Keep the current Vercel project and Supabase database. `vercel.json` builds `web/dist` with Bun and routes API/auth requests to `api/index.rs`; static assets and frontend routes stay on Vercel. The native Rust function has a 300-second limit. Chat and PDF conversion each have a 240-second overall provider-work deadline; an expiring database lease prevents duplicate chat requests for one user across instances.

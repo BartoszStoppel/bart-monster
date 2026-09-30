@@ -43,6 +43,7 @@ export function SpinnerWheel({
   const angleRef = useRef(0);
   const animRef = useRef<number | null>(null);
   const spinningRef = useRef(false);
+  const failedImages = useRef(new Set<string>());
   const [loadedImages, setLoadedImages] = useState<
     Map<string, HTMLImageElement>
   >(new Map());
@@ -54,7 +55,9 @@ export function SpinnerWheel({
       .map((s) => s.imageUrl)
       .filter((u): u is string => u != null && u !== "");
     const unique = [...new Set(urls)];
-    const pending = unique.filter((u) => !loadedImages.has(u));
+    const pending = unique.filter(
+      (u) => !loadedImages.has(u) && !failedImages.current.has(u),
+    );
     if (pending.length === 0) return;
 
     let cancelled = false;
@@ -69,12 +72,16 @@ export function SpinnerWheel({
               newMap.set(url, img);
               resolve();
             };
-            img.onerror = () => resolve();
+            img.onerror = () => {
+              failedImages.current.add(url);
+              resolve();
+            };
             img.src = url;
           }),
       ),
     ).then(() => {
-      if (!cancelled) setLoadedImages(new Map(newMap));
+      if (!cancelled && newMap.size > loadedImages.size)
+        setLoadedImages(new Map(newMap));
     });
 
     return () => {
@@ -212,6 +219,8 @@ export function SpinnerWheel({
     ctx.scale(dpr, dpr);
     drawWheel(ctx, size, angleRef.current);
   }, [drawWheel]);
+  const renderRef = useRef(render);
+  renderRef.current = render;
 
   // Resize observer
   useEffect(() => {
@@ -241,25 +250,27 @@ export function SpinnerWheel({
     }
     angleToTarget += (segments[targetIndex].weight / totalWeight) * Math.PI;
 
-    // The wheel rotates, pointer is fixed at top (-PI/2)
-    // We want: rotation + angleToTarget ≡ -PI/2 (mod 2PI)
-    // So final rotation = -PI/2 - angleToTarget
-    const extraSpins = (20 + Math.floor(Math.random() * 10)) * Math.PI * 2;
-    const finalAngle = -Math.PI / 2 - angleToTarget + extraSpins;
-
-    const startAngle = angleRef.current;
-    const totalSpin = finalAngle - startAngle;
+    // Keep each spin moving forward, even after an earlier spin accumulated turns.
+    const turn = Math.PI * 2;
+    const startAngle = ((angleRef.current % turn) + turn) % turn;
+    const targetAngle = -Math.PI / 2 - angleToTarget;
+    const forwardAngle = (((targetAngle - startAngle) % turn) + turn) % turn;
+    const totalSpin =
+      (20 + Math.floor(Math.random() * 10)) * turn + forwardAngle;
     const duration = 10000;
     const startTime = performance.now();
+    const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
 
     function animate(now: number) {
       const elapsed = now - startTime;
-      const progress = Math.min(elapsed / duration, 1);
+      const progress = reducedMotion.matches
+        ? 1
+        : Math.min(elapsed / duration, 1);
       const eased = easeOutCubic(progress);
 
       angleRef.current = startAngle + totalSpin * eased;
 
-      render();
+      renderRef.current();
 
       if (progress < 1) {
         animRef.current = requestAnimationFrame(animate);
@@ -278,7 +289,7 @@ export function SpinnerWheel({
         animRef.current = null;
       }
     };
-  }, [spinning, targetIndex, segments, totalWeight, render, onSpinComplete]);
+  }, [spinning, targetIndex, segments, totalWeight, onSpinComplete]);
 
   return (
     <div className="relative mx-auto w-full max-w-md">
