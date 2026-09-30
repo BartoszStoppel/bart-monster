@@ -126,7 +126,8 @@ function NavGroupButton({
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) onClose();
+        if (isOpen && !event.currentTarget.contains(event.relatedTarget))
+          onClose();
       }}
     >
       <button
@@ -184,7 +185,8 @@ function AvatarMenu({
       onPointerEnter={onPointerEnter}
       onPointerLeave={onPointerLeave}
       onBlur={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) onClose();
+        if (isOpen && !event.currentTarget.contains(event.relatedTarget))
+          onClose();
       }}
     >
       <button

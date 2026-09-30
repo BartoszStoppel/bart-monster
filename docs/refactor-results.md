@@ -62,6 +62,8 @@ The local Vite harnesses `web/tests/browser_interactions.py` and `browser_naviga
 
 The broader browser pass completed 102 assertions, including 19 routes in each combination of light/dark theme and desktop/touch input, card lift/zoom/control visibility, normal picker result animations and reduced-motion behavior. It reported no JavaScript or API errors and no page overflow. The production frontend build and seven Bun domain tests passed. Rust code and database schema were unchanged by this follow-up.
 
+Targeted checks also passed chart mouse/keyboard/touch interaction, two complete forward spins with delayed image loading, disabled filters while spinning, immediate reduced-motion results and bounded mixed successful/failed image requests. The existing autosave release harness passed again against disposable local PostgreSQL: queued retry ordering, browser Back protection, independent difficulty persistence and stale-tab conflicts. No production ranking writes were used for these checks.
+
 ## Historical data evidence
 
 The September 29 consolidation retained 27 players, 234 games, 1,006 enjoyment placements, 48 explicit ratings, 26 curated expansions, and 20 expansion placements at that cutover. It merged 1,575 source association rows into 1,143 user–game rows and compacted 9,085 raw history events into 5,180 historical daily values plus 1,185 truthful current-day baseline values. These are historical verified counts, not current production totals.

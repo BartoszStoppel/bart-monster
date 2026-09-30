@@ -86,7 +86,11 @@ with sync_playwright() as playwright:
     page.wait_for_timeout(250)
     expect(games).to_have_attribute('aria-expanded', 'true')
     games.press('Escape')
-    print('Cached tints survive return navigation; hover-click, keyboard navigation, and leave/focus timer: PASS', flush=True)
+    rankings = page.get_by_role('button', name='Rankings', exact=True)
+    rankings.hover()
+    page.get_by_role('link', name='Tier List', exact=True).click()
+    expect(page.get_by_role('heading', name='Tier List', exact=True)).to_be_visible()
+    print('Cached tints, keyboard/hover timers, and cross-menu focus navigation: PASS', flush=True)
 
     page.goto(base + '/users/' + fixture['user_id'], wait_until='domcontentloaded')
     trigger = page.locator('main button[aria-expanded]').first
