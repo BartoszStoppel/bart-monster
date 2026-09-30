@@ -8,6 +8,11 @@ import {
 import { createRoot } from "react-dom/client";
 import { useLocation, Redirect, navigate } from "@/compat/navigation";
 import { session, invalidateData } from "@/lib/api";
+import {
+  isAssetLoadError,
+  recoverPageLoad,
+  reloadSite,
+} from "@/lib/deployment";
 import AppLayout from "@/app/(app)/layout";
 import Login from "@/app/(auth)/login/page";
 import Search from "@/app/(app)/search/page";
@@ -85,12 +90,14 @@ function App() {
           setLoadedRoute(route);
         }
       })
-      .catch((e) => {
+      .catch(async (e) => {
         if (!current) return;
         if (e instanceof Redirect) {
           navigate(e.href, true);
           return;
         }
+        if (await recoverPageLoad(e, () => current)) return;
+        if (!current) return;
         setError(e.message || "Could not load this page");
       })
       .finally(() => {
@@ -111,12 +118,20 @@ function App() {
   }, [pending]);
   const body = error ? (
     <div role="alert" className="rounded-lg border border-red-400 p-6">
-      <p>{error}</p>
+      <p>
+        {isAssetLoadError(error)
+          ? "A page file could not load. Reload the site to get the latest version."
+          : error}
+      </p>
       <button
-        onClick={() => window.dispatchEvent(new Event("bart:refresh"))}
+        onClick={() =>
+          isAssetLoadError(error)
+            ? reloadSite()
+            : window.dispatchEvent(new Event("bart:refresh"))
+        }
         className="mt-4 underline"
       >
-        Try again
+        {isAssetLoadError(error) ? "Reload site" : "Try again"}
       </button>
     </div>
   ) : hasContent ? (

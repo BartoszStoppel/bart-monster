@@ -71,6 +71,13 @@ uv run --no-project --with playwright python web/tests/browser_navigation.py --b
 uv run --no-project --with playwright python web/tests/browser_theme.py --base-url http://127.0.0.1:8000 --fixture /path/to/local-test.json
 ```
 
+The deployment regression uses built production chunks and synthetic API responses, with no database or remote requests. It exercises automatic recovery of old tabs, explicit reload, offline fallback, unsaved-navigation guards and reload-loop prevention for Achievements and Furtch.
+
+```sh
+bun run --cwd web build
+uv run --no-project --with playwright python web/tests/browser_deployment.py
+```
+
 The theme harness also supports a deployed base URL and an optional private `--bypass-file`. It checks the actual rendered font families, original branding, card/torch effects, navigation, touch layout and reduced motion, and blocks mutations except the canonical heartbeat.
 
 ## Hosting and releases

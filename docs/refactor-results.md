@@ -80,6 +80,14 @@ The staged and canonical deployments both passed `web/tests/browser_theme.py`, c
 
 Runtime commit `8bc003d` was promoted as `dpl_Es5zt3B2yp8SUaYzWctpsGKGFAt7` at https://bart.monster. The temporary verification account/activity/sessions were removed, and its old session returned HTTP 401. Disposable local backend/PostgreSQL resources were removed. The existing Vite development process was left running. `ideas.md` was not modified or staged.
 
+## Open-tab deployment recovery
+
+A tab opened before promotion retained the preceding entry bundle, then requested deleted page chunks when visiting Achievements or Furtch. The canonical catch-all returned HTML for those missing JavaScript files, causing a dynamic-import failure. The original “Try again” control retried the cached rejected import. Both current pages worked in fresh browsers; the earlier fresh-page checks did not cover an already-open tab across deployments.
+
+The router now checks the current HTML entry after a page-asset failure. When a newer entry exists, it performs a guarded full reload, recording the attempted destination to avoid repeated automatic reloads. Offline checks or an unchanged entry show an explicit “Reload site” control. Both reload paths use the existing unsaved-navigation guard. Business/API errors keep their ordinary retry behavior. Tabs already running the old router need one initial browser reload to acquire this recovery logic.
+
+The frontend build and all ten production-bundle browser regressions passed: both affected routes under automatic recovery, unchanged-build retry, denied navigation, failed update checks and persistent broken chunks. Independent reproduction with the real preceding release confirmed the original failures and ineffective retry. No Rust, schema or ranking changes were needed.
+
 ## Historical data evidence
 
 The September 29 consolidation retained 27 players, 234 games, 1,006 enjoyment placements, 48 explicit ratings, 26 curated expansions, and 20 expansion placements at that cutover. It merged 1,575 source association rows into 1,143 user–game rows and compacted 9,085 raw history events into 5,180 historical daily values plus 1,185 truthful current-day baseline values. These are historical verified counts, not current production totals.
