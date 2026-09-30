@@ -1,6 +1,6 @@
 # Rust deployment and retained data
 
-This filename is retained for existing documentation links. The active application is Rust/Axum with a React/Vite frontend; Python/Django is a rollback implementation at commit `9a1596e`. The original Next.js application remains at `091d2461f1bf47a6b3b78af7d62275050f33bb20`.
+This filename is retained for existing documentation links. The active application is Rust/Axum with a React/Vite frontend; Python/Django is a rollback implementation at commit `9a1596e`. The original Table Monsters design is preserved at GitHub commit `9d2a3fb`; the earlier `091d246` source predates that redesign.
 
 The Rust release retains current Supabase data in place. Production uses the existing private `bart_django` schema/role and previews use `bart_django_preview`. Their historical names are deliberately unchanged: renaming them would add deployment risk without changing application behavior. Supabase Auth and its Google provider remain in the same project. The application is live at https://bart.monster.
 
@@ -53,7 +53,7 @@ On September 29, 2026, deployment `dpl_2LT4h1yaH6MV5iqP3hGzFu6Rqj6T` was promote
 
 The live domain returned Rust health, authenticated session/catalog/ranking/history responses, SPA deep links, anonymous API rejection, missing-CSRF rejection, and a valid Supabase Google PKCE initiation. The `www` hostname redirects to the canonical origin with HTTP 308 while retaining path and query. Existing browser sessions require a fresh sign-in. The preceding Django deployment `dpl_9wvd5Ft4aZLjmNLq2QPAGPGqAs7q` and private backups remain available for rollback.
 
-The subsequent interaction follow-up at commit `e3dd41c` is live as deployment `dpl_FYPtm1yijaH6qKfnu2YQfAMFAmuH`, with immutable URL https://bart-monster-29ubxzv5q-barts-projects-af89ee9c.vercel.app. It fixes frontend motion, navigation and input behavior while retaining the existing Rust sessions and Supabase data. The previous Rust deployment above remains a rollback option. See the [interaction verification](refactor-results.md#interaction-follow-up).
+The subsequent interaction follow-up at commit `e3dd41c` was deployed as `dpl_FYPtm1yijaH6qKfnu2YQfAMFAmuH`, with immutable URL https://bart-monster-29ubxzv5q-barts-projects-af89ee9c.vercel.app. It fixes frontend motion, navigation and input behavior while retaining the existing Rust sessions and Supabase data. The previous Rust deployment above remains a rollback option. See the [interaction verification](refactor-results.md#interaction-follow-up).
 
 ## Data semantics retained by Rust
 

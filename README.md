@@ -4,7 +4,7 @@ A board-game home for a group of friends. Rust/Axum handles authentication, cata
 
 The application is live at **https://bart.monster** on Vercel's native Rust runtime. The existing Supabase project remains the PostgreSQL host and Google sign-in provider. The private production schema is still named `bart_django`; that historical name preserves deployed data and does not require Python or Django.
 
-The frontend reuses the original Next.js dashboard's page structure, components, and navigation through small compatibility adapters, with a brown palette. An original brown screenshot or exact historical brown palette was not recovered, so pixel-for-pixel color fidelity is not claimed. The Python/Django runtime has been removed; its rollback source remains at commit `9a1596e`.
+The frontend restores the Table Monsters dungeon design from GitHub commit `9d2a3fb`, including its navigation, stone/amber palette, card layout, icons and motion, through small compatibility adapters. EB Garamond headings, Hanken Grotesk body text and Geist stats use the original self-hosted font files. The recovered specification and mockup are in [design/](design/README.md). The Python/Django runtime has been removed; its rollback source remains at commit `9a1596e`.
 
 ## Local development
 
@@ -63,12 +63,15 @@ cargo test --lib action_tests -- --ignored
 
 Coverage includes score decreases, daily rollups, independent metrics, stale/identical saves, PostgreSQL concurrency, authentication/CSRF, BGG parsing, bounded model calls, citations, and rulebook caching. Provider tests use local mocks and make no paid AI requests. See [verification details](docs/refactor-results.md).
 
-The optional browser interaction checks use Playwright against a local Vite server and Rust API with a disposable staff session. Supply a private JSON fixture containing `session` and `user_id`; these release harnesses are separate from the default Bun tests and refuse remote app URLs. They check mouse/touch/keyboard controls, cached card colors, animated category changes, fresh-data refresh, focus restoration and autosave navigation protection. The interaction harness loads the otherwise unused rank badge directly through Vite, so use the development server on port 5173.
+The optional browser interaction checks use Playwright against a local Vite server and Rust API with a disposable staff session. Supply a private JSON fixture containing `session` and `user_id`; these release harnesses are separate from the default Bun tests and refuse remote app URLs. They check mouse/touch/keyboard controls, original card effects, animated category changes, fresh-data refresh, focus restoration and autosave navigation protection. The interaction harness loads the otherwise unused rank badge directly through Vite, so use the development server on port 5173.
 
 ```sh
 uv run --no-project --with playwright python web/tests/browser_interactions.py --fixture /path/to/local-test.json
 uv run --no-project --with playwright python web/tests/browser_navigation.py --base-url http://127.0.0.1:5173 --fixture /path/to/local-test.json
+uv run --no-project --with playwright python web/tests/browser_theme.py --base-url http://127.0.0.1:8000 --fixture /path/to/local-test.json
 ```
+
+The theme harness also supports a deployed base URL and an optional private `--bypass-file`. It checks the actual rendered font families, original branding, card/torch effects, navigation, touch layout and reduced motion, and blocks mutations except the canonical heartbeat.
 
 ## Hosting and releases
 
@@ -102,7 +105,8 @@ Set a container-reachable database URL and public `APP_ORIGIN`; terminate HTTPS 
 - `rust/migrations/`: fresh-install baseline and additive Rust session/lease migration.
 - `rust/data/`: preserved assistant tool schemas. Player ranks live in `web/src/lib/ranks.ts`; stories remain in the frontend Furtch page.
 - `api/index.rs`: Vercel entrypoint; `rust/src/main.rs`: local/container entrypoint.
-- `web/src/`: original dashboard components/pages, Vite adapters, brown theme, and autosave UI.
+- `web/src/`: recovered Table Monsters pages/components, Vite adapters, theme, and autosave UI.
+- `design/`: historical design reference; `web/public/fonts/`: self-hosted fonts and licenses.
 - `supabase/`: historical SQL and read-only legacy audit; never replay its migrations against the private application schema.
 - `archive/`, `emails/`, `scripts/`: preserved historical/personal material, excluded from deployment.
 

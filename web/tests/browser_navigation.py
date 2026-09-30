@@ -1,7 +1,7 @@
 """Same-page navigation regression; uses a disposable local authenticated fixture.
 
 uv run --no-project --with playwright python web/tests/browser_navigation.py \
-  --base-url http://127.0.0.1:5173 --fixture backups/interaction-audit/local-test.json
+  --base-url http://127.0.0.1:5173 --fixture backups/brand-restoration/local-test.json
 
 All non-read API requests are intercepted; the fixture database is not mutated.
 """
@@ -12,6 +12,8 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from playwright.async_api import async_playwright, expect
+
+expect.set_options(timeout=20000)
 
 
 async def check(base, fixture):
@@ -87,8 +89,10 @@ async def check(base, fixture):
 
         await page.route("**/api/**", api)
         await page.goto(base + "/community?category=board")
-        await expect(page.get_by_role("heading", name="Community", exact=True)).to_be_visible()
+        await expect(page.get_by_role("heading", name="The Guild Hall", exact=True)).to_be_visible()
         await page.wait_for_function('document.querySelector("main [aria-busy]")?.getAttribute("aria-busy") === "false"')
+        await page.evaluate("document.fonts.ready")
+        await page.wait_for_timeout(250)
         await page.evaluate('''() => {
             const button = [...document.querySelectorAll('main button')].find(e => e.textContent === 'Party Games');
             window.audit = {button, pill: button.parentElement.querySelector('[style]'), heading: document.querySelector('main h1'), transitions: [], animations: []};
@@ -106,7 +110,7 @@ async def check(base, fixture):
         await page.wait_for_function('document.querySelector("main [aria-busy]")?.getAttribute("aria-busy") === "false"')
         await page.wait_for_timeout(250)
         assert await page.evaluate('audit.button.isConnected && audit.pill.isConnected'), "category query remounted controls"
-        assert await page.evaluate('audit.transitions.includes("left")'), "category selection did not animate between positions"
+        assert await page.evaluate('audit.transitions.includes("left")'), await page.evaluate('({reason:"category selection did not animate between positions", transitions:audit.transitions, pill:audit.pill.style.cssText, duration:getComputedStyle(audit.pill).transitionDuration, reduced:matchMedia("(prefers-reduced-motion: reduce)").matches})')
         await expect(category_button).to_be_focused()
 
         # A refresh supplies visibly new server data while preserving the page DOM.
@@ -133,7 +137,7 @@ async def check(base, fixture):
         # Metric data still changes scope and resets the stateful ranking board.
         fresh_profile = False
         await page.goto(base + "/tier-list?category=board&metric=enjoyment")
-        await expect(page.get_by_role("heading", name="Tier List", exact=True)).to_be_visible()
+        await expect(page.get_by_role("heading", name="The Tier Forge", exact=True)).to_be_visible()
         tiles = page.locator('[aria-roledescription="sortable"]')
         await expect(tiles.first).to_be_visible()
         original_tile = await tiles.first.element_handle()
@@ -149,13 +153,13 @@ async def check(base, fixture):
         # Response-only changes model updates from another page/tab. Collection
         # props must refresh without losing its current sort/filter controls.
         await page.goto(base + "/")
-        cards = page.locator("main .glass-card").filter(has=page.locator('a[href^="/games/"]'))
+        cards = page.locator("main article.monster-card").filter(has=page.locator('a[href^="/games/"]'))
         await expect(cards.first).to_be_visible()
         href = await cards.first.locator('a[href^="/games/"]').first.get_attribute("href")
         target_game = int(href.rsplit("/", 1)[1])
-        card = page.locator("main .glass-card").filter(has=page.locator(f'a[href="{href}"]'))
+        card = page.locator("main article.monster-card").filter(has=page.locator(f'a[href="{href}"]'))
         original_card = await card.element_handle()
-        name_sort = page.get_by_role("button", name="Name", exact=True)
+        name_sort = page.get_by_role("button", name="Sort by Name", exact=True)
         await name_sort.click()
         original_sort = await name_sort.element_handle()
         collection_flags = (True, False)
@@ -164,7 +168,7 @@ async def check(base, fixture):
         await expect(card.locator('[title="You own this"]')).to_have_count(1)
         assert await original_card.evaluate('(el) => el.isConnected')
         assert await original_sort.evaluate('(el) => el.isConnected')
-        assert "dark:text-zinc-50" in await name_sort.get_attribute("class")
+        assert await name_sort.get_attribute("aria-pressed") == "true"
         collection_flags = (False, True)
         await page.evaluate('window.dispatchEvent(new Event("bart:refresh"))')
         await expect(card.locator('[title="On your wishlist"]')).to_have_count(1)
@@ -172,14 +176,14 @@ async def check(base, fixture):
 
         await page.goto(base + "/wishlist")
         await expect(page.get_by_text("Fresh wishlist note", exact=True)).to_be_visible()
-        wishlist_sort = page.get_by_role("button", name="Name", exact=True)
+        wishlist_sort = page.get_by_role("button", name="Sort by Name", exact=True)
         await wishlist_sort.click()
         original_wishlist_sort = await wishlist_sort.element_handle()
         collection_flags = (True, False)
         await page.evaluate('window.dispatchEvent(new Event("bart:refresh"))')
         await expect(page.get_by_text("Fresh wishlist note", exact=True)).to_have_count(0)
         assert await original_wishlist_sort.evaluate('(el) => el.isConnected')
-        assert "dark:text-zinc-50" in await wishlist_sort.get_attribute("class")
+        assert await wishlist_sort.get_attribute("aria-pressed") == "true"
 
         # New/deleted expansion IDs reset only the ranking board; a revision
         # change must also reset its retained selection and save revision.

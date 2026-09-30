@@ -6,8 +6,8 @@ import {
   useCallback,
   useRef,
   useMemo,
-  useEffect,
   useId,
+  useEffect,
 } from "react";
 import {
   DndContext,
@@ -131,9 +131,9 @@ function UnplayedRow({
 
   return (
     <div
-      className={`mt-4 rounded-lg border border-dashed border-zinc-300 dark:border-white/10 ${
-        isOver ? "bg-zinc-100 dark:bg-white/10" : ""
-      } ${selectedBggId !== null ? "bg-zinc-50 dark:bg-white/5" : ""}`}
+      className={`mt-gutter rounded-lg border border-dashed border-outline-variant ${
+        isOver ? "bg-surface-container-highest" : ""
+      } ${selectedBggId !== null ? "bg-surface-container-high" : ""}`}
     >
       <div
         role="button"
@@ -146,8 +146,11 @@ function UnplayedRow({
             onTierTap("unplayed");
           }
         }}
-        className="px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-zinc-500 dark:text-zinc-400"
+        className="flex items-center gap-2 px-card-padding py-2 font-stat text-caption uppercase tracking-wide text-on-surface-variant"
       >
+        <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+          inventory_2
+        </span>
         Unranked — tap to select, then tap to place
       </div>
       <SortableContext
@@ -171,7 +174,7 @@ function UnplayedRow({
             />
           ))}
           {games.length === 0 && (
-            <span className="text-xs text-zinc-400 dark:text-zinc-500">
+            <span className="text-xs text-on-surface-variant">
               All games have been ranked!
             </span>
           )}
@@ -404,9 +407,9 @@ export function TierListBoard({
   }
 
   return (
-    <div>
+    <div className="flex flex-col gap-gutter">
       {saveError && (
-        <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900/20 dark:text-red-300">
+        <div className="rounded-lg border border-error bg-error-container/15 p-card-padding text-sm text-error">
           {saveError}
         </div>
       )}
@@ -414,7 +417,7 @@ export function TierListBoard({
         role="status"
         aria-label="Ranking save status"
         aria-live="polite"
-        className="absolute right-0 top-3 text-xs text-zinc-500 dark:text-zinc-400"
+        className="absolute right-0 top-3 text-xs text-on-surface-variant"
       >
         {saveError
           ? "Unsaved changes"
@@ -423,13 +426,15 @@ export function TierListBoard({
             : "All changes saved"}
       </span>
 
-      <div className="mb-2 flex items-center gap-2 text-xs text-zinc-400 dark:text-zinc-500">
-        <span className="font-medium">
-          {metric() === "difficulty" ? "Hardest" : "Best"}
+      <div className="flex items-center gap-2 font-stat text-caption text-on-surface-variant">
+        <span aria-hidden="true" className="material-symbols-outlined stat-icon text-[16px]">
+          trophy
         </span>
-        <div className="h-1 w-16 rounded-full bg-gradient-to-r from-emerald-500 to-rose-500" />
-        <span className="font-medium">
-          {metric() === "difficulty" ? "Easiest" : "Worst"}
+        <span>{metric() === "difficulty" ? "Hardest" : "Best"}</span>
+        <div className="h-1 w-16 rounded-full bg-gradient-to-r from-secondary-container to-error-container" />
+        <span>{metric() === "difficulty" ? "Easiest" : "Worst"}</span>
+        <span aria-hidden="true" className="material-symbols-outlined text-[16px] text-error">
+          skull
         </span>
       </div>
 
@@ -445,7 +450,7 @@ export function TierListBoard({
           setActiveGame(null);
         }}
       >
-        <div className="overflow-hidden rounded-lg border border-zinc-200 dark:border-white/10">
+        <div className="monster-card overflow-hidden rounded-lg">
           {TIERS.map((tier) => (
             <TierRow
               key={tier}

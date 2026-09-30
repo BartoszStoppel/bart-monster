@@ -42,13 +42,13 @@ export function ExpansionSection({
   return (
     <div className="mb-8">
       <div className="mb-3 flex items-center justify-between gap-3">
-        <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+        <h2 className="text-lg font-semibold text-on-surface">
           Expansion Tier List
         </h2>
         {bank.length > 0 && (
           <button
             onClick={() => setShowCommunity(true)}
-            className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-100 dark:border-white/10 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className="stone-button rounded-md px-3 py-1.5 text-sm font-medium"
           >
             Community scores
           </button>
@@ -64,7 +64,7 @@ export function ExpansionSection({
           key={`${gameBggId}:${revision}:${bank.map((expansion) => expansion.id).join(",")}`}
         />
       ) : (
-        <p className="mb-4 text-sm text-zinc-500 dark:text-zinc-400">
+        <p className="mb-4 text-sm text-on-surface-variant">
           No expansions in the word bank yet. Add some below to let everyone
           rank them.
         </p>

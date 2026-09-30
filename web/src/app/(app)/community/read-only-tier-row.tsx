@@ -23,7 +23,7 @@ export function ReadOnlyTierRow({
   if (entries.length === 0) return null;
 
   return (
-    <div className="flex min-h-[4.5rem] items-stretch border-b border-zinc-200 last:border-b-0 dark:border-white/10">
+    <div className="flex min-h-[4.5rem] items-stretch border-b border-outline-variant last:border-b-0">
       <div
         className={`flex ${metric() === "difficulty" ? "w-24 text-xs" : "w-12 text-lg"} shrink-0 items-center justify-center font-bold text-white ${TIER_COLORS[tier]}`}
       >

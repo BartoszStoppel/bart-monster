@@ -5,15 +5,21 @@ import Image from "next/image";
 import type { BggSearchResult } from "@/lib/bgg/types";
 
 interface GameSearchBarProps {
+  initialQuery?: string;
   onSelect: (game: BggSearchResult) => void;
 }
 
-export function GameSearchBar({ onSelect }: GameSearchBarProps) {
-  const [query, setQuery] = useState("");
+export function GameSearchBar({
+  onSelect,
+  initialQuery = "",
+}: GameSearchBarProps) {
+  const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<BggSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => setQuery(initialQuery), [initialQuery]);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -30,23 +36,42 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+    setError(null);
     if (query.trim().length < 2) {
+      setResults([]);
+      setShowDropdown(false);
+      setLoading(false);
       return;
     }
-
-    if (timeoutRef.current) clearTimeout(timeoutRef.current);
-
-    timeoutRef.current = setTimeout(async () => {
+    const timeout = setTimeout(async () => {
       setLoading(true);
-      const res = await fetch(`/api/bgg/search?q=${encodeURIComponent(query)}`);
-      const data = await res.json();
-      setResults(data.results ?? []);
-      setShowDropdown(true);
-      setLoading(false);
+      try {
+        const res = await fetch(
+          `/api/bgg/search?q=${encodeURIComponent(query.trim())}`,
+          { signal: controller.signal },
+        );
+        if (!res.ok) throw new Error("Search unavailable. Please try again.");
+        const data = await res.json();
+        if (controller.signal.aborted) return;
+        setResults(data.results ?? []);
+        setShowDropdown(true);
+      } catch (error) {
+        if (controller.signal.aborted) return;
+        setResults([]);
+        setShowDropdown(false);
+        setError(
+          error instanceof Error
+            ? error.message
+            : "Search unavailable. Please try again.",
+        );
+      } finally {
+        if (!controller.signal.aborted) setLoading(false);
+      }
     }, 400);
-
     return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+      clearTimeout(timeout);
+      controller.abort();
     };
   }, [query]);
 
@@ -72,22 +97,28 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
         }}
         onFocus={() => results.length > 0 && setShowDropdown(true)}
         placeholder="Search for a board game..."
-        className="w-full rounded-lg border border-zinc-200 bg-white px-4 py-3 text-sm text-zinc-900 placeholder-zinc-400 focus:border-cyan-500 focus:outline-none focus:ring-1 focus:ring-cyan-500 dark:border-white/10 dark:bg-white/5 dark:text-zinc-100"
+        className="carved-input w-full rounded-lg px-4 py-3 text-sm placeholder-on-surface-variant/60 focus:outline-none"
       />
 
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-error">
+          {error}
+        </p>
+      )}
+
       {loading && (
-        <div className="absolute right-3 top-3.5 text-xs text-zinc-400">
+        <div className="absolute right-3 top-3.5 text-xs text-on-surface-variant">
           Searching...
         </div>
       )}
 
       {showDropdown && results.length > 0 && (
-        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-zinc-200 bg-white shadow-lg dark:border-white/10 dark:bg-zinc-800">
+        <ul className="absolute z-10 mt-1 max-h-72 w-full overflow-y-auto rounded-lg border border-outline-variant bg-surface-container-high shadow-lg">
           {results.slice(0, 20).map((game) => (
             <li key={game.id}>
               <button
                 onClick={() => handleSelect(game)}
-                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-zinc-50 dark:hover:bg-white/10"
+                className="flex w-full items-center gap-3 px-4 py-2.5 text-left text-sm transition-colors hover:bg-surface-container-highest"
               >
                 {game.thumbnailUrl ? (
                   <Image
@@ -95,16 +126,16 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
                     alt=""
                     width={40}
                     height={40}
-                    className="h-10 w-10 shrink-0 rounded border border-zinc-200 object-cover dark:border-white/10"
+                    className="h-10 w-10 shrink-0 rounded border border-outline-variant object-cover"
                   />
                 ) : (
-                  <div className="h-10 w-10 shrink-0 rounded border border-zinc-200 bg-zinc-100 dark:border-white/10 dark:bg-white/5" />
+                  <div className="h-10 w-10 shrink-0 rounded border border-outline-variant bg-surface-container-highest" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <span className="block truncate font-medium text-zinc-900 dark:text-zinc-100">
+                  <span className="block truncate font-medium text-on-surface">
                     {game.name}
                   </span>
-                  <span className="text-xs text-zinc-400">
+                  <span className="text-xs text-on-surface-variant">
                     {[
                       game.yearPublished,
                       game.minPlayers && game.maxPlayers
@@ -125,7 +156,7 @@ export function GameSearchBar({ onSelect }: GameSearchBarProps) {
         !loading &&
         results.length === 0 &&
         query.length >= 2 && (
-          <div className="absolute z-10 mt-1 w-full rounded-lg border border-zinc-200 bg-white p-4 text-center text-sm text-zinc-500 shadow-lg dark:border-white/10 dark:bg-zinc-800">
+          <div className="absolute z-10 mt-1 w-full rounded-lg border border-outline-variant bg-surface-container-high p-4 text-center text-sm text-on-surface-variant shadow-lg">
             No games found
           </div>
         )}

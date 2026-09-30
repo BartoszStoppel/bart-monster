@@ -14,6 +14,9 @@ import type {
 } from "./expansion-community-modal";
 import { getHouseholdIds } from "@/lib/household";
 import { TIER_COLORS } from "@/lib/tier-colors";
+import { getMonsterLevel, levelBadgeClass } from "@/lib/monster-level";
+import { StatMeter } from "./stat-meter";
+import GameTemplate from "./template";
 import type { ExpansionTierPlacement, Tier } from "@/types/database";
 
 export const dynamic = "force-dynamic";
@@ -103,6 +106,26 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
     (w) => w.userId === user?.id,
   );
 
+  // Renown — glory of conquering a rare beast. Inverse of the monster-level
+  // idea: the FEWER members have ranked (tier-placed) this game, the harder it
+  // is to conquer and the greater its renown. Measured as the share of the
+  // whole roster that has NOT yet ranked it.
+  const { count: totalMembers } = await supabase
+    .from("profiles")
+    .select("id", { count: "exact", head: true });
+  const conqueredBy = rankings.length;
+  // Renown FORMULA value — inverse: high when few have conquered the beast.
+  // Kept as the canonical score (and the render gate); the meter itself shows
+  // the un-inverted figures below.
+  const renownPct =
+    totalMembers && totalMembers > 0
+      ? (1 - conqueredBy / totalMembers) * 100
+      : null;
+  // The displayed number AND bar both show the un-inverted conquest share —
+  // how much of the roster has ranked it — so the meter reads straight.
+  const conqueredPct =
+    totalMembers && totalMembers > 0 ? (conqueredBy / totalMembers) * 100 : 0;
+
   // Expansion tier list: admin-curated word bank, the user's own placements,
   // and the community aggregate shown in the breakdown popup.
   const { data: bank } = await supabase
@@ -177,159 +200,292 @@ export default async function GameDetailPage({ params }: GameDetailPageProps) {
   const playerRange =
     game.min_players && game.max_players
       ? game.min_players === game.max_players
-        ? `${game.min_players} players`
-        : `${game.min_players}-${game.max_players} players`
+        ? `${game.min_players}`
+        : `${game.min_players}-${game.max_players}`
       : null;
 
+  const scoredRankings = rankings.filter((r) => r.score != null);
+  const oursAvg = scoredRankings.length
+    ? scoredRankings.reduce((a, r) => a + (r.score as number), 0) /
+      scoredRankings.length
+    : null;
+  const heroImage = game.image_url || game.thumbnail_url;
+
+  // Monster level (1–10): blends our rating, BGG, complexity, time, age, players.
+  const level = getMonsterLevel(oursAvg, game);
+  const subtitle = game.categories?.length
+    ? game.categories.slice(0, 3).join(" · ")
+    : game.category
+      ? (CATEGORY_LABELS[game.category] ?? game.category)
+      : null;
+  const weight = game.difficulty != null ? Number(game.difficulty) : null;
+  const complexityPct = weight != null ? Math.min(weight / 6, 1) * 100 : 0;
+  const timePct = game.playing_time
+    ? Math.min(game.playing_time / 180, 1) * 100
+    : 0;
+  const timeLabel =
+    game.min_play_time &&
+    game.max_play_time &&
+    game.min_play_time !== game.max_play_time
+      ? `${game.min_play_time}-${game.max_play_time}m`
+      : game.playing_time
+        ? `${game.playing_time}m`
+        : "—";
+
   return (
-    <div className="mx-auto max-w-3xl">
-      <div className="mb-8 flex flex-col gap-6 sm:flex-row">
-        {(game.image_url || game.thumbnail_url) && (
-          <div className="relative h-64 w-48 shrink-0 overflow-hidden rounded-lg bg-zinc-100 dark:bg-white/5">
-            <Image
-              src={(game.image_url || game.thumbnail_url)!}
-              alt={game.name}
-              fill
-              className="object-contain"
-              sizes="192px"
-            />
-          </div>
-        )}
-
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold text-zinc-900 dark:text-zinc-50">
-              {game.name}
-            </h1>
-            {game.category && (
-              <span
-                className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-                  game.category === "party"
-                    ? "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300"
-                    : "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-300"
-                }`}
-              >
-                {CATEGORY_LABELS[game.category] ?? game.category}
-              </span>
-            )}
-          </div>
-          {admin && (
-            <div className="flex flex-wrap items-center gap-3">
-              <EditGameButton game={game} />
-              <DeleteGameButton bggId={game.bgg_id} gameName={game.name} />
-            </div>
-          )}
-
-          {game.year_published && (
-            <span className="text-sm text-zinc-500 dark:text-zinc-400">
-              ({game.year_published})
-            </span>
-          )}
-
-          <div className="mt-2 flex flex-wrap gap-3 text-sm text-zinc-600 dark:text-zinc-400">
-            {playerRange && <span>{playerRange}</span>}
-            {game.playing_time && <span>{game.playing_time} min</span>}
-            {game.min_age && <span>Age {game.min_age}+</span>}
-            {game.difficulty && (
-              <span>Difficulty: {Number(game.difficulty).toFixed(1)}/6</span>
-            )}
-          </div>
-
-          {game.bgg_rating && (
-            <div className="mt-3">
-              <div className="text-xs text-zinc-400">BGG Rating</div>
-              <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                {Number(game.bgg_rating).toFixed(1)}
-              </div>
-            </div>
-          )}
-
-          {user && (
-            <CollectionToggles
-              bggId={bggId}
-              currentUserId={user.id}
-              initialOwned={currentUserOwns}
-              initialOwners={ownerInfos}
-              initialWishlisted={currentUserWishlisted}
-              initialWishlisters={wishlisterInfos}
-            />
-          )}
-
-          {game.categories && game.categories.length > 0 && (
-            <div className="mt-2 flex flex-wrap gap-1">
-              {game.categories.map((cat: string) => (
-                <span
-                  key={cat}
-                  className="rounded-full bg-zinc-100 px-2 py-0.5 text-xs text-zinc-600 dark:bg-white/5 dark:text-zinc-400"
-                >
-                  {cat}
-                </span>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {rankings.length > 0 && (
-        <div className="mb-8">
-          <h2 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Rankings ({rankings.length})
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {rankings.map((r) => (
-              <div
-                key={r.displayName}
-                className="flex items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 py-2 dark:border-white/[0.06] dark:bg-white/5"
-              >
-                <span
-                  className={`inline-flex h-6 w-6 items-center justify-center rounded text-xs font-bold text-white ${TIER_COLORS[r.tier] ?? "bg-zinc-400"}`}
-                >
-                  {r.tier}
-                </span>
-                <span className="text-sm font-medium text-zinc-900 dark:text-zinc-100">
-                  {r.displayName}
-                </span>
-                {r.score != null && (
-                  <span className="text-xs text-zinc-500 dark:text-zinc-400">
-                    {r.score.toFixed(1)}
+    <GameTemplate key={bggId}>
+      <div className="relative z-10 flex flex-col gap-margin">
+        {/* Encounter view — two-column (design/code-detail.html) */}
+        <div className="grid grid-cols-1 gap-gutter md:grid-cols-12">
+          {/* Left: the encounter card + actions */}
+          <div className="flex flex-col gap-stack-compact md:col-span-5">
+            <article className="encounter-card hero-reveal flex flex-col rounded-lg">
+              {/* Header band — threat level */}
+              <div className="flex items-center justify-end border-b border-outline-variant bg-surface-container-high px-4 py-2">
+                {level != null && (
+                  <span
+                    title="Threat level (1–10) from our rating, BGG, complexity, time, age & player count"
+                    className={`rounded border bg-surface-container-highest px-2 py-0.5 font-stat text-stat-label ${levelBadgeClass(level)}`}
+                  >
+                    LVL {level}
                   </span>
                 )}
               </div>
-            ))}
+
+              {/* Artwork */}
+              <div className="relative h-72 overflow-hidden bg-black sm:h-80">
+                {heroImage ? (
+                  <Image
+                    src={heroImage}
+                    alt={game.name}
+                    fill
+                    priority
+                    sizes="(max-width: 768px) 100vw, 520px"
+                    className="object-cover opacity-80 mix-blend-luminosity transition-all duration-700 hover:opacity-100 hover:mix-blend-normal"
+                    style={{ viewTransitionName: `game-art-${game.bgg_id}` }}
+                  />
+                ) : (
+                  <div className="flex h-full items-center justify-center text-outline-variant">
+                    No image
+                  </div>
+                )}
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent" />
+              </div>
+
+              {/* Stat area */}
+              <div className="flex flex-grow flex-col justify-between gap-4 p-card-padding">
+                <div>
+                  <div className="mb-2 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                    <h1 className="font-display text-display-lg leading-none text-primary">
+                      {game.name}
+                    </h1>
+                    {game.year_published && (
+                      <span className="font-stat text-stat-label text-on-surface-variant">
+                        {game.year_published}
+                      </span>
+                    )}
+                  </div>
+                  {subtitle && (
+                    <p className="font-body text-caption uppercase tracking-wider text-on-surface-variant">
+                      {subtitle}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-4 grid grid-cols-2 items-end gap-x-4 gap-y-3">
+                  {oursAvg != null && (
+                    <StatMeter
+                      icon="local_fire_department"
+                      label="Power"
+                      value={`${oursAvg.toFixed(1)}/10`}
+                      pct={(oursAvg / 10) * 100}
+                      tone="amber"
+                      hint="Power — our group's average rating, out of 10."
+                    />
+                  )}
+                  {renownPct != null && (
+                    <StatMeter
+                      icon="auto_awesome"
+                      label="Renown"
+                      value={`${(conqueredPct / 10).toFixed(1)}/10`}
+                      pct={conqueredPct}
+                      tone="green"
+                      hint={`Renown — how many have faced this beast: ${conqueredBy} of ${totalMembers} ${totalMembers === 1 ? "challenger has" : "challengers have"} ranked it.`}
+                    />
+                  )}
+                  {weight != null && (
+                    <StatMeter
+                      icon="swords"
+                      label="Ferocity"
+                      value={`${weight.toFixed(1)}/6`}
+                      pct={complexityPct}
+                      tone="amber"
+                      hint="Ferocity — how complex the game is to learn and play (community difficulty, out of 6)."
+                    />
+                  )}
+                  {game.playing_time != null && (
+                    <StatMeter
+                      icon="hourglass_empty"
+                      label="Stamina"
+                      value={timeLabel}
+                      pct={timePct}
+                      tone="green"
+                      hint="Stamina — typical play time, in minutes."
+                    />
+                  )}
+                  {playerRange && (
+                    <StatMeter
+                      icon="groups"
+                      label="Charm"
+                      value={playerRange}
+                      pct={
+                        (Math.min(
+                          game.max_players ?? game.min_players ?? 0,
+                          8,
+                        ) /
+                          8) *
+                        100
+                      }
+                      tone="amber"
+                      hint="Charm — the player counts this game supports."
+                    />
+                  )}
+                  {game.min_age != null && (
+                    <StatMeter
+                      icon="calendar_today"
+                      label="Maturity"
+                      value={`${game.min_age}+`}
+                      pct={(Math.min(game.min_age, 18) / 18) * 100}
+                      tone="green"
+                      hint="Maturity — minimum recommended player age."
+                    />
+                  )}
+                </div>
+              </div>
+            </article>
+
+            {/* Action row — owned/wishlist (stacked checkboxes) + admin controls */}
+            {(admin || user) && (
+              <div className="flex flex-col gap-3 rounded-lg border border-outline-variant bg-surface-container-low p-card-padding">
+                {user && (
+                  <div className="flex flex-col items-start">
+                    <CollectionToggles
+                      bggId={bggId}
+                      currentUserId={user.id}
+                      initialOwned={currentUserOwns}
+                      initialOwners={ownerInfos}
+                      initialWishlisted={currentUserWishlisted}
+                      initialWishlisters={wishlisterInfos}
+                    />
+                  </div>
+                )}
+                {admin && (
+                  <div className="flex flex-wrap items-center gap-3 border-t border-outline-variant pt-3">
+                    <EditGameButton game={game} />
+                    <DeleteGameButton
+                      bggId={game.bgg_id}
+                      gameName={game.name}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Right: scroll panels */}
+          <div className="stagger flex flex-col gap-margin md:col-span-7">
+            {game.description && (
+              <section className="bevel-border relative overflow-hidden rounded-lg bg-surface-container-highest p-card-padding">
+                <div className="pointer-events-none absolute -right-10 -top-10 h-32 w-32 rounded-full bg-primary-container opacity-5 blur-3xl" />
+                <h2 className="mb-4 flex items-center gap-2 border-b border-outline-variant pb-2 font-display text-headline-lg text-primary">
+                  <span aria-hidden="true" className="material-symbols-outlined">menu_book</span>{" "}
+                  Ancient Scrolls
+                </h2>
+                <div className="space-y-4 whitespace-pre-line font-body text-body-md text-on-surface-variant">
+                  {game.description.slice(0, 1200)}
+                  {game.description.length > 1200 ? "…" : ""}
+                </div>
+              </section>
+            )}
+
+            {rankings.length > 0 && (
+              <section className="bevel-border rounded-lg bg-surface-container p-card-padding">
+                <h2 className="mb-4 flex items-center gap-2 border-b border-outline-variant pb-2 font-display text-headline-lg text-secondary-container">
+                  <span aria-hidden="true" className="material-symbols-outlined">
+                    social_leaderboard
+                  </span>{" "}
+                  The Verdict
+                  <span className="ml-auto font-stat text-stat-label text-on-surface-variant">
+                    {rankings.length}{" "}
+                    {rankings.length === 1 ? "ruling" : "rulings"}
+                  </span>
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {rankings.map((r) => (
+                    <div
+                      key={r.displayName}
+                      className="bevel-border flex items-center gap-2 rounded bg-surface-dim px-3 py-2"
+                    >
+                      <span
+                        className={`inline-flex h-6 w-6 items-center justify-center rounded text-xs font-bold text-white ${TIER_COLORS[r.tier] ?? "bg-surface-container-highest"}`}
+                      >
+                        {r.tier}
+                      </span>
+                      <span className="font-body text-sm text-on-surface">
+                        {r.displayName}
+                      </span>
+                      {r.score != null && (
+                        <span className="font-stat text-xs text-on-surface-variant">
+                          {r.score.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </section>
+            )}
+
+            {game.mechanics?.length > 0 && (
+              <section className="bevel-border rounded-lg bg-surface-container p-card-padding">
+                <h2 className="mb-4 flex items-center gap-2 border-b border-outline-variant pb-2 font-display text-headline-lg text-primary">
+                  <span aria-hidden="true" className="material-symbols-outlined">strategy</span>{" "}
+                  Battle Plan
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {game.mechanics.map((m: string) => (
+                    <span
+                      key={m}
+                      className="rounded-full border border-outline-variant bg-surface-dim px-3 py-1 font-body text-caption text-on-surface"
+                    >
+                      {m}
+                    </span>
+                  ))}
+                </div>
+              </section>
+            )}
           </div>
         </div>
-      )}
 
-      <ExpansionSection
-        gameBggId={bggId}
-        gameName={game.name}
-        isAdmin={admin}
-        bggExpansions={game.expansions ?? []}
-        bank={expansionBank}
-        myPlacements={myExpansionPlacements}
-        revision={expansionRanking.revision}
-        community={communityExpansions}
-      />
+        {/* Full-width detail sections (wide interactive content) */}
+        <div className="stagger flex flex-col gap-stack-loose">
+          <ExpansionSection
+            gameBggId={bggId}
+            gameName={game.name}
+            isAdmin={admin}
+            bggExpansions={game.expansions ?? []}
+            bank={expansionBank}
+            myPlacements={myExpansionPlacements}
+            revision={expansionRanking.revision}
+            community={communityExpansions}
+          />
 
-      {game.description && (
-        <div className="mb-8">
-          <h2 className="mb-2 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
-            Description
-          </h2>
-          <div className="whitespace-pre-line text-sm leading-relaxed text-zinc-600 dark:text-zinc-400">
-            {game.description.slice(0, 1000)}
-            {game.description.length > 1000 ? "..." : ""}
-          </div>
+          {game.suggested_players?.length > 0 && (
+            <SuggestedPlayersTable data={game.suggested_players} />
+          )}
+
+          <BggDetails game={game} />
         </div>
-      )}
-
-      {game.suggested_players?.length > 0 && (
-        <div className="mb-8">
-          <SuggestedPlayersTable data={game.suggested_players} />
-        </div>
-      )}
-
-      <BggDetails game={game} />
-    </div>
+      </div>
+    </GameTemplate>
   );
 }

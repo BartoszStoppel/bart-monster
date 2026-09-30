@@ -146,10 +146,10 @@ export function DistributionChart({
 
   return (
     <section className="min-w-0">
-      <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+      <h2 className="mb-4 font-display text-headline-lg text-on-surface">
         Score Distribution
       </h2>
-      <div className="flex flex-1 flex-col rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
+      <div className="glass-card flex flex-1 flex-col rounded-lg p-4">
         <div className="mb-3 flex items-center gap-2">
           {selected?.thumbnailUrl && (
             <Image
@@ -157,7 +157,7 @@ export function DistributionChart({
               alt=""
               width={28}
               height={28}
-              className="h-7 w-7 shrink-0 rounded border border-zinc-200 object-cover dark:border-white/10"
+              className="h-7 w-7 shrink-0 rounded border border-outline-variant object-cover"
             />
           )}
           <select
@@ -166,7 +166,7 @@ export function DistributionChart({
               setSelectedId(Number(e.target.value) || null);
               setHoveredDot(null);
             }}
-            className="min-w-0 flex-1 rounded-lg border border-zinc-200 bg-white px-3 py-1.5 text-sm text-zinc-900 dark:border-white/10 dark:bg-zinc-800 dark:text-zinc-100"
+            className="carved-input min-w-0 flex-1 rounded-lg px-3 py-1.5 text-sm"
           >
             {sortedGames.map((g) => (
               <option key={g.bggId} value={g.bggId}>
@@ -177,7 +177,7 @@ export function DistributionChart({
         </div>
 
         {selected && !selected.scores.length && (
-          <p className="mb-3 text-xs text-zinc-500">
+          <p className="mb-3 text-xs text-on-surface-variant">
             No current rankings. Saved daily history remains below.
           </p>
         )}
@@ -198,7 +198,7 @@ export function DistributionChart({
               x2={toX(t)}
               y1={PAD.top}
               y2={H - PAD.bottom}
-              className="stroke-zinc-100 dark:stroke-zinc-800"
+              className="stroke-outline-variant/30"
               strokeWidth={0.3}
             />
           ))}
@@ -208,7 +208,7 @@ export function DistributionChart({
             x2={W - PAD.right}
             y1={centerY}
             y2={centerY}
-            className="stroke-zinc-200 dark:stroke-zinc-700"
+            className="stroke-outline-variant/50"
             strokeWidth={0.3}
           />
 
@@ -219,7 +219,7 @@ export function DistributionChart({
               x={toX(t)}
               y={H - PAD.bottom + 14}
               textAnchor="middle"
-              className="fill-zinc-400 text-[8px]"
+              className="fill-on-surface-variant text-[8px]"
             >
               {t}
             </text>
@@ -229,7 +229,7 @@ export function DistributionChart({
           {violinPath && (
             <path
               d={violinPath}
-              className="fill-cyan-500/30 stroke-cyan-500 dark:fill-cyan-400/30 dark:stroke-cyan-400"
+              className="fill-primary-container/25 stroke-primary-container"
               strokeWidth={1}
             />
           )}
@@ -271,7 +271,7 @@ export function DistributionChart({
                 cx={toX(entry.score)}
                 cy={centerY}
                 r={hoveredDot === i ? 4.5 : 2.5}
-                className="fill-cyan-600 dark:fill-cyan-300"
+                className="fill-primary"
                 opacity={hoveredDot === i ? 1 : 0.6}
                 style={{ pointerEvents: "none" }}
               />
@@ -286,14 +286,14 @@ export function DistributionChart({
                 x2={toX(selected.yourScore)}
                 y1={PAD.top}
                 y2={PAD.top + PLOT_H}
-                className="stroke-green-500 dark:stroke-green-400"
+                className="stroke-secondary-container"
                 strokeWidth={1}
               />
               <circle
                 cx={toX(selected.yourScore)}
                 cy={centerY}
                 r={3.5}
-                className="fill-green-500 stroke-white dark:fill-green-400 dark:stroke-zinc-900"
+                className="fill-secondary-container stroke-surface"
                 strokeWidth={1}
               />
             </g>
@@ -307,7 +307,7 @@ export function DistributionChart({
                 x2={toX(communityAvg)}
                 y1={PAD.top}
                 y2={PAD.top + PLOT_H}
-                className="stroke-cyan-500 dark:stroke-cyan-400"
+                className="stroke-primary-container"
                 strokeWidth={1}
               />
             </g>
@@ -320,7 +320,7 @@ export function DistributionChart({
               x2={bggLineX}
               y1={PAD.top}
               y2={PAD.top + PLOT_H}
-              className="stroke-orange-500 dark:stroke-orange-400"
+              className="stroke-outline"
               strokeWidth={1}
               pointerEvents="none"
             />
@@ -331,7 +331,7 @@ export function DistributionChart({
             x={PAD.left + PLOT_W / 2}
             y={H - 2}
             textAnchor="middle"
-            className="fill-zinc-300 text-[8px] dark:fill-zinc-600"
+            className="fill-on-surface-variant/60 text-[8px]"
           >
             Score
           </text>
@@ -359,17 +359,17 @@ export function DistributionChart({
                     width={tipW}
                     height={tipH}
                     rx={4}
-                    className="fill-zinc-900 dark:fill-zinc-100"
+                    className="fill-surface-container-highest"
                   />
                   <polygon
                     points={`${dotX - 4},${arrowY} ${dotX + 4},${arrowY} ${dotX},${arrowY + 5}`}
-                    className="fill-zinc-900 dark:fill-zinc-100"
+                    className="fill-surface-container-highest"
                   />
                   <text
                     x={tipX}
                     y={tipY + 13.5}
                     textAnchor="middle"
-                    className="fill-white text-[8px] font-semibold dark:fill-zinc-900"
+                    className="fill-on-surface text-[8px] font-semibold"
                   >
                     {label}
                   </text>
@@ -381,27 +381,27 @@ export function DistributionChart({
         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-[11px]">
           {selected?.yourScore != null && (
             <div className="flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-green-500 dark:bg-green-400" />
-              <span className="text-zinc-500 dark:text-zinc-400">You</span>
-              <span className="font-semibold text-green-600 dark:text-green-400">
+              <span className="inline-block h-2 w-2 rounded-full bg-secondary-container" />
+              <span className="text-on-surface-variant">You</span>
+              <span className="font-semibold text-secondary">
                 {selected.yourScore.toFixed(1)}
               </span>
             </div>
           )}
           {communityAvg != null && (
             <div className="flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-cyan-500 dark:bg-cyan-400" />
-              <span className="text-zinc-500 dark:text-zinc-400">Avg</span>
-              <span className="font-semibold text-cyan-600 dark:text-cyan-400">
+              <span className="inline-block h-2 w-2 rounded-full bg-primary-container" />
+              <span className="text-on-surface-variant">Avg</span>
+              <span className="font-semibold text-primary">
                 {communityAvg.toFixed(1)}
               </span>
             </div>
           )}
           {selected?.bggRating != null && (
             <div className="flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-orange-500 dark:bg-orange-400" />
-              <span className="text-zinc-500 dark:text-zinc-400">BGG</span>
-              <span className="font-semibold text-orange-600 dark:text-orange-400">
+              <span className="inline-block h-2 w-2 rounded-full bg-outline" />
+              <span className="text-on-surface-variant">BGG</span>
+              <span className="font-semibold text-on-surface-variant">
                 {selected.bggRating.toFixed(1)}
               </span>
             </div>
@@ -409,8 +409,8 @@ export function DistributionChart({
         </div>
 
         {selected && selected.scoreHistory.length > 0 && (
-          <div className="mt-3 border-t border-zinc-100 pt-3 dark:border-white/[0.06]">
-            <h3 className="mb-1 text-xs font-medium text-zinc-500 dark:text-zinc-400">
+          <div className="mt-3 border-t border-outline-variant pt-3">
+            <h3 className="mb-1 font-stat text-stat-label text-on-surface-variant">
               Score Over Time
             </h3>
             <ScoreHistoryChart

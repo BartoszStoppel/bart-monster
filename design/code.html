@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TABLE MONSTERS - Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:wght@600;700&amp;family=Hanken+Grotesk:wght@400;500&amp;family=Geist:wght@600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline": "#9f8e7c",
+                        "on-secondary-container": "#307000",
+                        "outline-variant": "#524535",
+                        "inverse-surface": "#e5e2e1",
+                        "secondary-fixed": "#80ff2c",
+                        "surface-dim": "#131313",
+                        "secondary-container": "#75fd00",
+                        "error-container": "#93000a",
+                        "tertiary-fixed": "#ffdad6",
+                        "surface-container-low": "#1c1b1b",
+                        "secondary-fixed-dim": "#67e100",
+                        "surface-container-lowest": "#0e0e0e",
+                        "on-primary-container": "#704700",
+                        "on-tertiary-fixed-variant": "#930010",
+                        "tertiary-container": "#ffada5",
+                        "surface": "#131313",
+                        "inverse-primary": "#845400",
+                        "on-primary-fixed-variant": "#643f00",
+                        "error": "#ffb4ab",
+                        "on-tertiary-fixed": "#410003",
+                        "on-secondary-fixed-variant": "#215100",
+                        "on-error": "#690005",
+                        "surface-tint": "#ffb95a",
+                        "primary-fixed-dim": "#ffb95a",
+                        "on-surface-variant": "#d6c3b0",
+                        "surface-container": "#20201f",
+                        "primary-fixed": "#ffddb6",
+                        "background": "#131313",
+                        "tertiary-fixed-dim": "#ffb3ac",
+                        "on-primary": "#462a00",
+                        "tertiary": "#ffd4d0",
+                        "on-secondary": "#153800",
+                        "surface-container-high": "#2a2a2a",
+                        "surface-bright": "#393939",
+                        "on-tertiary": "#680008",
+                        "on-secondary-fixed": "#092100",
+                        "inverse-on-surface": "#313030",
+                        "primary-container": "#ffb347",
+                        "on-primary-fixed": "#2a1800",
+                        "on-tertiary-container": "#a30113",
+                        "on-surface": "#e5e2e1",
+                        "surface-variant": "#353535",
+                        "surface-container-highest": "#353535",
+                        "on-background": "#e5e2e1",
+                        "on-error-container": "#ffdad6",
+                        "secondary": "#f8ffec",
+                        "primary": "#ffd7a9"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    "spacing": {
+                        "unit": "4px",
+                        "stack-loose": "48px",
+                        "margin": "32px",
+                        "card-padding": "16px",
+                        "stack-compact": "8px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "stat-label": ["Geist", "sans-serif"],
+                        "headline-lg": ["EB Garamond", "serif"],
+                        "display-lg": ["EB Garamond", "serif"],
+                        "body-md": ["Hanken Grotesk", "sans-serif"],
+                        "headline-lg-mobile": ["EB Garamond", "serif"],
+                        "caption": ["Hanken Grotesk", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "stat-label": ["14px", { "lineHeight": "1", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-md": ["16px", { "lineHeight": "1.6", "fontWeight": "400" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "1.2", "fontWeight": "600" }],
+                        "caption": ["12px", { "lineHeight": "1.4", "fontWeight": "500" }]
+                    },
+                    "backgroundImage": {
+                        'stone-texture': "url('data:image/svg+xml,%3Csvg width=\"100\" height=\"100\" xmlns=\"http://www.w3.org/2000/svg\"%3E%3Cfilter id=\"noise\"%3E%3CfeTurbulence type=\"fractalNoise\" baseFrequency=\"0.8\" numOctaves=\"4\" stitchTiles=\"stitch\"/%3E%3C/filter%3E%3Crect width=\"100\" height=\"100\" filter=\"url(%23noise)\" opacity=\"0.05\"/%3E%3C/svg%3E')"
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: theme('colors.surface');
+            color: theme('colors.on-surface');
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(255, 179, 71, 0.05) 0%, transparent 70%),
+                theme('backgroundImage.stone-texture');
+        }
+        
+        .monster-card {
+            background: linear-gradient(145deg, theme('colors.surface-container-low') 0%, theme('colors.surface-container') 100%);
+            box-shadow: 
+                inset 0 1px 1px rgba(255,255,255,0.05),
+                inset 0 0 20px rgba(255, 179, 71, 0.02),
+                0 4px 6px -1px rgba(0, 0, 0, 0.5), 
+                0 2px 4px -1px rgba(0, 0, 0, 0.3);
+            border: 1px solid theme('colors.outline-variant');
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .monster-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            border: 0.5rem solid rgba(159, 142, 124, 0.1);
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .monster-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                inset 0 1px 1px rgba(255,255,255,0.1),
+                inset 0 0 30px rgba(255, 179, 71, 0.05),
+                0 0 15px rgba(255, 179, 71, 0.15),
+                0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            border-color: theme('colors.outline');
+        }
+
+        .stat-icon {
+            color: theme('colors.primary');
+            text-shadow: 0 0 8px rgba(255, 215, 169, 0.3);
+        }
+
+        .carved-input {
+            background-color: theme('colors.surface-container-lowest');
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.5);
+            border: 1px solid theme('colors.surface-variant');
+            color: theme('colors.on-surface');
+        }
+        
+        .carved-input:focus {
+            outline: none;
+            border-color: theme('colors.secondary-container');
+            box-shadow: 
+                inset 0 2px 4px rgba(0,0,0,0.5),
+                0 0 8px rgba(117, 253, 0, 0.2);
+        }
+
+        .rune-chip {
+            background-color: theme('colors.surface-container-highest');
+            border: 1px solid theme('colors.outline-variant');
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
+            transition: all 0.2s ease;
+        }
+        
+        .rune-chip:hover, .rune-chip.active {
+            background-color: theme('colors.primary-container');
+            color: theme('colors.on-primary-container');
+            border-color: theme('colors.primary');
+            box-shadow: 0 0 10px rgba(255, 179, 71, 0.2);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-body-md text-body-md antialiased">
+<!-- TopNavBar -->
+<nav class="bg-surface dark:bg-surface font-body-md text-body-md docked full-width top-0 bg-surface-container-high border-b border-outline-variant shadow-md flex justify-between items-center w-full px-margin py-4 max-w-1280px mx-auto z-50 sticky">
+<div class="flex items-center gap-gutter">
+<a class="font-display-lg text-display-lg font-bold text-primary dark:text-primary tracking-tighter" href="#">TABLE MONSTERS</a>
+<div class="hidden md:flex gap-6 ml-8">
+<a class="text-primary font-bold border-b-2 border-primary pb-1 hover:text-primary-container transition-colors duration-300 active:scale-95 transition-transform" href="#">Library</a>
+<a class="text-on-surface-variant font-medium hover:text-primary-container transition-colors duration-300 active:scale-95 transition-transform" href="#">Trade</a>
+<a class="text-on-surface-variant font-medium hover:text-primary-container transition-colors duration-300 active:scale-95 transition-transform" href="#">Quests</a>
+<a class="text-on-surface-variant font-medium hover:text-primary-container transition-colors duration-300 active:scale-95 transition-transform" href="#">Vault</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="carved-input rounded-full py-2 pl-10 pr-4 w-64 font-body-md text-body-md" placeholder="Search the archives..." type="text"/>
+</div>
+<button class="text-primary dark:text-primary hover:text-primary-container transition-colors duration-300 active:scale-95 transition-transform p-2 rounded-full bg-surface-container-highest">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-grow w-full max-w-1280px mx-auto px-margin py-stack-loose flex flex-col gap-stack-loose relative z-10">
+<!-- Header & Filters -->
+<section class="flex flex-col gap-stack-compact">
+<h1 class="font-display-lg text-display-lg text-primary">The Great Library</h1>
+<p class="text-on-surface-variant max-w-2xl">Browse the codex of available tabletop adventures. Filter by species, difficulty, and player count to find your next encounter.</p>
+<!-- Mobile Search (visible only on small screens) -->
+<div class="relative sm:hidden mt-4">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
+<input class="carved-input rounded-full py-3 pl-10 pr-4 w-full font-body-md text-body-md" placeholder="Search the archives..." type="text"/>
+</div>
+<!-- Species/Genre Filters -->
+<div class="flex flex-wrap gap-3 mt-6">
+<button class="rune-chip active rounded-full px-4 py-1.5 font-stat-label text-stat-label flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">apps</span>
+                    All Species
+                </button>
+<button class="rune-chip rounded-full px-4 py-1.5 font-stat-label text-stat-label text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">swords</span>
+                    Combat
+                </button>
+<button class="rune-chip rounded-full px-4 py-1.5 font-stat-label text-stat-label text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">castle</span>
+                    Euro
+                </button>
+<button class="rune-chip rounded-full px-4 py-1.5 font-stat-label text-stat-label text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">groups</span>
+                    Party
+                </button>
+<button class="rune-chip rounded-full px-4 py-1.5 font-stat-label text-stat-label text-on-surface-variant flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px]">auto_awesome</span>
+                    Co-op
+                </button>
+<button class="ml-auto text-on-surface-variant hover:text-primary flex items-center gap-2 font-stat-label text-stat-label transition-colors">
+<span class="material-symbols-outlined">tune</span>
+                    Advanced Filters
+                </button>
+</div>
+</section>
+<!-- Grid of Monster Cards -->
+<section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-gutter">
+<!-- Card 1 -->
+<article class="monster-card rounded-lg flex flex-col h-[400px] cursor-pointer group">
+<div class="relative h-[60%] w-full overflow-hidden">
+<img alt="A highly detailed miniature painted figure of a fearsome, armored dragon perched atop a rocky crag. The miniature is photographed with dramatic, low-key lighting that emphasizes its jagged scales and imposing silhouette against a dark, moody background. The scene exudes a grim-dark fantasy aesthetic, perfect for a high-stakes tabletop RPG setting." class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A highly detailed miniature painted figure of a fearsome, armored dragon perched atop a rocky crag. The miniature is photographed with dramatic, low-key lighting that emphasizes its jagged scales and imposing silhouette against a dark, moody background. The scene exudes a grim-dark fantasy aesthetic, perfect for a high-stakes tabletop RPG setting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCdFrH8EbhpXI4ziExN4xo3YlpMpwAKvNqDtlrEr8h7lLk2_fldHI1Wzs23m8k625bqjmu8Rug6ytnG4R76RmZBRu6vguS9g1zH6uaXlRuU-e-_I_LHdfcoXXZkcPx4tmzqnK2hcjto94WHS4BfSCaUEZIl8fWNNb-A5uKDZ6wtTKhjEofAG9X1XdOWio7fvH_3GA0lHGJlMGsSjvSsrHK9ii3_gkk6HKCdxIg4R2i9WTPKqX2dEBQYW3xQvkr3oMwZqXw_aWHEvRs"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+<div class="absolute top-3 left-3 bg-surface-container-highest px-2 py-1 rounded border border-outline font-stat-label text-stat-label text-primary shadow-sm">
+                        Legendary
+                    </div>
+</div>
+<div class="p-card-padding flex-grow flex flex-col justify-between bg-surface-container-low relative z-20">
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-1 truncate">Gloomhaven</h2>
+<p class="font-caption text-caption text-on-surface-variant truncate">Tactical Combat &amp; Dungeon Crawl</p>
+</div>
+<div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-surface-variant">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">group</span>
+<span class="font-stat-label text-stat-label text-on-surface">1-4</span>
+</div>
+<div class="flex flex-col items-center border-l border-r border-surface-variant">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">hourglass_empty</span>
+<span class="font-stat-label text-stat-label text-on-surface">120m</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">fitness_center</span>
+<span class="font-stat-label text-stat-label text-on-surface">Heavy</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 2 -->
+<article class="monster-card rounded-lg flex flex-col h-[400px] cursor-pointer group">
+<div class="relative h-[60%] w-full overflow-hidden">
+<img alt="A close-up shot of scattered, weathered wooden meeples and metallic tokens resting on a dark, chiseled stone surface. The lighting is warm and ambient, resembling candlelight, casting long shadows that highlight the tactile textures of the game pieces. The atmosphere is strategic and ancient, evoking a sense of classic European-style resource management games." class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A close-up shot of scattered, weathered wooden meeples and metallic tokens resting on a dark, chiseled stone surface. The lighting is warm and ambient, resembling candlelight, casting long shadows that highlight the tactile textures of the game pieces. The atmosphere is strategic and ancient, evoking a sense of classic European-style resource management games." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDZU8rx9b1FzepACUsF6tkaXE87JB6VpVCb9Z0AEXp48Ebt6bmWNGIk3a2yw9R188bmaTJatYh9iuoljpqj9iHn2uDs0R7XENQIaWS2ezMjNFENgGgt0Q_gQaD7MhiJqxC3N3YQCPEhCfw7tFkj2bU0P8_l68i_f5s2Wt-RoCvRfhdHg1ckUKQlEtFMC8kqiuvy37IGjLQz93FePUP1Bo5M0i55c2dUgPdkoRB5mkPATW-j6Km5wp2sTydGNHgGqnxoCo9lOJtR_H8"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+<div class="absolute top-3 left-3 bg-surface-container-highest px-2 py-1 rounded border border-outline-variant font-stat-label text-stat-label text-on-surface shadow-sm">
+                        Rare
+                    </div>
+</div>
+<div class="p-card-padding flex-grow flex flex-col justify-between bg-surface-container-low relative z-20">
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-1 truncate">Scythe</h2>
+<p class="font-caption text-caption text-on-surface-variant truncate">Engine Building &amp; Area Control</p>
+</div>
+<div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-surface-variant">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">group</span>
+<span class="font-stat-label text-stat-label text-on-surface">1-5</span>
+</div>
+<div class="flex flex-col items-center border-l border-r border-surface-variant">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">hourglass_empty</span>
+<span class="font-stat-label text-stat-label text-on-surface">115m</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">fitness_center</span>
+<span class="font-stat-label text-stat-label text-on-surface">Med</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 3 -->
+<article class="monster-card rounded-lg flex flex-col h-[400px] cursor-pointer group">
+<div class="relative h-[60%] w-full overflow-hidden">
+<img alt="An eerie, cinematic view of intricately crafted terrain tiles representing an infected, bio-hazardous space station. Miniature figures stand tensely amidst glowing, acid-green slime effects and rusted metal bulkheads. The high-contrast lighting creates a claustrophobic, intense mood, capturing the suspenseful, grim-dark survival horror essence of a sci-fi board game." class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="An eerie, cinematic view of intricately crafted terrain tiles representing an infected, bio-hazardous space station. Miniature figures stand tensely amidst glowing, acid-green slime effects and rusted metal bulkheads. The high-contrast lighting creates a claustrophobic, intense mood, capturing the suspenseful, grim-dark survival horror essence of a sci-fi board game." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCA17pE-s0aRPpNCFHPX1B6Os20aLIL_IQz-fAlEvjctP7eG5ptmsfIX68f-32JJivympF-okvvzADpj9zpoOTM1HU3WX6PdH8ZsELobpoK7IE23g6YC0DXGDkUzaINCkD2iHNsPfp3jVMeXN6HNRme-TpHJalx4_193pRACUsB0hWpWCidFXH06fNGT91clDFAyrRuR-tBoq7XhWNzq7xOgjAU2gJbBdlxYacz6n3XNkJ5mBdeo2k9VC-5cm5dpTJ5_lv_5ag-EKE"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+<div class="absolute top-3 left-3 bg-surface-container-highest px-2 py-1 rounded border border-outline font-stat-label text-stat-label text-primary shadow-sm">
+                        Epic
+                    </div>
+</div>
+<div class="p-card-padding flex-grow flex flex-col justify-between bg-surface-container-low relative z-20">
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-1 truncate">Nemesis</h2>
+<p class="font-caption text-caption text-on-surface-variant truncate">Sci-Fi Survival Horror</p>
+</div>
+<div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-surface-variant">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">group</span>
+<span class="font-stat-label text-stat-label text-on-surface">1-5</span>
+</div>
+<div class="flex flex-col items-center border-l border-r border-surface-variant">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">hourglass_empty</span>
+<span class="font-stat-label text-stat-label text-on-surface">180m</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">fitness_center</span>
+<span class="font-stat-label text-stat-label text-on-surface">Heavy</span>
+</div>
+</div>
+</div>
+</article>
+<!-- Card 4 -->
+<article class="monster-card rounded-lg flex flex-col h-[400px] cursor-pointer group">
+<div class="relative h-[60%] w-full overflow-hidden">
+<img alt="A mystical arrangement of vibrantly colored, translucent dice resting on an ancient, leather-bound tome. A soft, warm amber glow illuminates the dice from within, suggesting magical properties, while the surrounding environment fades into deep shadows. The composition conveys a sense of high-fantasy spellcasting and arcane knowledge inherent in role-playing games." class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" data-alt="A mystical arrangement of vibrantly colored, translucent dice resting on an ancient, leather-bound tome. A soft, warm amber glow illuminates the dice from within, suggesting magical properties, while the surrounding environment fades into deep shadows. The composition conveys a sense of high-fantasy spellcasting and arcane knowledge inherent in role-playing games." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlci3qbRRj022SRC9YqBAGUAlZNRFucHrYfYfppd05ag-9P_umqnhb3_VRqq4U_yOI2R6W7lmsevGNRFMss-ZykLVz-WjCkKIESDe832CGaKlozASP-xc2DTCZywDZLdOOmGyDjXkNu1jegohYVKzEL9xJYfJFu4xsKb1uMeN59gbOvUWHm-3UJ9TweZdxC-LHfcyfYcNylraPWCgXqsJ9nQhEAfVDaGo59fwFizqul5T9DU9-Ohp90FPGwTtxmMu2I-FG1HHjZo8"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-low to-transparent"></div>
+<div class="absolute top-3 left-3 bg-surface-container-highest px-2 py-1 rounded border border-outline-variant font-stat-label text-stat-label text-on-surface shadow-sm">
+                        Common
+                    </div>
+</div>
+<div class="p-card-padding flex-grow flex flex-col justify-between bg-surface-container-low relative z-20">
+<div>
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-1 truncate">Splendor</h2>
+<p class="font-caption text-caption text-on-surface-variant truncate">Card Drafting &amp; Set Collection</p>
+</div>
+<div class="grid grid-cols-3 gap-2 mt-4 pt-4 border-t border-surface-variant">
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">group</span>
+<span class="font-stat-label text-stat-label text-on-surface">2-4</span>
+</div>
+<div class="flex flex-col items-center border-l border-r border-surface-variant">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">hourglass_empty</span>
+<span class="font-stat-label text-stat-label text-on-surface">30m</span>
+</div>
+<div class="flex flex-col items-center">
+<span class="material-symbols-outlined stat-icon text-[20px] mb-1">fitness_center</span>
+<span class="font-stat-label text-stat-label text-on-surface">Light</span>
+</div>
+</div>
+</div>
+</article>
+</section>
+<!-- Load More Button -->
+<div class="flex justify-center mt-8">
+<button class="bg-surface-container-highest text-primary border border-outline px-8 py-3 rounded-md font-stat-label text-stat-label shadow-[inset_0_1px_0_rgba(255,255,255,0.1),_0_2px_4px_rgba(0,0,0,0.5)] hover:bg-surface-variant hover:shadow-[inset_0_1px_0_rgba(255,255,255,0.1),_0_0_15px_rgba(255,179,71,0.2)] transition-all duration-300">
+                Reveal More Monsters
+            </button>
+</div>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-lowest dark:bg-surface-container-lowest font-caption text-caption full-width py-stack-loose border-t border-outline-variant flex flex-col md:flex-row justify-between items-center px-margin w-full max-w-1280px mx-auto mt-auto">
+<div class="font-headline-lg text-headline-lg text-outline mb-4 md:mb-0">
+            TABLE MONSTERS
+        </div>
+<div class="text-on-surface-variant dark:text-on-surface-variant mb-4 md:mb-0">
+            © 2024 TABLE MONSTERS - FORGED IN THE DUNGEON
+        </div>
+<div class="flex gap-6">
+<a class="text-on-surface-variant hover:text-secondary-container transition-colors opacity-80 hover:opacity-100" href="#">Tome of Rules</a>
+<a class="text-on-surface-variant hover:text-secondary-container transition-colors opacity-80 hover:opacity-100" href="#">Privacy Rune</a>
+<a class="text-on-surface-variant hover:text-secondary-container transition-colors opacity-80 hover:opacity-100" href="#">Merchant Terms</a>
+</div>
+</footer>
+</body></html>

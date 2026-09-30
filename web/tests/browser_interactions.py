@@ -1,7 +1,7 @@
 """Local Vite interaction regression harness; requires a disposable staff fixture.
 
 uv run --with playwright python web/tests/browser_interactions.py \
-  --fixture backups/interaction-audit/local-test.json
+  --fixture backups/brand-restoration/local-test.json
 """
 import argparse
 import json
@@ -27,7 +27,7 @@ with sync_playwright() as playwright:
     def context(**options):
         ctx = browser.new_context(color_scheme='dark', **options)
         ctx.add_cookies([{'name': 'bart_session', 'value': fixture['session'], 'url': base}])
-        # A deterministic image exercises the real canvas/cache without remote image failures.
+        # Deterministic artwork isolates visual interactions from image-service failures.
         ctx.route('**/_next/image?*', lambda route: route.fulfill(
             content_type='image/png', body=(root / 'web/public/icon.png').read_bytes()))
         ctx.route('**/api/actions', lambda route: route.fulfill(json={'ok': True})
@@ -38,15 +38,16 @@ with sync_playwright() as playwright:
     page = desktop.new_page()
     page.on('pageerror', lambda error: errors.append(str(error)))
     page.goto(base + '/', wait_until='domcontentloaded')
-    expect(page.get_by_role('heading', name='Collection', exact=True)).to_be_visible()
-    card = page.locator('.glass-card').first
+    expect(page.get_by_role('heading', name='The Codex', exact=True)).to_be_visible()
+    card = page.locator('article.monster-card').first
     edit = card.get_by_role('button', name='Edit ', exact=False)
-    page.wait_for_function("document.querySelector('.glass-card')?.style.borderColor")
-    tint = card.evaluate('(element) => element.style.borderColor')
+    initial_border = card.evaluate('(element) => getComputedStyle(element).borderColor')
+    initial_shadow = card.evaluate('(element) => getComputedStyle(element).boxShadow')
     page.mouse.move(0, 0)
     expect(edit).to_have_css('opacity', '0')
     card.hover()
-    expect(card).to_have_css('translate', '0px -4px')
+    expect(card).not_to_have_css('border-color', initial_border)
+    expect(card).not_to_have_css('box-shadow', initial_shadow)
     expect(card.locator('img')).to_have_css('scale', '1.05')
     expect(edit).to_have_css('opacity', '1')
     page.mouse.move(0, 0)
@@ -57,7 +58,7 @@ with sync_playwright() as playwright:
     expect(card.get_by_role('heading', level=4)).to_be_visible()
     page.keyboard.press('Escape')
     expect(card.get_by_role('heading', level=4)).to_have_count(0)
-    print('Mouse card lift/zoom, keyboard action reveal, and editor Escape: PASS', flush=True)
+    print('Mouse stone glow/art zoom, keyboard action reveal, and editor Escape: PASS', flush=True)
 
     games = page.get_by_role('button', name='Games', exact=True)
     games.hover()
@@ -65,11 +66,11 @@ with sync_playwright() as playwright:
     games.click()
     expect(games).to_have_attribute('aria-expanded', 'true')
     page.get_by_role('link', name='Picker', exact=True).click()
-    expect(page.get_by_role('heading', name='Game Picker', exact=True)).to_be_visible()
+    expect(page.get_by_role('heading', name='The Summoning Wheel', exact=True)).to_be_visible()
     games.hover()
     page.get_by_role('link', name='Collection', exact=True).click()
-    expect(page.get_by_role('heading', name='Collection', exact=True)).to_be_visible()
-    expect(page.locator('.glass-card').first).to_have_attribute('style', 'border-color: ' + tint + ';')
+    expect(page.get_by_role('heading', name='The Codex', exact=True)).to_be_visible()
+    expect(page.locator('article.monster-card').first.locator('[class*="from-surface-container-low"]')).to_be_visible()
     page.mouse.move(0, 0)
     games.focus()
     games.press('Enter')
@@ -81,16 +82,17 @@ with sync_playwright() as playwright:
     expect(games).to_be_focused()
     page.evaluate('document.activeElement.blur()')
     games.hover()
+    # Focus before the close timer expires without depending on CDP round-trip speed.
+    games.evaluate('(button) => button.parentElement.addEventListener("pointerleave", () => button.focus(), {once: true})')
     page.mouse.move(0, 0)
-    games.focus()
     page.wait_for_timeout(250)
     expect(games).to_have_attribute('aria-expanded', 'true')
     games.press('Escape')
     rankings = page.get_by_role('button', name='Rankings', exact=True)
     rankings.hover()
     page.get_by_role('link', name='Tier List', exact=True).click()
-    expect(page.get_by_role('heading', name='Tier List', exact=True)).to_be_visible()
-    print('Cached tints, keyboard/hover timers, and cross-menu focus navigation: PASS', flush=True)
+    expect(page.get_by_role('heading', name='The Tier Forge', exact=True)).to_be_visible()
+    print('Restored art-to-stone fade, keyboard/hover timers, and cross-menu focus navigation: PASS', flush=True)
 
     page.goto(base + '/users/' + fixture['user_id'], wait_until='domcontentloaded')
     trigger = page.locator('main button[aria-expanded]').first
@@ -129,8 +131,8 @@ with sync_playwright() as playwright:
     mobile = touch.new_page()
     mobile.on('pageerror', lambda error: errors.append(str(error)))
     mobile.goto(base + '/', wait_until='domcontentloaded')
-    expect(mobile.get_by_role('heading', name='Collection', exact=True)).to_be_visible()
-    touch_card = mobile.locator('.glass-card').first
+    expect(mobile.get_by_role('heading', name='The Codex', exact=True)).to_be_visible()
+    touch_card = mobile.locator('article.monster-card').first
     for button in touch_card.locator('button').all():
         expect(button).to_have_css('opacity', '1')
     mobile_games = mobile.get_by_role('button', name='Games', exact=True)
@@ -141,7 +143,7 @@ with sync_playwright() as playwright:
     mobile_games.tap()
     expect(mobile.get_by_role('link', name='Picker', exact=True)).to_be_visible()
     mobile.get_by_role('link', name='Picker', exact=True).tap()
-    expect(mobile.get_by_role('heading', name='Game Picker', exact=True)).to_be_visible()
+    expect(mobile.get_by_role('heading', name='The Summoning Wheel', exact=True)).to_be_visible()
     avatar = mobile.locator('nav button[aria-expanded]').last
     avatar.tap()
     profile_link = mobile.get_by_role('link', name='Profile', exact=True)
@@ -162,12 +164,11 @@ with sync_playwright() as playwright:
     login.goto(base + '/login', wait_until='domcontentloaded')
     sign_in = login.get_by_role('button', name='Sign in with Google')
     expect(sign_in).to_be_visible()
-    before = sign_in.evaluate('(element) => ({background: getComputedStyle(element).backgroundColor, border: getComputedStyle(element).borderColor})')
+    before = sign_in.evaluate('(element) => ({background: getComputedStyle(element).backgroundColor, shadow: getComputedStyle(element).boxShadow})')
     sign_in.hover()
     login.wait_for_timeout(400)
-    after = sign_in.evaluate('(element) => ({background: getComputedStyle(element).backgroundColor, border: getComputedStyle(element).borderColor})')
-    assert before['background'] != after['background'], (before, after)
-    assert before['border'] != after['border'], (before, after)
-    print('Dark login hover changes actual background and border:', before, '->', after, flush=True)
+    after = sign_in.evaluate('(element) => ({background: getComputedStyle(element).backgroundColor, shadow: getComputedStyle(element).boxShadow})')
+    assert before['shadow'] != after['shadow'], (before, after)
+    print('Restored stone login hover changes glow:', before, '->', after, flush=True)
     assert not errors, errors
     browser.close()

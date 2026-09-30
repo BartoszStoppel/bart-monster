@@ -1,27 +1,27 @@
 "use client";
 
-import { usePillIndicator } from "@/lib/use-pill-indicator";
-
 import { useState, useMemo, useCallback, useEffect } from "react";
 import { GameCard } from "@/components/game-card";
+import { BggMark } from "@/components/bgg-mark";
 import { createClient } from "@/lib/supabase/client";
+import { getMonsterLevel } from "@/lib/monster-level";
 import type { BoardGame } from "@/types/database";
 
-type SortOption = "ours" | "bgg" | "name" | "weight" | "decorated";
-type CategoryFilter = "all" | "board" | "party";
+type SortOption = "ours" | "level" | "bgg" | "name" | "weight" | "decorated";
+type Category = "board" | "party";
 
-const SORT_OPTIONS: { value: SortOption; label: string }[] = [
-  { value: "ours", label: "Our Rating" },
-  { value: "bgg", label: "BGG Rating" },
-  { value: "name", label: "Name" },
-  { value: "weight", label: "Difficulty" },
-  { value: "decorated", label: "Decorated" },
+const SORT_OPTIONS: { value: SortOption; label: string; icon: string }[] = [
+  { value: "ours", label: "Our Rating", icon: "trophy" },
+  { value: "level", label: "Level", icon: "stairs" },
+  { value: "bgg", label: "BGG", icon: "public" },
+  { value: "name", label: "Name", icon: "sort_by_alpha" },
+  { value: "weight", label: "Difficulty", icon: "fitness_center" },
+  { value: "decorated", label: "Decorated", icon: "military_tech" },
 ];
 
-const CATEGORY_OPTIONS: { value: CategoryFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "board", label: "Board Games" },
-  { value: "party", label: "Party Games" },
+const CATEGORY_OPTIONS: { value: Category; label: string; icon: string }[] = [
+  { value: "board", label: "Board", icon: "castle" },
+  { value: "party", label: "Party", icon: "celebration" },
 ];
 
 export interface CategoryBadges {
@@ -58,8 +58,19 @@ export function SortableGameGrid({
   const [games, setGames] = useState(initialGames);
   const [failure, setFailure] = useState<string | null>(null);
   const [sort, setSort] = useState<SortOption>("ours");
-  const [category, setCategory] = useState<CategoryFilter>("all");
+  const [categories, setCategories] = useState<Set<Category>>(
+    () => new Set<Category>(["board", "party"]),
+  );
   const [ownedOnly, setOwnedOnly] = useState(false);
+
+  function toggleCategory(value: Category) {
+    setCategories((prev) => {
+      const next = new Set(prev);
+      if (next.has(value)) next.delete(value);
+      else next.add(value);
+      return next;
+    });
+  }
   const [ownedIds, setOwnedIds] = useState(() => new Set(ownedSet));
   const [wishlistIds, setWishlistIds] = useState(
     () => new Set(wishlistSetProp),
@@ -181,17 +192,6 @@ export function SortableGameGrid({
     }
   }
 
-  const {
-    containerRef: catContainerRef,
-    setRef: setCatRef,
-    pill: catPillStyle,
-  } = usePillIndicator(category);
-  const {
-    containerRef: sortContainerRef,
-    setRef: setSortRef,
-    pill: sortPillStyle,
-  } = usePillIndicator(sort);
-
   const scores = useMemo(
     () => new Map(Object.entries(avgScoreMap).map(([k, v]) => [Number(k), v])),
     [avgScoreMap],
@@ -214,8 +214,7 @@ export function SortableGameGrid({
   );
 
   const sorted = useMemo(() => {
-    let filtered =
-      category === "all" ? games : games.filter((g) => g.category === category);
+    let filtered = games.filter((g) => categories.has(g.category as Category));
     if (ownedOnly) {
       filtered = filtered.filter(
         (g) => ownedIds.has(g.bgg_id) || sharedOwnedSet.includes(g.bgg_id),
@@ -231,6 +230,13 @@ export function SortableGameGrid({
           if (sa == null) return 1;
           if (sb == null) return -1;
           return sb - sa;
+        });
+        break;
+      case "level":
+        copy.sort((a, b) => {
+          const la = getMonsterLevel(scores.get(a.bgg_id), a) ?? -1;
+          const lb = getMonsterLevel(scores.get(b.bgg_id), b) ?? -1;
+          return lb - la || a.name.localeCompare(b.name);
         });
         break;
       case "bgg":
@@ -263,107 +269,92 @@ export function SortableGameGrid({
     games,
     sort,
     scores,
-    category,
+    categories,
     ownedOnly,
     ownedIds,
     sharedOwnedSet,
     decorationScore,
   ]);
 
+  const shown = sorted;
+
   return (
-    <div>
+    <div className="flex flex-col gap-stack-loose">
       {failure && (
-        <p role="alert" className="mb-3 text-sm text-red-600 dark:text-red-300">
+        <p role="alert" className="text-sm text-error">
           {failure}
         </p>
       )}
-      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div
-          ref={catContainerRef}
-          className="relative flex min-w-0 gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
-        >
-          <div
-            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10 dark:shadow-cyan-500/5"
-            style={{ left: catPillStyle.left, width: catPillStyle.width }}
-          />
+      {/* Controls: filter chips (Board/Party/Owned) on one row, sort below */}
+      <div className="flex flex-col gap-3">
+        {/* Filter row — funnel icon, category toggles, owned */}
+        <div className="flex flex-wrap items-center gap-3">
+          <span aria-hidden="true" className="material-symbols-outlined text-[20px] text-on-surface-variant">
+            filter_alt
+          </span>
           {CATEGORY_OPTIONS.map((opt) => (
             <button
               key={opt.value}
-              ref={(el) => setCatRef(opt.value, el)}
-              onClick={() => setCategory(opt.value)}
-              className={`relative z-10 shrink-0 whitespace-nowrap rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                category === opt.value
-                  ? "text-zinc-900 dark:text-zinc-50"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+              onClick={() => toggleCategory(opt.value)}
+              aria-pressed={categories.has(opt.value)}
+              className={`rune-chip flex items-center gap-2 rounded-full px-4 py-1.5 font-stat text-stat-label ${
+                categories.has(opt.value) ? "active" : "text-on-surface-variant"
               }`}
             >
+              <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+                {opt.icon}
+              </span>
               {opt.label}
             </button>
           ))}
-        </div>
-        <div className="flex min-w-0 max-w-full items-center gap-2">
-          <span className="shrink-0 whitespace-nowrap text-xs text-zinc-400 dark:text-zinc-500">
-            Sort by
-          </span>
-          <div
-            ref={sortContainerRef}
-            className="relative flex min-w-0 gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
-          >
-            <div
-              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10 dark:shadow-cyan-500/5"
-              style={{ left: sortPillStyle.left, width: sortPillStyle.width }}
-            />
-            {SORT_OPTIONS.map((opt) => (
-              <button
-                key={opt.value}
-                ref={(el) => setSortRef(opt.value, el)}
-                onClick={() => setSort(opt.value)}
-                className={`relative z-10 shrink-0 whitespace-nowrap rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                  sort === opt.value
-                    ? "text-zinc-900 dark:text-zinc-50"
-                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-                }`}
-              >
-                {opt.label}
-              </button>
-            ))}
-          </div>
-        </div>
-        <button
-          onClick={() => setOwnedOnly((v) => !v)}
-          className={`ml-auto relative flex items-center gap-1.5 rounded-lg bg-zinc-100 px-3 py-1 text-xs font-medium transition-colors dark:bg-white/5 ${
-            ownedOnly
-              ? "text-green-600 dark:text-green-400"
-              : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-          }`}
-        >
-          <span
-            className={`inline-flex h-3 w-3 items-center justify-center rounded-sm border transition-colors ${
+          <button
+            onClick={() => setOwnedOnly((v) => !v)}
+            aria-pressed={ownedOnly}
+            className={`flex items-center gap-2 rounded-full border px-4 py-1.5 font-stat text-stat-label transition-all ${
               ownedOnly
-                ? "border-green-500 bg-green-500 text-white"
-                : "border-zinc-400 dark:border-white/20"
+                ? "border-secondary-container bg-secondary-container text-on-secondary-container shadow-[0_0_10px_rgba(117,253,0,0.2)]"
+                : "rune-chip text-on-surface-variant"
             }`}
           >
-            {ownedOnly && (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                className="h-2.5 w-2.5"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M12.416 3.376a.75.75 0 0 1 .208 1.04l-5 7.5a.75.75 0 0 1-1.154.114l-3-3a.75.75 0 0 1 1.06-1.06l2.353 2.353 4.493-6.74a.75.75 0 0 1 1.04-.207Z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            )}
+            <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+              inventory_2
+            </span>
+            Owned
+          </button>
+        </div>
+
+        {/* Sort row — left-aligned, wraps cleanly when narrow */}
+        <div className="flex flex-wrap items-center justify-start gap-1.5">
+          <span aria-hidden="true" className="material-symbols-outlined text-[18px] text-on-surface-variant">
+            sort
           </span>
-          Owned
-        </button>
+          {SORT_OPTIONS.map((opt) => (
+            <button
+              key={opt.value}
+              onClick={() => setSort(opt.value)}
+              aria-label={`Sort by ${opt.label}`}
+              aria-pressed={sort === opt.value}
+              title={`Sort by ${opt.label}`}
+              className={`rune-chip flex items-center gap-1.5 rounded-full px-3 py-1.5 font-stat text-stat-label ${
+                sort === opt.value ? "active" : "text-on-surface-variant"
+              }`}
+            >
+              {opt.value === "bgg" ? (
+                <BggMark className="h-4 w-4 shrink-0" />
+              ) : (
+                <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+                  {opt.icon}
+                </span>
+              )}
+              <span className="hidden lg:inline">{opt.label}</span>
+            </button>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6">
-        {sorted.map((game) => (
+
+      {/* Monster card grid */}
+      <div className="grid grid-cols-1 gap-gutter sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {shown.map((game) => (
           <GameCard
             key={game.bgg_id}
             game={game}
@@ -378,6 +369,12 @@ export function SortableGameGrid({
           />
         ))}
       </div>
+
+      {shown.length === 0 && (
+        <p className="py-stack-loose text-center text-on-surface-variant">
+          No monsters match these filters.
+        </p>
+      )}
     </div>
   );
 }

@@ -25,7 +25,7 @@ Each completed move autosaves. Serialize requests, retry temporary failures, ack
 
 ## Community and navigation
 
-The original dashboard structure/navigation is retained with a brown theme and metric controls added where needed. Community independently filters Enjoyment/Difficulty and Board/Party games. A metric switch changes the displayed placements and scores, not the player's earned progression.
+The Table Monsters presentation and navigation from `9d2a3fb` are restored, with metric controls added where needed. Community independently filters Enjoyment/Difficulty and Board/Party games. A metric switch changes the displayed placements and scores, not the player's earned progression.
 
 Order active players by existing category-specific enjoyment level descending, enjoyment-ranked game count descending, then stable user ID. Difficulty voting does not award duplicate progression. Keep empty states for players without votes in the selected metric. Enjoyment taste comparisons and predictions do not treat difficulty votes as enjoyment preferences.
 
@@ -35,7 +35,7 @@ Hot takes are always highlighted with the red glow. Compare personal values with
 
 Community difficulty is the arithmetic mean of each player's current fixed vote. Show vote counts and label samples below three as early estimates. No votes means **Unrated**. Do not use BGG complexity, enjoyment scores, or descriptions to invent a difficulty number.
 
-Use this value consistently in game details, collection sorting/filtering, statistics, picker easy/hard weighting, and assistant tools. Unknown values sort last and are excluded only by modes that require a known difficulty. BGG's global enjoyment rating remains a separate reference; catalog metadata remains available.
+Use this value consistently in game details, collection sorting/filtering, statistics, picker easy/hard weighting and restored monster-level badges, and assistant tools. Unknown values sort last and are excluded only by modes that require a known difficulty. BGG's global enjoyment rating remains a separate reference; catalog metadata remains available.
 
 ## Daily retention
 

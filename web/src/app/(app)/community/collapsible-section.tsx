@@ -19,31 +19,21 @@ export function CollapsibleSection({
 
   if (expanded) {
     return (
-      <div>
+      <div className="flex flex-col gap-stack-compact">
         <button
           type="button"
           onClick={() => setExpanded(false)}
-          className="mb-3 flex items-center gap-2 text-left"
+          className="group flex items-center gap-2 text-left"
         >
-          <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
+          <span aria-hidden="true" className="material-symbols-outlined stat-icon text-[22px]">
+            expand_less
+          </span>
+          <h2 className="font-display text-headline-lg text-on-surface transition-colors group-hover:text-primary">
             {title}
           </h2>
-          <span className="text-xs text-zinc-400 dark:text-zinc-500">
+          <span className="font-stat text-stat-label text-on-surface-variant">
             collapse
           </span>
-          <svg
-            className="h-4 w-4 rotate-180 text-zinc-400"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
         </button>
         {children}
       </div>
@@ -58,19 +48,21 @@ export function CollapsibleSection({
       onKeyDown={(e) => {
         if (e.key === "Enter") setExpanded(true);
       }}
-      className="group relative h-48 w-full cursor-pointer overflow-hidden rounded-xl border border-zinc-200 dark:border-white/10"
+      className="monster-card group relative h-48 w-full cursor-pointer overflow-hidden rounded-lg"
     >
       {/* Preview content, clipped */}
       <div className="pointer-events-none h-48 overflow-hidden">{preview}</div>
 
       {/* Glass overlay */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center bg-white/30 backdrop-blur-[2px] transition-colors group-hover:bg-white/15 dark:bg-zinc-900/30 dark:group-hover:bg-zinc-900/15">
-        <h2 className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-          {title}
-        </h2>
-        <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-          {description}
-        </p>
+      <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-1 bg-surface-container-low/40 backdrop-blur-[2px] transition-colors group-hover:bg-surface-container-low/20">
+        <h2 className="font-display text-headline-lg text-primary">{title}</h2>
+        <p className="text-sm text-on-surface-variant">{description}</p>
+        <span className="mt-2 flex items-center gap-1 font-stat text-stat-label text-on-surface-variant transition-colors group-hover:text-primary">
+          <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+            unfold_more
+          </span>
+          Reveal
+        </span>
       </div>
     </div>
   );

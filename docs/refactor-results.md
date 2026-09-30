@@ -2,13 +2,13 @@
 
 The current runtime is Rust/Axum with SQLx and a React/Vite frontend. Supabase remains the database/Google identity provider; Vercel's official native Rust runtime hosts the application at the existing bart.monster project. The private `bart_django` schema name is retained to preserve current data without another import.
 
-Original Next.js source: `091d2461f1bf47a6b3b78af7d62275050f33bb20`. Django rollback source: `9a1596e`. The Python runtime directories, package manifest/lockfile, management entrypoint, and Django deployment configuration are superseded by Cargo, explicit SQL migrations, and Bun/Vite.
+Original Table Monsters design source: `9d2a3fb` (first introduced at `3c9fb44`). The initially restored source `091d246` predates that redesign. Django rollback source: `9a1596e`. The Python runtime directories, package manifest/lockfile, management entrypoint, and Django deployment configuration are superseded by Cargo, explicit SQL migrations, and Bun/Vite.
 
 ## Scope
 
 - Rust owns authorization, CSRF, Supabase PKCE, opaque database sessions, mutations, scoring/revisions, daily history, BGG/image access, and the assistant.
 - The frontend reuses the original dashboard page/component structure and navigation through compatibility adapters. It restores a brown palette while retaining autosave, difficulty controls, and the always-visible hot-take glow.
-- No original brown screenshot/exact palette was recovered. Layout/source reuse and the restored theme do not establish a pixel-for-pixel color match.
+- A fresh fetch recovered the original brown/stone design, its specification and mockup, and the exact deployed text fonts. The presentation now follows that reference while retaining Rust and the newer rating behavior.
 - The user–game consolidation, independent enjoyment/difficulty state, daily rollups, decreases, and retained historical data remain intact. Rust does not re-import a legacy snapshot over newer writes.
 - Source stories, rank definitions, archived assets, personal scripts, and historical Supabase SQL remain preserved. `ideas.md` is excluded from documentation edits.
 
@@ -48,7 +48,7 @@ The final multi-stage Docker build uses Bun for frontend assets and Cargo for th
 
 ## Interaction follow-up
 
-The follow-up audit compares the restored components with the original source and exercises computed styles and input events. Original card lift, image zoom, button highlights and modal keyframes were present; several surrounding state and input bugs interrupted them or hid controls.
+This earlier follow-up compared components against `091d246`, before the newer Table Monsters design was recovered. It exercised computed styles and input events. Original card lift, image zoom, button highlights and modal keyframes were present; several surrounding state and input bugs interrupted them or hid controls.
 
 - Same-page query changes and refreshes retain controls so selection highlights can animate. Stale controls are inert during loading, focus returns after loading, and the autosave guard still blocks navigation and refresh while changes are pending. Ranking boards reset when their scope/revision changes, and collection, wishlist and expansion state reconcile fresh data.
 - One selection-indicator hook handles horizontal scrolling and resizing across collection, wishlist, picker and category selectors. Tier category controls remain mounted separately from the independently keyed board.
@@ -65,6 +65,16 @@ The broader browser pass completed 102 assertions, including 19 routes in each c
 Targeted checks also passed chart mouse/keyboard/touch interaction, two complete forward spins with delayed image loading, disabled filters while spinning, immediate reduced-motion results and bounded mixed successful/failed image requests. The existing autosave release harness passed again against disposable local PostgreSQL: queued retry ordering, browser Back protection, independent difficulty persistence and stale-tab conflicts. No production ranking writes were used for these checks.
 
 The corrected hosted build `e3dd41c` passed the cross-menu keyboard/hover regression and was promoted as `dpl_FYPtm1yijaH6qKfnu2YQfAMFAmuH`. On https://bart.monster, the bundle matched the verified build and card animations, both cross-menu Escape sequences, touch toggles and mobile menu bounds passed. Canonical heartbeats returned HTTP 200 with no JavaScript/API failures. Authenticated session/catalog/ranking/history, CSRF, anonymous API rejection, Google PKCE initiation and canonical redirects passed. The temporary verification account, activity and sessions were removed; its session then returned HTTP 401. Local disposable test resources were removed. `ideas.md` remained untouched.
+
+## Recovered Table Monsters design
+
+A fresh GitHub fetch recovered the actual design at `9d2a3fb`, introduced by `3c9fb44` and refined by `1db416a`, `04566d2` and `9d2a3fb`. The earlier `091d246` reference was too old. The specification, mockup and historical mapping are preserved in `design/`.
+
+The restored presentation includes the TABLE MONSTERS header, EB Garamond display type, Hanken Grotesk body type, Geist stats, Material Symbols, stone/amber surfaces, library cards and level badges, encounter details/stat meters, rune controls, torch glow, footer and original page compositions. The exact deployed Latin text fonts and a Material Symbols subset are self-hosted with their licenses. Header search passes its query to the search page; superseded searches are cancelled to prevent stale results.
+
+Historical presentation was merged with current logic, retaining Rust auth/data adapters, independent rating metrics, autosave, daily-history gaps/decreases, community level sorting, always-on hot-take glow, touch/keyboard controls, reduced motion and navigation guards. Restored monster levels and the picker difficulty slider use community difficulty on its 1–6 scale. The database schema and Rust backend are unchanged.
+
+The production frontend build and nine Bun tests passed. Both interaction/navigation browser harnesses passed with the recovered presentation, and all 18 additional desktop/mobile route checks passed without JavaScript errors or overflow. Header search initial and subsequent query changes passed with mocked BGG responses. Chrome’s rendered-font inspection confirmed the four real font families rather than fallbacks. The focused page checks passed chart mouse/keyboard/touch, encounter meters, two forward ten-second picker spins and reduced-motion results. Actual autosave checks against disposable PostgreSQL passed retry ordering, Back protection, independent difficulty persistence and stale-tab conflicts, then restored the fixture’s initial rankings.
 
 ## Historical data evidence
 

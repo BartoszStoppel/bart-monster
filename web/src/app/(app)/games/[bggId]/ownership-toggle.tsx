@@ -105,11 +105,11 @@ export function OwnershipToggle({
   return (
     <div className="mt-3">
       {failure && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-300">
+        <p role="alert" className="text-sm text-error">
           {failure}
         </p>
       )}
-      <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-zinc-700 dark:text-zinc-300">
+      <label className="flex cursor-pointer items-center gap-2 text-sm font-medium text-on-surface">
         <button
           type="button"
           role="checkbox"
@@ -118,8 +118,8 @@ export function OwnershipToggle({
           disabled={updating}
           className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border transition-colors disabled:opacity-50 ${
             owned
-              ? "border-green-500 bg-green-500 text-white"
-              : "border-zinc-300 bg-white hover:border-zinc-400 dark:border-white/10 dark:bg-white/5 dark:hover:border-zinc-500"
+              ? "border-secondary-container bg-secondary-container text-on-secondary-container"
+              : "border-outline-variant bg-surface-container-high hover:border-outline"
           }`}
         >
           {owned && (
@@ -142,10 +142,10 @@ export function OwnershipToggle({
 
       {owners.length > 0 && (
         <div className="mt-2">
-          <span className="text-xs text-zinc-400">
+          <span className="text-xs text-on-surface-variant">
             Owned by ({owners.length}):{" "}
           </span>
-          <span className="text-sm text-zinc-600 dark:text-zinc-300">
+          <span className="text-sm text-on-surface-variant">
             {owners.map((o) => o.displayName).join(", ")}
           </span>
         </div>

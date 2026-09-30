@@ -1,7 +1,5 @@
 "use client";
 
-import { usePillIndicator } from "@/lib/use-pill-indicator";
-
 import { useState, useMemo, useEffect } from "react";
 import { WishlistCard } from "./wishlist-card";
 import { SuggestForMe } from "./suggest-for-me";
@@ -12,18 +10,26 @@ import type {
   SuggestedGame,
 } from "./wishlist-types";
 
-const SORT_OPTIONS: { value: WishlistSortOption; label: string }[] = [
-  { value: "name", label: "Name" },
-  { value: "bgg-rating", label: "BGG Rating" },
-  { value: "weight", label: "Difficulty" },
-  { value: "priority", label: "Priority" },
-  { value: "players", label: "Players" },
+const SORT_OPTIONS: {
+  value: WishlistSortOption;
+  label: string;
+  icon: string;
+}[] = [
+  { value: "priority", label: "Priority", icon: "flag" },
+  { value: "name", label: "Name", icon: "sort_by_alpha" },
+  { value: "bgg-rating", label: "BGG Rating", icon: "public" },
+  { value: "weight", label: "Difficulty", icon: "fitness_center" },
+  { value: "players", label: "Players", icon: "group" },
 ];
 
-const CATEGORY_OPTIONS: { value: CategoryFilter; label: string }[] = [
-  { value: "all", label: "All" },
-  { value: "board", label: "Board" },
-  { value: "party", label: "Party" },
+const CATEGORY_OPTIONS: {
+  value: CategoryFilter;
+  label: string;
+  icon: string;
+}[] = [
+  { value: "all", label: "All Species", icon: "apps" },
+  { value: "board", label: "Board", icon: "castle" },
+  { value: "party", label: "Party", icon: "celebration" },
 ];
 
 interface WishlistGridProps {
@@ -41,18 +47,6 @@ export function WishlistGrid({
   const [sort, setSort] = useState<WishlistSortOption>("priority");
   const [category, setCategory] = useState<CategoryFilter>("all");
   useEffect(() => setItems(initialItems), [initialItems]);
-
-  const {
-    containerRef: catContainerRef,
-    setRef: setCatRef,
-    pill: catPill,
-  } = usePillIndicator(category);
-
-  const {
-    containerRef: sortContainerRef,
-    setRef: setSortRef,
-    pill: sortPill,
-  } = usePillIndicator(sort);
 
   function handleRemove(bggId: number) {
     setItems((prev) => prev.filter((i) => i.game.bgg_id !== bggId));
@@ -106,74 +100,66 @@ export function WishlistGrid({
   }, [items, sort, category]);
 
   return (
-    <div>
-      {/* Controls */}
-      <div className="mb-4 flex flex-wrap items-center gap-x-4 gap-y-2">
-        <div
-          ref={catContainerRef}
-          className="relative flex min-w-0 gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
-        >
-          <div
-            className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10 dark:shadow-cyan-500/5"
-            style={{ left: catPill.left, width: catPill.width }}
-          />
-          {CATEGORY_OPTIONS.map((opt) => (
-            <button
-              key={opt.value}
-              ref={(el) => setCatRef(opt.value, el)}
-              onClick={() => setCategory(opt.value)}
-              className={`relative z-10 shrink-0 whitespace-nowrap rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                category === opt.value
-                  ? "text-zinc-900 dark:text-zinc-50"
-                  : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
-              }`}
-            >
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        <div className="flex min-w-0 max-w-full items-center gap-2">
-          <span className="shrink-0 whitespace-nowrap text-xs text-zinc-400 dark:text-zinc-500">
-            Sort
-          </span>
-          <div
-            ref={sortContainerRef}
-            className="relative flex min-w-0 gap-1 overflow-x-auto rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
+    <div className="flex flex-col gap-stack-loose">
+      {/* Rune-chip filter + sort row */}
+      <div className="flex flex-wrap items-center gap-3">
+        {CATEGORY_OPTIONS.map((opt) => (
+          <button
+            key={opt.value}
+            onClick={() => setCategory(opt.value)}
+            aria-pressed={category === opt.value}
+            className={`rune-chip flex items-center gap-2 rounded-full px-4 py-1.5 font-stat text-stat-label ${
+              category === opt.value ? "active" : "text-on-surface-variant"
+            }`}
           >
-            <div
-              className="absolute top-1 bottom-1 rounded-md bg-white shadow-sm transition-all duration-200 ease-in-out dark:bg-white/10 dark:shadow-cyan-500/5"
-              style={{ left: sortPill.left, width: sortPill.width }}
-            />
+            <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+              {opt.icon}
+            </span>
+            {opt.label}
+          </button>
+        ))}
+
+        <div className="ml-auto flex flex-wrap items-center gap-3">
+          <span className="font-stat text-stat-label text-on-surface-variant">
+            {sorted.length} game{sorted.length !== 1 ? "s" : ""}
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span aria-hidden="true" className="material-symbols-outlined text-[18px] text-on-surface-variant">
+              sort
+            </span>
             {SORT_OPTIONS.map((opt) => (
               <button
                 key={opt.value}
-                ref={(el) => setSortRef(opt.value, el)}
                 onClick={() => setSort(opt.value)}
-                className={`relative z-10 shrink-0 whitespace-nowrap rounded-md px-3 py-1 text-xs font-medium transition-colors ${
-                  sort === opt.value
-                    ? "text-zinc-900 dark:text-zinc-50"
-                    : "text-zinc-500 hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-50"
+                aria-label={`Sort by ${opt.label}`}
+                aria-pressed={sort === opt.value}
+                title={`Sort by ${opt.label}`}
+                className={`rune-chip flex items-center gap-1.5 rounded-full px-3 py-1.5 font-stat text-stat-label ${
+                  sort === opt.value ? "active" : "text-on-surface-variant"
                 }`}
               >
-                {opt.label}
+                <span aria-hidden="true" className="material-symbols-outlined text-[16px]">
+                  {opt.icon}
+                </span>
+                <span className="hidden lg:inline">{opt.label}</span>
               </button>
             ))}
           </div>
         </div>
-        <span className="ml-auto text-xs text-zinc-400 dark:text-zinc-500">
-          {sorted.length} game{sorted.length !== 1 ? "s" : ""}
-        </span>
       </div>
 
       {/* Cards */}
       {sorted.length === 0 ? (
-        <div className="rounded-lg border border-zinc-200 bg-white p-8 text-center dark:border-white/[0.06] dark:bg-white/5">
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            No games on your wishlist yet. Search for games and add them!
+        <div className="monster-card flex flex-col items-center gap-3 rounded-lg py-stack-loose text-center">
+          <span aria-hidden="true" className="material-symbols-outlined text-[40px] text-outline">
+            redeem
+          </span>
+          <p className="text-on-surface-variant">
+            No treasures on your wishlist yet. Seek out games and covet them!
           </p>
         </div>
       ) : (
-        <div className="flex flex-col gap-2">
+        <div className="flex flex-col gap-gutter">
           {sorted.map((item) => (
             <WishlistCard
               key={item.game.bgg_id}

@@ -23,9 +23,10 @@ const PLOT_W = W - PAD.left - PAD.right;
 const PLOT_H = H - PAD.top - PAD.bottom;
 const Y_MIN = 1;
 
-const YOU_COLOR = { light: "#22c55e", dark: "#4ade80" };
-const AVG_COLOR = { light: "#06b6d4", dark: "#22d3ee" };
-const BGG_COLOR = { light: "#f97316", dark: "#fb923c" };
+// Dungeon chart hues (see design/THEME-MAPPING.md): You = slime, Avg = amber, BGG = stone.
+const YOU_COLOR = { light: "#75fd00", dark: "#75fd00" };
+const AVG_COLOR = { light: "#ffb347", dark: "#ffb347" };
+const BGG_COLOR = { light: "#9f8e7c", dark: "#9f8e7c" };
 
 function toY(score: number): number {
   return PAD.top + PLOT_H - ((score - Y_MIN) / (scoreMax() - Y_MIN)) * PLOT_H;
@@ -67,7 +68,7 @@ export function ScoreHistoryChart({
 
   if (avgPoints.length === 0 && yourPoints.length === 0) {
     return (
-      <p className="py-4 text-center text-xs text-zinc-400 dark:text-zinc-500">
+      <p className="py-4 text-center text-xs text-on-surface-variant">
         No score history yet. Your final score for each day is saved
         automatically.
       </p>
@@ -131,7 +132,7 @@ export function ScoreHistoryChart({
               x2={W - PAD.right}
               y1={toY(v)}
               y2={toY(v)}
-              className="stroke-zinc-100 dark:stroke-zinc-800"
+              className="stroke-outline-variant/30"
               strokeWidth={0.5}
             />
             <text
@@ -139,7 +140,7 @@ export function ScoreHistoryChart({
               y={toY(v) + 1}
               textAnchor="end"
               dominantBaseline="middle"
-              className="fill-zinc-400 text-[8px]"
+              className="fill-on-surface-variant text-[8px]"
             >
               {v}
             </text>
@@ -153,7 +154,7 @@ export function ScoreHistoryChart({
             x={toX(t)}
             y={H - PAD.bottom + 14}
             textAnchor="middle"
-            className="fill-zinc-400 text-[7px]"
+            className="fill-on-surface-variant text-[7px]"
           >
             {formatDate(new Date(t).toISOString())}
           </text>
@@ -263,7 +264,7 @@ export function ScoreHistoryChart({
               className="hidden h-2 w-2 rounded-full dark:inline-block"
               style={{ backgroundColor: s.color.dark }}
             />
-            <span className="text-zinc-500 dark:text-zinc-400">{s.label}</span>
+            <span className="text-on-surface-variant">{s.label}</span>
           </div>
         ))}
         {bggRating != null && (
@@ -290,7 +291,7 @@ export function ScoreHistoryChart({
                 strokeDasharray="3 2"
               />
             </svg>
-            <span className="text-zinc-500 dark:text-zinc-400">
+            <span className="text-on-surface-variant">
               BGG {bggRating.toFixed(1)}
             </span>
           </div>

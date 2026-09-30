@@ -108,7 +108,7 @@ function buildSmoothPath(
 
 /**
  * Scatter plot: X = community difficulty (dynamic), Y = score (1-10).
- * Three series: Yours (green), Ours (blue), BGG (orange).
+ * Three series: Yours (slime), Ours (amber), BGG (stone).
  * Clickable legend to toggle series visibility.
  */
 export function ComplexityChart({ games }: ComplexityChartProps) {
@@ -219,10 +219,10 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
 
   return (
     <section className="min-w-0">
-      <h2 className="mb-4 text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+      <h2 className="mb-4 font-display text-headline-lg text-on-surface">
         Difficulty vs Score
       </h2>
-      <div className="flex flex-1 flex-col justify-center rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5">
+      <div className="glass-card flex flex-1 flex-col justify-center rounded-lg p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full"
@@ -244,7 +244,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
                 x2={W - PAD.right}
                 y1={yPos(t)}
                 y2={yPos(t)}
-                className="stroke-zinc-100 dark:stroke-zinc-800"
+                className="stroke-outline-variant/30"
                 strokeWidth={0.3}
               />
             ),
@@ -256,7 +256,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               x2={toX(t)}
               y1={PAD.top}
               y2={H - PAD.bottom}
-              className="stroke-zinc-100 dark:stroke-zinc-800"
+              className="stroke-outline-variant/30"
               strokeWidth={0.3}
             />
           ))}
@@ -268,7 +268,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               x={toX(t)}
               y={H - PAD.bottom + 14}
               textAnchor="middle"
-              className="fill-zinc-400 text-[8px]"
+              className="fill-on-surface-variant text-[8px]"
             >
               {t % 1 === 0 ? t : t.toFixed(1)}
             </text>
@@ -280,7 +280,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
                 x={PAD.left - 5}
                 y={yPos(t) + 3}
                 textAnchor="end"
-                className="fill-zinc-400 text-[8px]"
+                className="fill-on-surface-variant text-[8px]"
               >
                 {t}
               </text>
@@ -292,7 +292,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             x={PAD.left + PLOT_W / 2}
             y={H - 2}
             textAnchor="middle"
-            className="fill-zinc-300 text-[8px] dark:fill-zinc-600"
+            className="fill-on-surface-variant/60 text-[8px]"
           >
             Community Difficulty
           </text>
@@ -300,7 +300,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             x={6}
             y={PAD.top + PLOT_H / 2}
             textAnchor="middle"
-            className="fill-zinc-300 text-[8px] dark:fill-zinc-600"
+            className="fill-on-surface-variant/60 text-[8px]"
             transform={`rotate(-90, 6, ${PAD.top + PLOT_H / 2})`}
           >
             Score
@@ -311,7 +311,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             <path
               d={bggTrend}
               fill="none"
-              className="stroke-orange-400 dark:stroke-orange-500"
+              className="stroke-outline"
               strokeWidth={LINE_W}
               opacity={0.4}
               strokeLinecap="round"
@@ -322,7 +322,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             <path
               d={ourTrend}
               fill="none"
-              className="stroke-cyan-400 dark:stroke-cyan-500"
+              className="stroke-primary-container"
               strokeWidth={LINE_W}
               opacity={0.4}
               strokeLinecap="round"
@@ -333,7 +333,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
             <path
               d={yourTrend}
               fill="none"
-              className="stroke-green-400 dark:stroke-green-500"
+              className="stroke-secondary-container"
               strokeWidth={LINE_W}
               opacity={0.4}
               strokeLinecap="round"
@@ -362,7 +362,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
                     cx={cx}
                     cy={cy}
                     r={active ? DOT_R_HOVER : DOT_R}
-                    className="fill-orange-500 dark:fill-orange-400"
+                    className="fill-outline"
                     opacity={active ? 1 : 0.7}
                   />
                 </a>
@@ -390,7 +390,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
                     cx={cx}
                     cy={cy}
                     r={active ? DOT_R_HOVER : DOT_R}
-                    className="fill-cyan-500 dark:fill-cyan-400"
+                    className="fill-primary-container"
                     opacity={active ? 1 : 0.75}
                   />
                 </a>
@@ -418,7 +418,7 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
                     cx={cx}
                     cy={cy}
                     r={active ? DOT_R_HOVER : DOT_R}
-                    className="fill-green-500 dark:fill-green-400"
+                    className="fill-secondary-container"
                     opacity={active ? 1 : 0.8}
                   />
                 </a>
@@ -459,12 +459,12 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
                     width={labelW}
                     height={16}
                     rx={2}
-                    className="fill-zinc-800/90 dark:fill-zinc-200/90"
+                    className="fill-surface-container-highest"
                   />
                   <text
                     x={tx + 5}
                     y={cy + 2}
-                    className="fill-white text-[7px] dark:fill-zinc-900"
+                    className="fill-on-surface text-[7px]"
                   >
                     {label}
                   </text>
@@ -481,13 +481,13 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               cx={W - PAD.right - 108}
               cy={PAD.top - 10}
               r={2}
-              className="fill-green-500"
+              className="fill-secondary-container"
               opacity={visible.yours ? 1 : 0.25}
             />
             <text
               x={W - PAD.right - 103}
               y={PAD.top - 7.5}
-              className="fill-zinc-400 text-[7px]"
+              className="fill-on-surface-variant text-[7px]"
               opacity={visible.yours ? 1 : 0.35}
             >
               Yours
@@ -501,13 +501,13 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               cx={W - PAD.right - 74}
               cy={PAD.top - 10}
               r={2}
-              className="fill-cyan-500"
+              className="fill-primary-container"
               opacity={visible.ours ? 1 : 0.25}
             />
             <text
               x={W - PAD.right - 69}
               y={PAD.top - 7.5}
-              className="fill-zinc-400 text-[7px]"
+              className="fill-on-surface-variant text-[7px]"
               opacity={visible.ours ? 1 : 0.35}
             >
               Ours
@@ -521,13 +521,13 @@ export function ComplexityChart({ games }: ComplexityChartProps) {
               cx={W - PAD.right - 44}
               cy={PAD.top - 10}
               r={2}
-              className="fill-orange-500"
+              className="fill-outline"
               opacity={visible.bgg ? 1 : 0.25}
             />
             <text
               x={W - PAD.right - 39}
               y={PAD.top - 7.5}
-              className="fill-zinc-400 text-[7px]"
+              className="fill-on-surface-variant text-[7px]"
               opacity={visible.bgg ? 1 : 0.35}
             >
               BGG

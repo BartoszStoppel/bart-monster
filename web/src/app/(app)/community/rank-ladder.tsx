@@ -129,7 +129,7 @@ function EntryRow({ entry }: { entry: DisplayEntry }) {
   return (
     <Link
       href={`/users/${entry.linkUserId}`}
-      className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800"
+      className="flex items-center gap-2 rounded-md px-2 py-1 transition-colors hover:bg-surface-container-high"
     >
       <div className="flex -space-x-1.5">
         {entry.avatars.map((url, i) =>
@@ -140,22 +140,20 @@ function EntryRow({ entry }: { entry: DisplayEntry }) {
               alt=""
               width={24}
               height={24}
-              className="h-6 w-6 rounded-full border-2 border-white object-cover dark:border-zinc-900"
+              className="h-6 w-6 rounded-full border-2 border-outline-variant object-cover"
             />
           ) : (
             <div
               key={i}
-              className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-white bg-zinc-200 text-[10px] font-medium text-zinc-600 dark:border-zinc-900 dark:bg-white/10 dark:text-zinc-300"
+              className="flex h-6 w-6 items-center justify-center rounded-full border-2 border-outline-variant bg-surface-container-highest text-[10px] font-medium text-on-surface-variant"
             >
               {entry.label.charAt(0).toUpperCase()}
             </div>
           ),
         )}
       </div>
-      <span className="text-sm text-zinc-900 dark:text-zinc-100">
-        {entry.label}
-      </span>
-      <span className="text-xs text-zinc-400 dark:text-zinc-500">
+      <span className="text-sm text-on-surface">{entry.label}</span>
+      <span className="font-stat text-stat-label text-on-surface-variant">
         {entry.count}
       </span>
     </Link>
@@ -189,28 +187,31 @@ function HoldingsColumn({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-xs font-semibold text-zinc-400 dark:text-zinc-500">
-        Holdings <span className="font-normal">— games owned</span>
+      <h3 className="flex items-center gap-1.5 font-display text-headline-lg text-on-surface">
+        <span aria-hidden="true" className="material-symbols-outlined stat-icon text-[20px]">
+          inventory_2
+        </span>
+        Holdings{" "}
+        <span className="font-stat text-stat-label font-normal text-on-surface-variant">
+          games owned
+        </span>
       </h3>
       {visible.map((adj) => {
         const members = groups.get(adj.name)!;
         const entries = buildHouseholdEntries(members, userMap, "gamesOwned");
         return (
-          <div
-            key={adj.name}
-            className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5"
-          >
+          <div key={adj.name} className="glass-card rounded-lg p-4">
             <div className="mb-1 flex items-center gap-2">
               <span
                 className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${adj.color} ${adj.darkColor}`}
               >
                 {adj.name}
               </span>
-              <span className="text-xs text-zinc-400 dark:text-zinc-500">
+              <span className="font-stat text-stat-label text-on-surface-variant">
                 {adj.minOwned}+ owned
               </span>
             </div>
-            <p className="mb-2 text-[11px] italic text-zinc-400 dark:text-zinc-500">
+            <p className="mb-2 text-[11px] italic text-on-surface-variant">
               {adj.tagline}
             </p>
             {entries.length > 0 ? (
@@ -220,7 +221,7 @@ function HoldingsColumn({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-zinc-300 dark:text-zinc-600">
+              <p className="text-xs text-on-surface-variant/70">
                 {adj.emptyMsg}
               </p>
             )}
@@ -258,8 +259,14 @@ function RenownColumn({
 
   return (
     <div className="space-y-3">
-      <h3 className="text-xs font-semibold text-zinc-400 dark:text-zinc-500">
-        Renown <span className="font-normal">— games played</span>
+      <h3 className="flex items-center gap-1.5 font-display text-headline-lg text-on-surface">
+        <span aria-hidden="true" className="material-symbols-outlined stat-icon text-[20px]">
+          military_tech
+        </span>
+        Renown{" "}
+        <span className="font-stat text-stat-label font-normal text-on-surface-variant">
+          games played
+        </span>
       </h3>
       {visible.map((rank) => {
         const members = groups.get(rank.name)!;
@@ -269,21 +276,18 @@ function RenownColumn({
           "totalGamesRanked",
         );
         return (
-          <div
-            key={rank.name}
-            className="rounded-lg border border-zinc-200 bg-white p-4 dark:border-white/[0.06] dark:bg-white/5"
-          >
+          <div key={rank.name} className="glass-card rounded-lg p-4">
             <div className="mb-1 flex items-center gap-2">
               <span
                 className={`rounded-full px-2.5 py-0.5 text-xs ${rankClasses(rank)}`}
               >
                 {rank.name}
               </span>
-              <span className="text-xs text-zinc-400 dark:text-zinc-500">
+              <span className="font-stat text-stat-label text-on-surface-variant">
                 {rank.minGames}+ played
               </span>
             </div>
-            <p className="mb-2 text-[11px] italic text-zinc-400 dark:text-zinc-500">
+            <p className="mb-2 text-[11px] italic text-on-surface-variant">
               {rank.tagline}
             </p>
             {entries.length > 0 ? (
@@ -293,7 +297,7 @@ function RenownColumn({
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-zinc-300 dark:text-zinc-600">
+              <p className="text-xs text-on-surface-variant/70">
                 {EMPTY_RANK_MESSAGES[rank.name] ?? "No one here yet"}
               </p>
             )}

@@ -9,15 +9,15 @@ export default function AppError({
 }) {
   return (
     <div className="flex min-h-[50vh] flex-col items-center justify-center gap-4">
-      <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-50">
+      <h2 className="text-lg font-semibold text-on-surface">
         Something went wrong
       </h2>
-      <p className="text-sm text-zinc-500 dark:text-zinc-400">
+      <p className="text-sm text-on-surface-variant">
         {error.message || "An unexpected error occurred"}
       </p>
       <button
         onClick={reset}
-        className="rounded-lg bg-gradient-to-r from-cyan-500 to-cyan-600 px-4 py-2 text-sm font-medium text-white shadow-lg shadow-cyan-500/25 transition-all hover:shadow-cyan-500/40 hover:brightness-110"
+        className="stone-button rounded-lg px-4 py-2 text-sm font-medium transition-all"
       >
         Try again
       </button>

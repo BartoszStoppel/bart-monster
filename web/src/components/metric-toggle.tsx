@@ -4,7 +4,7 @@ export function MetricToggle() {
   const current = metric();
   return (
     <div
-      className="flex gap-1 rounded-lg bg-zinc-100 p-1 dark:bg-white/5"
+      className="flex gap-1 rounded-lg bg-surface-container-low p-1"
       aria-label="Rating metric"
     >
       {(["enjoyment", "difficulty"] as const).map((value) => {
@@ -15,7 +15,7 @@ export function MetricToggle() {
             key={value}
             href={`${location.pathname}?${query}`}
             aria-current={current === value ? "page" : undefined}
-            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${current === value ? "bg-white text-zinc-900 shadow-sm dark:bg-white/10 dark:text-zinc-50" : "text-zinc-500 dark:text-zinc-400"}`}
+            className={`rounded-md px-3 py-1.5 text-sm font-medium transition-colors ${current === value ? "bg-primary-container text-on-primary-container shadow-sm" : "text-on-surface-variant hover:text-on-surface"}`}
           >
             {value === "enjoyment" ? "Enjoyment" : "Difficulty"}
           </Link>

@@ -44,19 +44,19 @@ export function CategoryChanger({
   return (
     <div className="flex items-center gap-2">
       {failure && (
-        <p role="alert" className="text-sm text-red-600 dark:text-red-300">
+        <p role="alert" className="text-sm text-error">
           {failure}
         </p>
       )}
-      <span className="text-xs text-zinc-400">Category:</span>
-      <div className="flex gap-1 rounded-md bg-zinc-100 p-0.5 dark:bg-white/5">
+      <span className="text-xs text-on-surface-variant">Category:</span>
+      <div className="flex gap-1 rounded-md bg-surface-container-high p-0.5">
         <button
           onClick={() => handleChange("party")}
           disabled={updating}
           className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
             currentCategory === "party"
-              ? "bg-purple-600 text-white"
-              : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              ? "bg-secondary-container text-on-secondary-container"
+              : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
           Party
@@ -66,14 +66,16 @@ export function CategoryChanger({
           disabled={updating}
           className={`rounded px-2.5 py-1 text-xs font-medium transition-colors ${
             currentCategory === "board"
-              ? "bg-cyan-600 text-white"
-              : "text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+              ? "bg-primary-container text-on-primary-container"
+              : "text-on-surface-variant hover:text-on-surface"
           }`}
         >
           Board
         </button>
       </div>
-      {updating && <span className="text-xs text-zinc-400">Updating...</span>}
+      {updating && (
+        <span className="text-xs text-on-surface-variant">Updating...</span>
+      )}
     </div>
   );
 }
