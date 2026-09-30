@@ -86,7 +86,7 @@ A tab opened before promotion retained the preceding entry bundle, then requeste
 
 The router now checks the current HTML entry after a page-asset failure. When a newer entry exists, it performs a guarded full reload, recording the attempted destination to avoid repeated automatic reloads. Offline checks or an unchanged entry show an explicit “Reload site” control. Both reload paths use the existing unsaved-navigation guard. Business/API errors keep their ordinary retry behavior. Tabs already running the old router need one initial browser reload to acquire this recovery logic.
 
-The frontend build and all ten production-bundle browser regressions passed: both affected routes under automatic recovery, unchanged-build retry, denied navigation, failed update checks and persistent broken chunks. Independent reproduction with the real preceding release confirmed the original failures and ineffective retry. No Rust, schema or ranking changes were needed.
+The frontend build and all ten production-bundle browser regressions passed: both affected routes under automatic recovery, unchanged-build retry, denied navigation, failed update checks and persistent broken chunks. Independent reproduction with the real preceding release confirmed the original failures and ineffective retry. No Rust, schema or ranking changes were needed. Runtime commit `18e576e` was promoted as `dpl_H7g4HHPAFM5CDeuFnaPD9qP6eG2Y`. Both the candidate and https://bart.monster passed all eight authenticated direct-route/menu-navigation checks across desktop/mobile for Achievements and Furtch, with no page errors or overflow. The live entry/assets matched the tested production build.
 
 ## Historical data evidence
 
