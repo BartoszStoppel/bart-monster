@@ -64,6 +64,8 @@ The broader browser pass completed 102 assertions, including 19 routes in each c
 
 Targeted checks also passed chart mouse/keyboard/touch interaction, two complete forward spins with delayed image loading, disabled filters while spinning, immediate reduced-motion results and bounded mixed successful/failed image requests. The existing autosave release harness passed again against disposable local PostgreSQL: queued retry ordering, browser Back protection, independent difficulty persistence and stale-tab conflicts. No production ranking writes were used for these checks.
 
+The corrected hosted build `e3dd41c` passed the cross-menu keyboard/hover regression and was promoted as `dpl_FYPtm1yijaH6qKfnu2YQfAMFAmuH`. On https://bart.monster, the bundle matched the verified build and card animations, both cross-menu Escape sequences, touch toggles and mobile menu bounds passed. Canonical heartbeats returned HTTP 200 with no JavaScript/API failures. Authenticated session/catalog/ranking/history, CSRF, anonymous API rejection, Google PKCE initiation and canonical redirects passed. The temporary verification account, activity and sessions were removed; its session then returned HTTP 401. Local disposable test resources were removed. `ideas.md` remained untouched.
+
 ## Historical data evidence
 
 The September 29 consolidation retained 27 players, 234 games, 1,006 enjoyment placements, 48 explicit ratings, 26 curated expansions, and 20 expansion placements at that cutover. It merged 1,575 source association rows into 1,143 user–game rows and compacted 9,085 raw history events into 5,180 historical daily values plus 1,185 truthful current-day baseline values. These are historical verified counts, not current production totals.
