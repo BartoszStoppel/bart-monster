@@ -55,6 +55,8 @@ The live domain returned Rust health, authenticated session/catalog/ranking/hist
 
 The subsequent interaction follow-up at commit `e3dd41c` was deployed as `dpl_FYPtm1yijaH6qKfnu2YQfAMFAmuH`, with immutable URL https://bart-monster-29ubxzv5q-barts-projects-af89ee9c.vercel.app. It fixes frontend motion, navigation and input behavior while retaining the existing Rust sessions and Supabase data. The previous Rust deployment above remains a rollback option. See the [interaction verification](refactor-results.md#interaction-follow-up).
 
+The recovered Table Monsters design at runtime commit `8bc003d` is now live as deployment `dpl_Es5zt3B2yp8SUaYzWctpsGKGFAt7`, with immutable URL https://bart-monster-fhkmleeqg-barts-projects-af89ee9c.vercel.app. It restores the actual GitHub `9d2a3fb` presentation and original fonts, retaining Rust sessions, database schema and ranking behavior. The staged and canonical deployments passed actual-font, desktop/touch navigation, animation, reduced-motion, API/auth and CSRF checks. Live frontend assets and font bytes matched the verified build. The temporary verification account and sessions were removed; its session then returned HTTP 401. The preceding interaction deployment remains a rollback option.
+
 ## Data semantics retained by Rust
 
 `hub_usergame` consolidates ownership, wishlist metadata, explicit rating/comment, enjoyment tier/position/score, and independent difficulty tier/position. Removing one kind of state preserves the rest. Completely empty associations can be pruned, while source IDs and original timestamps remain for reconciliation.
